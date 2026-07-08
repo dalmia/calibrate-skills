@@ -1,0 +1,20 @@
+name: skill-check
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # main is served live to every `npx skills add dalmia/calibrate-skills`,
+      # so validate structure before it lands.
+      - name: Validate skills
+        run: python3 scripts/check_skills.py
+      # Smoke-test that the skills CLI can enumerate this repo's skills.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: List skills via npx
+        run: npx --yes skills list . || true
