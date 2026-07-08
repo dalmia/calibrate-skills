@@ -52,22 +52,30 @@ calibrate annotation-tasks create \
 Capture `task_uuid`. (To link an evaluator later:
 `calibrate annotation-tasks link-evaluator --task-uuid <t> --evaluator-id <e>`.)
 
-Seed the items to be labeled:
+Seed the items to be labeled. Each item is an `AnnotationItemPayload`: a
+required `payload` (its shape depends on the task `--type`, but `payload.name` is
+always required and must be unique in the task) and an optional `annotations`
+map. Unlabeled to start:
 
 ```bash
-calibrate annotation-tasks add-items --task-uuid <t> --items '[ ... ]'
+calibrate annotation-tasks add-items --task-uuid <t> \
+  --items '[{"payload":{"name":"item-1", ...}}]'
 ```
 
 ## Phase 2: Collect human labels
 
 Have annotators label every item. Seed known human labels inline, one call per
-annotator (the `--annotator-id` is required when items carry annotations):
+annotator (`--annotator-id` is required whenever any item carries annotations).
+Labels go under `annotations`, keyed by evaluator UUID, with `value` (a bool for
+a binary evaluator, a number for a rating one) and optional `reasoning`:
 
 ```bash
 calibrate annotation-tasks add-items --task-uuid <t> \
   --annotator-id <human_id> \
-  --items '[{ ..., "annotation": { ... }}]'
+  --items '[{"payload":{"name":"item-1"},"annotations":{"<evaluator_uuid>":{"value":true,"reasoning":"meets the bar"}}}]'
 ```
+
+Each evaluator UUID in `annotations` must be linked to the task.
 
 Use **two or more** annotators when you can — that yields an inter-annotator
 agreement number, which is your human ceiling (Phase 4).

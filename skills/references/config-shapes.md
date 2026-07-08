@@ -62,7 +62,23 @@ external agents carry `endpoint` (+ optional `headers`, `timeout`).
 
 ## Annotation item (`annotation-tasks add-items --items`)
 
-One item to be labeled by humans and by the judge. Payload shape follows the
-task `--type` (`conversation`, `stt`, `tts`, …). Seed known human labels by
-passing `--annotator-id <id>` and including the annotation inline; omit to leave
-items unlabeled for annotators to fill.
+`--items` is an array of `AnnotationItemPayload`. Each item has two keys:
+
+```json
+{
+  "payload": {"name": "item-1", "...": "shape depends on task --type"},
+  "annotations": {
+    "<evaluator_uuid>": {"value": true, "reasoning": "meets the bar"}
+  }
+}
+```
+
+- `payload` — **required**. Its shape follows the task `--type`
+  (`conversation`, `stt`, `tts`, …), but `payload.name` is **always required**
+  and must be unique within the task.
+- `annotations` — **optional**. Human labels to seed, keyed by evaluator UUID
+  (each must be linked to the task). `value` is a bool for a `binary` evaluator
+  or a number for a `rating` one; `reasoning` is optional. Whenever any item
+  carries `annotations`, the request must set `--annotator-id <id>` (the
+  annotator those labels belong to). Omit `annotations` to leave items unlabeled
+  for annotators to fill.
