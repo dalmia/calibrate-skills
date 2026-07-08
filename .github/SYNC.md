@@ -40,14 +40,18 @@ one). One step per consumer:
 - `DISPATCH_PAT` — a PAT (or GitHub App token) with `contents: write` on
   `dalmia/calibrate-skills`. The default `GITHUB_TOKEN` cannot dispatch across
   repos.
-- `client_payload.spec_url` — optional. If omitted, the workflow falls back to
-  the repo variable `OPENAPI_SPEC_URL`.
+- `client_payload.spec_url` — optional. The published spec URL is a public
+  constant and is already the workflow's default
+  (`https://api.calibrate.artpark.ai/public-api/openapi.json`), so the backend
+  only needs to pass this if the host ever moves.
 
 ## Config on this repo
 
-- **Variable `OPENAPI_SPEC_URL`** — public URL of the published `openapi.json`
-  (the API's `/openapi` endpoint or the hosted docs spec). Used when the
-  dispatch carries no `spec_url`.
+Nothing is required. The spec URL is baked in as the default, so there is no
+env var to keep in sync with the backend. Two optional overrides exist:
+
+- **Variable `OPENAPI_SPEC_URL`** (optional) — set only to point the drift check
+  at a different spec URL than the public default.
 - **Secret `SKILLS_SYNC_TOKEN`** (optional) — a PAT so the drift PR triggers
   `skill-check`; PRs opened by the default `GITHUB_TOKEN` do not start further
   CI runs. Without it the PR still opens, just without an automatic check.

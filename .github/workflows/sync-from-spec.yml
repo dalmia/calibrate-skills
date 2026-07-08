@@ -28,19 +28,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Prefer a spec_url passed in the dispatch payload; else the repo variable
-      # OPENAPI_SPEC_URL (e.g. the public API's /openapi endpoint or the hosted
-      # docs openapi.json). No secret needed for a public spec.
+      # The published spec URL is a public constant, so it is the default below —
+      # nothing to configure. Precedence: dispatch client_payload.spec_url (lets
+      # the backend override if the host ever moves) > optional repo variable
+      # OPENAPI_SPEC_URL > the hardcoded public default.
       - name: Resolve spec URL
         id: spec
+        env:
+          DEFAULT_SPEC_URL: https://api.calibrate.artpark.ai/public-api/openapi.json
         run: |
           URL="${{ github.event.client_payload.spec_url }}"
           [ -z "$URL" ] && URL="${{ vars.OPENAPI_SPEC_URL }}"
-          if [ -z "$URL" ]; then
-            echo "::error::No spec URL. Set repo variable OPENAPI_SPEC_URL or pass client_payload.spec_url."
-            exit 1
-          fi
+          [ -z "$URL" ] && URL="$DEFAULT_SPEC_URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Using spec URL: $URL"
 
       - name: Fetch published spec
         run: curl -fsSL "${{ steps.spec.outputs.url }}" -o openapi.published.json
