@@ -8,13 +8,13 @@ report.
 
 ## How it triggers
 
-Same mechanism the docs repo (`agentloop`) already uses: `calibrate-backend`
+Same mechanism the docs repo (`calibrate`) already uses: `calibrate-backend`
 fires a `repository_dispatch` after it finishes publishing, and each consumer
 repo listens for it.
 
 ```
 calibrate-backend ──(publish done)──► repository_dispatch: sync-api-spec
-                                          ├─► agentloop        (regenerates docs → PR)
+                                          ├─► calibrate        (regenerates docs → PR)
                                           └─► calibrate-skills (drift-checks       → PR)
 ```
 
@@ -24,7 +24,7 @@ also runs weekly (cron fallback) and on manual `workflow_dispatch`.
 ## What the backend needs to add
 
 In `calibrate-backend`, in the job/step that runs after publishing succeeds,
-add `calibrate-skills` as a dispatch target (alongside the existing `agentloop`
+add `calibrate-skills` as a dispatch target (alongside the existing `calibrate`
 one). One step per consumer:
 
 ```yaml
