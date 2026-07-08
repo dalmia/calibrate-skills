@@ -1,0 +1,82 @@
+name: sync-from-spec
+
+# Drift-check the skills against the published Calibrate OpenAPI spec. The skills
+# are hand-written prose (not generated), so this does not regenerate them — it
+# fetches the latest spec, asserts every operation and payload field the skills
+# hardcode still exists, and opens a PR carrying a drift report when something
+# no longer matches. See .github/SYNC.md for how calibrate-backend triggers this.
+on:
+  # Fired by calibrate-backend after it finishes publishing the spec.
+  repository_dispatch:
+    types: [sync-api-spec]
+  # Weekly fallback so drift is caught even without a dispatch.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Prefer a spec_url passed in the dispatch payload; else the repo variable
+      # OPENAPI_SPEC_URL (e.g. the public API's /openapi endpoint or the hosted
+      # docs openapi.json). No secret needed for a public spec.
+      - name: Resolve spec URL
+        id: spec
+        run: |
+          URL="${{ github.event.client_payload.spec_url }}"
+          [ -z "$URL" ] && URL="${{ vars.OPENAPI_SPEC_URL }}"
+          if [ -z "$URL" ]; then
+            echo "::error::No spec URL. Set repo variable OPENAPI_SPEC_URL or pass client_payload.spec_url."
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch published spec
+        run: curl -fsSL "${{ steps.spec.outputs.url }}" -o openapi.published.json
+
+      - name: Check drift
+        id: drift
+        run: |
+          if python3 scripts/check_spec_drift.py --spec openapi.published.json --report SPEC_DRIFT.md; then
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Open PR with drift report
+        if: steps.drift.outputs.drift == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # Use a PAT (SKILLS_SYNC_TOKEN) so skill-check runs on the drift PR;
+          # PRs opened by the default GITHUB_TOKEN do not trigger further CI.
+          token: ${{ secrets.SKILLS_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+          commit-message: "Spec drift: skills reference operations/fields no longer in the spec"
+          title: "Spec drift detected — update skills to match the API"
+          body: |
+            The published Calibrate OpenAPI spec no longer matches what the skills
+            document. `SPEC_DRIFT.md` lists each missing operation/field and the
+            skill relying on it. Fix the affected `SKILL.md` / reference files on
+            this branch, delete `SPEC_DRIFT.md`, and merge.
+
+            Opened by the [sync-from-spec](.github/workflows/sync-from-spec.yml) workflow.
+          branch: automated/spec-drift
+          delete-branch: true
+          add-paths: SPEC_DRIFT.md
+
+      - name: Fail if drift
+        if: steps.drift.outputs.drift == 'true'
+        run: |
+          echo "::error::Spec drift detected — see the automated/spec-drift PR."
+          exit 1
