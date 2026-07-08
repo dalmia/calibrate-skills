@@ -12,6 +12,9 @@ the automated scores are trustworthy.
 ## Quick start
 
 ```bash
+# Install all Calibrate skills (works with Claude Code, Cursor, Windsurf, Codex, and 40+ agents)
+npx skills add dalmia/calibrate-skills
+
 # Install the Calibrate CLI
 brew install dalmia/tap/calibrate
 
@@ -20,6 +23,24 @@ calibrate login
 
 # In your agent, run the guided onboarding skill
 /onboard
+```
+
+Install a single skill instead of all of them, or list what's available:
+
+```bash
+npx skills list dalmia/calibrate-skills
+npx skills add dalmia/calibrate-skills/onboard
+```
+
+### Manual installation
+
+```bash
+# Clone the repository
+git clone https://github.com/dalmia/calibrate-skills.git
+
+# Copy a skill (or the whole skills/ tree) into your agent's skills directory,
+# e.g. .claude/skills/ for Claude Code or .cursor/skills/ for Cursor
+cp -r calibrate-skills/skills/onboarding/onboard ~/.claude/skills/
 ```
 
 ## Skills
