@@ -49,7 +49,14 @@ mkdir -p .calibrate
 cp /path/to/skills/onboarding/onboard/assets/onboard.md .calibrate/onboard.md
 ```
 
-Confirm the CLI + auth once: `calibrate whoami` (else `calibrate login`).
+Confirm the CLI is installed, then auth, once. `npx skills add` installs only
+the skill prose, not the binary — if `calibrate` is missing, have the user
+`brew install dalmia/tap/calibrate` before continuing:
+
+```bash
+command -v calibrate >/dev/null || echo "calibrate CLI not installed — brew install dalmia/tap/calibrate"
+calibrate whoami   # else: calibrate login
+```
 
 ## Phase 1 — System under test → agent
 
