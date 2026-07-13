@@ -18,12 +18,13 @@ question.
 
 See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how to
 read command output (TOON/JSON) and [`../../references/config-shapes.md`](../../references/config-shapes.md)
-for the `config-param` shape.
+for the `config-param` shape. Keep what you *say* to the user plain — see
+[`../../references/voice.md`](../../references/voice.md).
 
-## Phase 0: Preflight
+## Phase 0: Setup check
 
 First confirm the CLI itself is installed — `npx skills add` installs only the
-skill prose, not the `calibrate` binary:
+instructions, not the `calibrate` command itself:
 
 ```bash
 command -v calibrate >/dev/null || echo "calibrate CLI not installed"
@@ -35,7 +36,7 @@ If it's missing, stop and have the user install it, then re-run:
 brew install dalmia/tap/calibrate
 ```
 
-(No account yet? https://calibrate.artpark.ai). Only once the binary is present,
+(No account yet? https://calibrate.artpark.ai). Only once the command is present,
 check auth:
 
 ```bash

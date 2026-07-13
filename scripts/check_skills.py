@@ -7,7 +7,9 @@ Since `npx skills add dalmia/calibrate-skills` serves the default branch live,
   - every SKILL.md has YAML frontmatter with name + description
   - skill `name` matches its directory name (npx skills resolves by name)
   - no broken relative links between skill files
-  - the onboarding preflight script fails on a blank intake and passes on a
+  - no echo-prone jargon in headings (the agent quotes headings verbatim)
+  - every SKILL.md links the voice reference (how to speak to the user)
+  - the onboarding setup-check script fails on a blank intake and passes on a
     filled one
 
 Stdlib-only; run with `python3 scripts/check_skills.py` from the repo root.
@@ -47,6 +49,39 @@ def check_frontmatter(problems: list[str]) -> None:
             )
         if not re.search(r"^description:", fm, re.MULTILINE):
             fail(f"{rel}: frontmatter missing `description`", problems)
+
+
+# Jargon that reads as machinery to a non-technical user. It's fine in body
+# prose (precise notes for the agent), but banned in HEADINGS: the agent tends
+# to quote headings back verbatim, so "Preflight" becomes "pre-flight checks"
+# out loud. See skills/references/voice.md and CLAUDE.md.
+HEADING_JARGON = ("preflight", "system under test", "adaptive determinism")
+
+
+def check_heading_jargon(problems: list[str]) -> None:
+    for f in sorted(SKILLS.rglob("SKILL.md")):
+        rel = f.relative_to(ROOT)
+        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            if not line.lstrip().startswith("#"):
+                continue
+            low = line.lower()
+            for term in HEADING_JARGON:
+                if term in low:
+                    fail(
+                        f"{rel}:{i}: jargon '{term}' in a heading — the agent "
+                        f"echoes headings verbatim; use a plain-language title",
+                        problems,
+                    )
+
+
+def check_voice_link(problems: list[str]) -> None:
+    for f in sorted(SKILLS.rglob("SKILL.md")):
+        if "references/voice.md" not in f.read_text(encoding="utf-8"):
+            fail(
+                f"{f.relative_to(ROOT)}: does not link references/voice.md "
+                f"(every skill must point the agent at the speaking-voice rules)",
+                problems,
+            )
 
 
 def check_links(problems: list[str]) -> None:
@@ -89,6 +124,8 @@ def check_preflight(problems: list[str]) -> None:
 def main() -> int:
     problems: list[str] = []
     check_frontmatter(problems)
+    check_heading_jargon(problems)
+    check_voice_link(problems)
     check_links(problems)
     check_preflight(problems)
     if problems:

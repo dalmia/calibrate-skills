@@ -1,6 +1,6 @@
 ---
 name: iterate-evaluator
-description: Add a new version to an existing evaluator and pin it live — the
+description: Add a new version to an existing evaluator and make it the live one — the
   judge-prompt tuning loop. Use when the user says "tune my evaluator", "improve
   the judge prompt", "new evaluator version", "the judge is wrong on X", "update
   my rubric", or "roll back the evaluator".
@@ -10,20 +10,21 @@ argument-hint: "[evaluator-uuid-or-name]"
 # Iterate on an evaluator
 
 Evaluators are versioned. Tuning a judge doesn't overwrite it — you add a new
-version and (usually) point the live pointer at it. Old versions stay for
+version and (usually) make it the live one. Old versions stay for
 comparison and rollback. Drives the `calibrate evaluators` commands. Ask at each
 step; if `$ARGUMENTS` already carries a UUID or name, pre-fill it and skip the
 lookup.
 
 Reference: [`../../references/config-shapes.md`](../../references/config-shapes.md)
-(evaluator version + variable shapes).
+(evaluator version + variable shapes). Keep what you *say* to the user plain —
+see [`../../references/voice.md`](../../references/voice.md).
 
 This skill is the version-mechanics half of the calibration loop in
 [`../../annotation/calibrate-evaluator/SKILL.md`](../../annotation/calibrate-evaluator/SKILL.md).
 Don't tune blind — that loop tells you *what* the judge gets wrong; this one
 changes it. Measure before and after with `/calibrate-evaluator`.
 
-## Phase 0: Preflight
+## Phase 0: Setup check
 
 ```bash
 calibrate whoami

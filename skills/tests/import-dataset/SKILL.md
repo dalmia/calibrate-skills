@@ -17,9 +17,10 @@ skip that question.
 See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how to
 read command output (TOON/JSON) and
 [`../../references/config-shapes.md`](../../references/config-shapes.md) for the
-exact test-item shape.
+exact test-item shape. Keep what you *say* to the user plain — see
+[`../../references/voice.md`](../../references/voice.md).
 
-## Phase 0: Preflight
+## Phase 0: Setup check
 
 ```bash
 calibrate whoami

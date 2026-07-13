@@ -15,9 +15,11 @@ if `$ARGUMENTS` carries an agent UUID or name, pre-fill it and skip that
 question.
 
 See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how to
-read command output (TOON/JSON) and the polling pattern used in Phase 4.
+read command output (TOON/JSON) and the polling pattern used in Phase 4. Keep
+what you *say* to the user plain — see
+[`../../references/voice.md`](../../references/voice.md).
 
-## Phase 0: Preflight
+## Phase 0: Setup check
 
 ```bash
 calibrate whoami
@@ -77,7 +79,7 @@ report the error and stop.
 
 ## Phase 3: Poll for results
 
-Poll the run until the status is terminal, backing off between polls (see the
+Poll the run until the status is final, backing off between polls (see the
 polling pattern in `agent-mode.md`). Report progress each time; never block
 silently.
 

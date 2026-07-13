@@ -17,9 +17,10 @@ measure agreement, and tune the judge until the gap closes. Drives the
 
 References: [`../../references/agent-mode.md`](../../references/agent-mode.md)
 (output/polling), [`../../references/config-shapes.md`](../../references/config-shapes.md)
-(item + evaluator shapes).
+(item + evaluator shapes). Keep what you *say* to the user plain — see
+[`../../references/voice.md`](../../references/voice.md).
 
-## Phase 0: Preflight
+## Phase 0: Setup check
 
 ```bash
 calibrate whoami

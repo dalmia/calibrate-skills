@@ -27,5 +27,5 @@ it, the CLI switches to **agent mode** automatically (it detects `CLAUDE_CODE`,
 ## Polling pattern (runs, benchmarks, evaluator jobs)
 
 Launch commands return a `task_id` / `job_uuid`; results come from a separate
-`get-*` command. Poll it until the status is terminal (`completed` / `failed`),
+`get-*` command. Poll it until the status is final (`completed` / `failed`),
 backing off between polls. Report progress to the user; never block silently.

@@ -18,19 +18,23 @@ the first incomplete phase.
 Loose inspiration: the local `calibrate-guide` intake flow — phased, resumable,
 adaptive. This version targets the cloud API primitives.
 
-## Operating principle: adaptive determinism
+This is a first-time user's first contact with Calibrate, so voice matters most
+here — keep what you *say* plain and jargon-free. See
+[`../../references/voice.md`](../../references/voice.md).
+
+## Operating principle: match the user's pace
 
 Match rigor to the user's expertise:
 
 - **Novice / unspecified** — walk the phases in order, use defaults, run the
-  preflight gate, don't over-ask.
+  setup check, don't over-ask.
 - **Expert / explicit** — honor their choices, compress or skip phases they've
   already answered, let them dictate. Defaults are a fallback, not a mandate.
 
 Compress a phase when the user already gave you the answer in passing. The phase
 list is structure, not a script.
 
-## Preflight (before any run)
+## Setup check (before any run)
 
 From the project root, run the bundled stdlib gate — it needs nothing installed:
 
@@ -50,7 +54,7 @@ cp /path/to/skills/onboarding/onboard/assets/onboard.md .calibrate/onboard.md
 ```
 
 Confirm the CLI is installed, then auth, once. `npx skills add` installs only
-the skill prose, not the binary — if `calibrate` is missing, have the user
+the instructions, not the `calibrate` command itself — if it's missing, have the user
 `brew install dalmia/tap/calibrate` before continuing:
 
 ```bash
@@ -58,7 +62,7 @@ command -v calibrate >/dev/null || echo "calibrate CLI not installed — brew in
 calibrate whoami   # else: calibrate login
 ```
 
-## Phase 1 — System under test → agent
+## Phase 1 — Describe your agent
 
 Ask what the agent does, who uses it, and where it fails today. Write a short
 summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate:
@@ -66,7 +70,7 @@ summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate:
 → **`/connect-agent`** — register + `verify-connection`. Record the resulting
 `agent_uuid` in the state file. Don't proceed until the connection verifies.
 
-## Phase 2 — Hypothesis → tests
+## Phase 2 — Turn goals into tests
 
 Turn the goal into a falsifiable claim ("when the user gives an ORD-\d+ id, the
 agent calls `check_order` with that id"). Write it into **Phase 2**. Then:
