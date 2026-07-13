@@ -26,13 +26,14 @@ API key: **Workspace settings → API keys**
 (https://calibrate.artpark.ai/workspace-settings?tab=api-keys). See
 [`../../references/agent-mode.md`](../../references/agent-mode.md) for output
 formats and [`../../references/config-shapes.md`](../../references/config-shapes.md)
-for payload shapes.
+for payload shapes. Keep what you *say* to the user plain — see
+[`../../references/voice.md`](../../references/voice.md).
 
 ## The five primitives
 
 | Primitive | What it is | CLI group | Skill |
 | --- | --- | --- | --- |
-| **Agent** | The system under test (endpoint or internal-LLM) | `agents` | `/connect-agent` |
+| **Agent** | The agent you're testing (endpoint or internal-LLM) | `agents` | `/connect-agent` |
 | **Test** | A conversation + evaluators (`tool_call` or `response`) | `tests` | `/build-test-suite`, `/import-dataset` |
 | **Agent-test** | Linking tests to an agent and running them | `agent-tests` | `/run-tests`, `/benchmark-models` |
 | **Evaluator** | A versioned LLM/audio judge (binary or rating) | `evaluators` | `/design-evaluator`, `/iterate-evaluator` |
@@ -46,7 +47,7 @@ for payload shapes.
 4. `/run-tests` — run and read pass/fail.
 5. `/calibrate-evaluator` — prove the judge agrees with humans before trusting it.
 6. `/benchmark-models` — compare models once the harness is trustworthy.
-7. `/iterate-evaluator` — tune the judge and re-pin its live version.
+7. `/iterate-evaluator` — tune the judge and reset its live version.
 
 `/onboard` runs this whole flow interactively for a first-time user.
 
