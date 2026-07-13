@@ -22,6 +22,22 @@ for the `config-param` shape.
 
 ## Phase 0: Preflight
 
+First confirm the CLI itself is installed — `npx skills add` installs only the
+skill prose, not the `calibrate` binary:
+
+```bash
+command -v calibrate >/dev/null || echo "calibrate CLI not installed"
+```
+
+If it's missing, stop and have the user install it, then re-run:
+
+```bash
+brew install dalmia/tap/calibrate
+```
+
+(No account yet? https://calibrate.artpark.ai). Only once the binary is present,
+check auth:
+
 ```bash
 calibrate whoami
 ```
