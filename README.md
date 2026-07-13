@@ -17,7 +17,7 @@ the automated scores are trustworthy.
 | --- | --- | --- |
 | Overview | [calibrate-resources](skills/overview/calibrate-resources/) | Orientation: primitives, CLI, auth, which skill to use |
 | Onboarding | [onboard](skills/onboarding/onboard/) | Guided end-to-end first evaluation (orchestrator) |
-| Agents | [connect-agent](skills/agents/connect-agent/) | Connect/create an agent and verify its connection |
+| Agents | [connect-agent](skills/agents/connect-agent/) | Create an agent on Calibrate or connect your existing agent, then verify the connection |
 | Tests | [build-test-suite](skills/tests/build-test-suite/) | Author test cases (`tool_call` / `response`) and upload |
 | Tests | [import-dataset](skills/tests/import-dataset/) | Turn a CSV / JSONL / HuggingFace dataset into tests |
 | Agent tests | [run-tests](skills/agent-tests/run-tests/) | Link tests to an agent, run, and read pass/fail |
