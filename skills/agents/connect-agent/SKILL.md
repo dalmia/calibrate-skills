@@ -1,8 +1,11 @@
 ---
 name: connect-agent
 description: Connect or create an agent under test in Calibrate, then verify its
-  endpoint is reachable. Use when the user says "connect my agent", "add an
-  agent", "create an agent", "set up my bot", or "point Calibrate at my endpoint".
+  endpoint is reachable. When the user has a codebase but no endpoint, add a
+  Calibrate route and infer its auth from the code. Use when the user says
+  "connect my agent", "add an agent", "create an agent", "set up my bot", "point
+  Calibrate at my endpoint", "expose my agent to Calibrate", or "convert my
+  codebase so Calibrate can test it".
 argument-hint: "[agent-name-or-endpoint]"
 ---
 
@@ -52,6 +55,31 @@ Ask what the agent does and how Calibrate should reach it. Collect:
   per-type required fields and pitfalls.
 - **config-param** (`-c`) — behavioral config; keys depend on type (endpoint,
   headers, model, system prompt). See the config-shapes reference.
+
+Which path you're on:
+
+- Already has a **live URL** → collect `endpoint` (+ headers if they name any)
+  and go to Phase 2.
+- Has a **codebase but no endpoint** ("expose my agent", "convert my code") → do
+  Phase 1.5 first.
+- Has **no service at all** → internal-LLM agent (`model` + `system_prompt`, no
+  endpoint); go to Phase 2.
+
+### Phase 1.5: Expose an endpoint from the codebase
+
+When the user points you at a codebase instead of a URL, load
+[`references/expose-endpoint.md`](references/expose-endpoint.md) and follow it:
+
+1. Read the agent's request handler and add a thin `POST /calibrate/test` route
+   that reuses its model call and returns `{"response": ...}` (+ `tool_calls` if
+   the agent emits them). Show the diff; the user applies and deploys it.
+2. **Infer auth from the code** — scan routes/middleware for the header + scheme.
+   If the code requires none, create the agent with **no** `headers` and don't
+   ask. If it reads a secret from an env var, set the header and ask **only** for
+   that value. Never ask a blanket "are there headers?".
+3. Ask only for the **deploy base URL** (the code can't know it); the endpoint is
+   `<base-url>/calibrate/test`. Then continue to Phase 2 with `endpoint` +
+   inferred `headers`.
 
 ## Phase 2: Create
 

@@ -20,6 +20,9 @@ Calibrate sends conversations to an HTTP endpoint you host.
 
 - **Required**: `endpoint` (valid http/https URL)
 - **Optional**: `headers` (auth), `model`, `system_prompt`, `timeout`
+- **No endpoint yet, but a codebase?** See
+  [`expose-endpoint.md`](expose-endpoint.md) — add the `/calibrate/test` route,
+  infer `headers` from the code, then come back here.
 - **Validation**: URL must be reachable from Calibrate — run
   `verify-connection` after create.
 - **Common pitfalls**:
