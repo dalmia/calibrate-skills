@@ -35,6 +35,42 @@ Calibrate needs one HTTP route that follows a fixed contract:
     ] }
   ```
 
+## Inspect first — don't assume greenfield
+
+Before editing anything, find out whether a Calibrate-style route **already
+exists**, so you don't add a duplicate or step on working wiring. Search the
+codebase for the tell-tale signs of the contract:
+
+```bash
+grep -rniE "/calibrate|calibrate.?test|\"?tool_calls\"?|\"?messages\"?\s*[:=]" \
+  --include=*.py --include=*.js --include=*.ts --include=*.go .
+```
+
+Also list the app's POST routes (`@app.post`, `app.post(`, `router.POST`,
+`methods=["POST"]`) and read any that look agent-facing. Then classify:
+
+| What you find | What to do |
+| --- | --- |
+| **No route** matching the contract | Add one — go to **Add the route**. |
+| A route that **already conforms** (POST, reads a `messages` array, returns `response` and/or `tool_calls`) | **Don't touch the code.** Use its path as the endpoint and go straight to auth inference + create/verify. |
+| A route that's **present but mis-wired** | Report the exact mismatch, propose a targeted fix — don't bolt on a second route. |
+
+When a route is present but wrong, check it against the contract point by point
+and name what's off:
+
+- Wrong method (GET instead of POST), or wrong path than the user expects.
+- Reads the body as something other than a `messages` array (e.g. a single
+  `prompt` / `text` field, or query params).
+- Returns the reply under the wrong key (`reply`, `output`, `text`,
+  `choices[0]...`) instead of `response`, or emits neither `response` nor
+  `tool_calls`.
+- Drops tool calls the agent makes, or returns them in a non-contract shape
+  (not an array of `{tool, arguments}`).
+
+Show the user the offending lines and the minimal edit to bring them into line,
+then let them apply it. `verify-connection` (Phase 3) is the backstop that
+confirms whichever path you took actually works.
+
 ## Add the route
 
 Pull the model call out of the request handler into a reusable function, then

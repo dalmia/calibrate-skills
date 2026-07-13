@@ -86,16 +86,21 @@ Which path you're on:
 When the user points you at a codebase instead of a URL, load
 [`references/expose-endpoint.md`](references/expose-endpoint.md) and follow it:
 
-1. Read the agent's request handler and add a thin `POST /calibrate/test` route
-   that reuses its model call and returns `{"response": ...}` (+ `tool_calls` if
-   the agent emits them). Show the diff; the user applies and deploys it.
-2. **Infer auth from the code** — scan routes/middleware for the header + scheme.
+1. **Inspect before editing.** Search the codebase for an existing
+   Calibrate-style route so you don't duplicate or clobber working wiring. If one
+   is already present and conforms to the contract, don't touch the code — reuse
+   its path. If it's present but mis-wired, report the exact mismatch and propose
+   a targeted fix. Only when none exists do you add one.
+2. Add (or fix) a thin `POST /calibrate/test` route that reuses the agent's model
+   call and returns `{"response": ...}` (+ `tool_calls` if the agent emits them).
+   Show the diff; the user applies and deploys it.
+3. **Infer auth from the code** — scan routes/middleware for the header + scheme.
    If the code requires none, create the agent with **no** `headers` and don't
    ask. If it reads a secret from an env var, set the header and ask **only** for
    that value. Never ask a blanket "are there headers?".
-3. Ask only for the **deploy base URL** (the code can't know it); the endpoint is
-   `<base-url>/calibrate/test`. Then continue to Phase 2 with `endpoint` +
-   inferred `headers`.
+4. Ask only for the **deploy base URL** (the code can't know it); the endpoint is
+   `<base-url>/calibrate/test` (or the existing route's path). Then continue to
+   Phase 2 with `endpoint` + inferred `headers`.
 
 ## Phase 2: Create
 
