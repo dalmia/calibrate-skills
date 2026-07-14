@@ -18,7 +18,7 @@ from pathlib import Path
 # Phases that must contain prose before the first run. Phase 3 (evaluators) and
 # Phase 5 (calibration) are optional, so they are not gated here.
 REQUIRED_PHASES = (
-    "Phase 1 — System under test",
+    "Phase 1 — Describe your agent",
     "Phase 2 — Hypothesis + tests",
 )
 

@@ -2,8 +2,9 @@
 name: run-tests
 description: Link tests to an agent, run them, poll for results, and present
   pass/fail with judge reasoning. Use when the user says "run my tests", "run
-  the test suite", "evaluate my agent", "run agent tests", or "check if my agent
-  passes".
+  the test suite", "evaluate my agent" (and they already have tests), "run agent
+  tests", or "check if my agent passes". Use onboard instead when the user is
+  starting from scratch with no tests yet.
 argument-hint: "[agent-uuid-or-name]"
 ---
 

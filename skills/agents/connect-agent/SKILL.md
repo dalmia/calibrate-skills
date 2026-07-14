@@ -70,17 +70,17 @@ Ask what the agent does and how Calibrate should reach it. Collect:
 - **type** — how the agent connects. Load
   [`references/connection-types.md`](references/connection-types.md) for the
   per-type required fields and pitfalls.
-- **config-param** (`-c`) — behavioral config; keys depend on type (endpoint,
-  headers, model, system prompt). See the config-shapes reference.
+- **config-param** (`-c`) — behavioral config; keys depend on type. See
+  [`references/connection-types.md`](references/connection-types.md) for exact keys.
 
 Which path you're on:
 
-- Already has a **live URL** → collect `endpoint` (+ headers if they name any)
-  and go to Phase 2.
+- Already has a **live URL** → `--type connection` with `agent_url` (+ `agent_headers`
+  if they name any) and go to Phase 2.
 - Has a **codebase but no endpoint** ("expose my agent", "convert my code") → do
   Phase 1.5 first.
-- Has **no service at all** → internal-LLM agent (`model` + `system_prompt`, no
-  endpoint); go to Phase 2.
+- Has **no service at all** → `--type agent` with `llm.model` + `system_prompt`;
+  go to Phase 2.
 
 ### Phase 1.5: Expose an endpoint from the codebase
 
@@ -96,12 +96,12 @@ When the user points you at a codebase instead of a URL, load
    call and returns `{"response": ...}` (+ `tool_calls` if the agent emits them).
    Show the diff; the user applies and deploys it.
 3. **Infer auth from the code** — scan routes/middleware for the header + scheme.
-   If the code requires none, create the agent with **no** `headers` and don't
+   If the code requires none, create the agent with **no** `agent_headers` and don't
    ask. If it reads a secret from an env var, set the header and ask **only** for
    that value. Never ask a blanket "are there headers?".
-4. Ask only for the **deploy base URL** (the code can't know it); the endpoint is
+4. Ask only for the **deploy base URL** (the code can't know it); the `agent_url` is
    `<base-url>/calibrate/test` (or the existing route's path). Then continue to
-   Phase 2 with `endpoint` + inferred `headers`.
+   Phase 2 with `agent_url` + inferred `agent_headers`.
 
 ## Phase 2: Create
 
@@ -116,7 +116,7 @@ Agent summary
 ```
 
 ```bash
-calibrate agents create --name "<name>" --type <type> --config-param '<json>' --output-format json
+calibrate agents create --name "<name>" --type <agent|connection> --config-param '<json>' --output-format json
 ```
 
 Capture `agent_uuid` from the response.
@@ -130,7 +130,7 @@ calibrate agents verify-connection --agent-uuid <agent_uuid>
 ```
 
 Report the result plainly. On failure, surface the structured error (auth,
-timeout, bad URL) and fix the endpoint/headers with `calibrate agents update`
+timeout, bad URL) and fix `agent_url`/`agent_headers` with `calibrate agents update`
 rather than moving on:
 
 ```bash

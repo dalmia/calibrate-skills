@@ -3,7 +3,9 @@ name: onboard
 description: Guided end-to-end setup for a first Calibrate evaluation — connect an
   agent, build tests, run them, and (optionally) calibrate the judge against
   humans. Orchestrates the feature skills. Use when the user says "get started",
-  "onboard me", "set up Calibrate", "evaluate my agent", or "run my first eval".
+  "onboard me", "set up Calibrate", "evaluate my agent" (and they have no tests
+  yet), or "run my first eval". Prefer run-tests when the user already has
+  tests set up.
 argument-hint: "[what-you-want-to-evaluate]"
 ---
 

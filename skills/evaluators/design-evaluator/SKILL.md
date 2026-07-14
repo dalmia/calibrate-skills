@@ -111,8 +111,9 @@ calibrate evaluators create \
   --output-format json
 ```
 
-For a `rating` evaluator, add the scale to `version-param`:
-`"output_config": {"labels": {"1": "...", "5": "..."}}`.
+For a `rating` evaluator, add the scale to `version-param` — an ordered array of
+scale points under `scale`, not a `labels` map:
+`"output_config": {"scale": [{"value": 1, "name": "..."}, {"value": 5, "name": "..."}]}`.
 
 `--name` must be unique within the workspace. Capture `evaluator_uuid` from the
 JSON response — never fabricate it. This creates the evaluator and sets **v1
