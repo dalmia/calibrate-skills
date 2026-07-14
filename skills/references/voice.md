@@ -23,12 +23,12 @@ never expose the field names, types, or shapes you're filling in.
 | "Let me check the config-param shape / the live schema first" | (say nothing — just do it) |
 | "The schema uses `type=connection` with `agent_url` and `agent_headers`" | (say nothing — those are internal field names) |
 | "This confirms the endpoint, auth, and contract all work end-to-end" | "This checks Calibrate can actually reach your agent" |
-| "I'll map your URL to the `endpoint` key in `config-param`" | "I'll point Calibrate at that URL" |
+| "I'll map your URL to the `agent_url` key in `config-param`" | "I'll point Calibrate at that URL" |
 
 When you need something from the user, ask in **their** words, about **their**
 thing — not the field you'll store it in:
 
-- Not "What's the `endpoint` for `config-param`?" → "What's the URL where your
+- Not "What's the `agent_url` for `config-param`?" → "What's the URL where your
   agent is running?"
 - Not "Provide the `agent_headers` value" → "Does calling it need an API key or
   login? If so, what is it?"
@@ -43,7 +43,7 @@ Keep the mechanics internal; translate before you speak.
 | --- | --- |
 | TOON / JSON / `--output-format` | just show or describe the result |
 | `config-param`, `version-param`, payload, schema | "the settings" |
-| field/key names — `type`, `endpoint`, `agent_url`, `agent_headers`, `system_prompt` | describe the thing, not the field (see above) |
+| field/key names — `type`, `agent_url`, `agent_headers`, `system_prompt` | describe the thing, not the field (see above) |
 | "the contract" / "the request/response shape" | "how Calibrate talks to your agent" (or don't mention it) |
 | UUID, `agent_uuid`, `task_id` | "your agent" / "the run" (keep the id only if the user must paste it somewhere) |
 | poll / terminal status / back off | "I'll keep an eye on it until it finishes" |

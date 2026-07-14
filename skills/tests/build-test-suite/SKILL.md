@@ -89,7 +89,7 @@ calibrate tests bulk-create \
 ```
 
 For a single case, use `create` — `-c/--config-param` is the test config, a JSON
-object with three top-level keys (`history`, `evaluators`, `settings`):
+object with three top-level keys (`history`, `evaluation`, `settings`):
 
 ```bash
 calibrate tests create \

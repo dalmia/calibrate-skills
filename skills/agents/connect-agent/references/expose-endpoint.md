@@ -5,7 +5,7 @@ can reach yet — you add the endpoint for them, infer its auth from the code, a
 only then collect the one thing the code can't tell you: where it's deployed.
 
 Skip all of this when the user already has a live URL — go straight to
-`agents create` with their `endpoint`.
+`agents create` with their `agent_url`.
 
 ## The connection contract
 
@@ -112,7 +112,7 @@ Show the user the diff and let them apply/deploy it. Calibrate can only reach a
 
 ## Infer auth from the code — don't ask blindly
 
-Read the existing routes/middleware to decide what `headers` (if any) the new
+Read the existing routes/middleware to decide what `agent_headers` (if any) the new
 route needs. **Do not ask "are there any headers?"** — infer, then confirm only
 what you genuinely can't resolve.
 
@@ -132,8 +132,8 @@ Decision table:
 
 | What the code shows | What to do |
 | --- | --- |
-| No auth on any route / the route is intentionally public | Create the agent with **no** `headers`. Don't ask. State: "No auth header — the endpoint is open in the code." |
-| A header + scheme, secret from an env var | Set `headers` to `{"<Header>": "<scheme> <value>"}`. Ask **only** for the secret value (the code can't resolve it), then confirm before create. |
+| No auth on any route / the route is intentionally public | Create the agent with **no** `agent_headers`. Don't ask. State: "No auth header — the endpoint is open in the code." |
+| A header + scheme, secret from an env var | Set `agent_headers` to `{"<Header>": "<scheme> <value>"}`. Ask **only** for the secret value (the code can't resolve it), then confirm before create. |
 | Auth present but ambiguous (custom/opaque middleware) | Show the user the exact code you found and ask them to confirm the header name + value. Don't guess. |
 
 Never invent a header the code doesn't require, and never leave off one it does.
@@ -148,5 +148,5 @@ After inspecting the code you should only need:
    this). The endpoint is `<base-url>/calibrate/test` (or wherever you added it).
 2. **Any secret value** the code references but can't resolve — and only that.
 
-Then hand back to Phase 2 of the skill with `endpoint` set to the full URL and
-`headers` set from inference (or omitted entirely when there is no auth).
+Then hand back to Phase 2 of the skill with `agent_url` set to the full URL and
+`agent_headers` set from inference (or omitted entirely when there is no auth).

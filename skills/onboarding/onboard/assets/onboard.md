@@ -4,11 +4,11 @@
 > blurb, not the TODO marker). Resume at the first phase still on TODO. New to the
 > terms? See the Glossary at the bottom.
 
-## Phase 1 — System under test
+## Phase 1 — Describe your agent
 
 *What the agent does, who uses it, where it fails today.*
 
-<!-- TODO: describe the system under test. -->
+<!-- TODO: describe your agent. -->
 
 **agent_uuid:** <!-- filled by /connect-agent -->
 
@@ -44,7 +44,7 @@
 
 ## Glossary
 
-1. **Agent** — the system under test; an endpoint or an internal-LLM config.
+1. **Agent** — the agent you're testing; an endpoint or an internal-LLM config.
 2. **Test** — one conversation the agent processes, plus what passes/fails.
 3. **Evaluator** — the versioned judge that decides pass/fail. `tool_call`
    (deterministic) or `response` (LLM judge against `criteria`).

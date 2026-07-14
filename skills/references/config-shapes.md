@@ -44,21 +44,24 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
   "judge_model": "openai/gpt-4.1",
   "system_prompt": "You are grading whether {{criteria}} holds. Respond ...",
   "variables": [{"name": "criteria", "description": "what must hold", "default": ""}],
-  "output_config": {"labels": {"1": "Wrong", "2": "Correct"}}
+  "output_config": {"scale": [{"value": 1, "name": "Wrong"}, {"value": 2, "name": "Correct"}]}
 }
 ```
 
 - `data-type`: `text` or `audio` (modality the judge reads).
 - `output-type`: `binary` (Correct/Wrong) or `rating` (a labeled scale — set
   `output_config`).
+- `output_config` is `{"scale": [{value, name, description?, color?}, ...]}` — an
+  ordered array of scale points, **not** a `labels` map. `value` is a boolean for
+  a `binary` evaluator, a number for a `rating` one.
 - Variable names are **frozen after v1** — later versions may change a
   variable's description/default but cannot add, remove, or rename one.
 
 ## Agent (`agents create --config-param`)
 
 See [`agents/connect-agent/references/connection-types.md`](../agents/connect-agent/references/connection-types.md).
-Internal-LLM agents carry `model` + `system_prompt` (+ optional `tools`);
-external agents carry `agent_url` (+ optional `agent_headers`, `timeout`).
+`type=agent` (built inside Calibrate) carries `system_prompt` + `llm.model` (+ optional `stt`, `tts`, `settings`);
+`type=connection` (your own HTTP endpoint) carries `agent_url` (+ optional `agent_headers`, `benchmark_provider`).
 
 ## Annotation item (`annotation-tasks add-items --items`)
 
