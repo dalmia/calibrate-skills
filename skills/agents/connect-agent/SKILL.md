@@ -116,7 +116,7 @@ Agent summary
 ```
 
 ```bash
-calibrate agents create --name "<name>" --config-param '<json>' --output-format json
+calibrate agents create --name "<name>" --type <type> --config-param '<json>' --output-format json
 ```
 
 Capture `agent_uuid` from the response.
