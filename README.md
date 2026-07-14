@@ -43,25 +43,38 @@ public API has no such resource:
 
 ## Quick start
 
+Pick the command for your agent — without `--agent`, the installer picks
+whichever agent it detects first, which may not be the one you want:
+
 ```bash
-# Install all Calibrate skills (works with Claude Code, Cursor, Windsurf, Codex, and 40+ agents)
-npx skills add dalmia/calibrate-skills
+# Claude Code (global — available in all projects)
+npx skills add dalmia/calibrate-skills --agent claude-code -g
 
-# Install the Calibrate CLI
-brew install dalmia/tap/calibrate
+# Cursor
+npx skills add dalmia/calibrate-skills --agent cursor
 
-# Authenticate (API key from Workspace settings -> API keys)
-calibrate login
+# Windsurf
+npx skills add dalmia/calibrate-skills --agent windsurf
 
-# In your agent, run the guided onboarding skill
-/onboard
+# Codex
+npx skills add dalmia/calibrate-skills --agent codex
 ```
+
+Then install the CLI, authenticate, and run the guided onboarding skill:
+
+```bash
+brew install dalmia/tap/calibrate
+calibrate login          # API key from Workspace settings → API keys
+```
+
+> **Claude Code:** restart your session (or open a new one) after installing so
+> the skills are picked up. Then run `/onboard` to get started.
 
 Install a single skill instead of all of them, or list what's available:
 
 ```bash
 npx skills list dalmia/calibrate-skills
-npx skills add dalmia/calibrate-skills/onboard
+npx skills add dalmia/calibrate-skills/onboard --agent claude-code -g
 ```
 
 ### Manual installation
