@@ -47,7 +47,7 @@ Pick the command for your agent — without `--agent`, the installer picks
 whichever agent it detects first, which may not be the one you want:
 
 ```bash
-# Claude Code (global — available in all projects)
+# Claude Code
 npx skills add dalmia/calibrate-skills --agent claude-code -g
 
 # Cursor
