@@ -58,7 +58,7 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
 
 See [`agents/connect-agent/references/connection-types.md`](../agents/connect-agent/references/connection-types.md).
 Internal-LLM agents carry `model` + `system_prompt` (+ optional `tools`);
-external agents carry `endpoint` (+ optional `headers`, `timeout`).
+external agents carry `agent_url` (+ optional `agent_headers`, `timeout`).
 
 ## Annotation item (`annotation-tasks add-items --items`)
 
