@@ -60,15 +60,14 @@ npx skills add dalmia/calibrate-skills --agent windsurf
 npx skills add dalmia/calibrate-skills --agent codex
 ```
 
+If the skills are installed correctly, you should see a new `/onboard` skill along with a few other skills mentioned [here](https://calibrate.artpark.ai/docs/agents/skills#available-skills). If the skills don't appear instantly, restart your session and open a new chat session after installing so the skills are picked up.
+
 Then install the CLI, authenticate, and run the guided onboarding skill:
 
 ```bash
 brew install dalmia/tap/calibrate
 calibrate login          # API key from Workspace settings → API keys
 ```
-
-> **Claude Code:** restart your session (or open a new one) after installing so
-> the skills are picked up. Then run `/onboard` to get started.
 
 Install a single skill instead of all of them, or list what's available:
 
