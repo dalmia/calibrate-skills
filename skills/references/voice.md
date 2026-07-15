@@ -47,7 +47,6 @@ Keep the mechanics internal; translate before you speak.
 | "the contract" / "the request/response shape" | "how Calibrate talks to your agent" (or don't mention it) |
 | UUID, `agent_uuid`, `task_id` | "your agent" / "the run" (keep the id only if the user must paste it somewhere) |
 | poll / terminal status / back off | "I'll keep an eye on it until it finishes" |
-| fork / workspace copy of a default / `source_default_slug` | just "an evaluator you can edit" — a default is nothing special to the user; don't mention copies or forks |
 | structured error / stderr | say what went wrong in plain words |
 | the `calibrate` binary | "the `calibrate` command" |
 | preflight | "a quick setup check" |
