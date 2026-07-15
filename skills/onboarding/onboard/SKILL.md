@@ -61,7 +61,7 @@ the instructions, not the `calibrate` command itself — if it's missing, have t
 
 ```bash
 command -v calibrate >/dev/null || echo "calibrate CLI not installed — brew install dalmia/tap/calibrate"
-calibrate whoami   # else: calibrate login
+calibrate agents list   # real read — 401 (not signed in / wrong deployment) → calibrate login
 ```
 
 Before that first login, confirm which Calibrate the user is on — the hosted
