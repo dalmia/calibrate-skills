@@ -132,7 +132,9 @@ Highlight regressions (cases that passed before and now fail) and new passes.
 
 ## Handoffs
 
-- **No tests, or not enough** → `/build-test-suite` or `/import-dataset`
+- **Understand *why* cases failed** → `/analyze-failures`
+- **No tests, or not enough** → `/build-test-suite`, `/generate-synthetic-data`,
+  or `/import-dataset`
 - **Compare models on these tests** → `/benchmark-models`
 - **Is the judge trustworthy?** → `/calibrate-evaluator`
 - **Tune the judge** → `/iterate-evaluator`

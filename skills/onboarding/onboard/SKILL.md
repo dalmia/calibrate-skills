@@ -82,12 +82,21 @@ summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate:
 
 ## Phase 2 — Turn goals into tests
 
-Turn the goal into a falsifiable claim ("when the user gives an ORD-\d+ id, the
-agent calls `check_order` with that id"). Write it into **Phase 2**. Then:
+First, **design before building**. Turn the goal into falsifiable claims and
+decide what to measure and how — actions become `tool_call` tests, response
+quality splits into independent dimensions each with its own judge:
 
-→ **`/build-test-suite`** (or **`/import-dataset`** if they already have a
-dataset). Name the evaluator type per case as you go: `tool_call` = deterministic
-and free; `response` = needs a judge. Record the `test_uuids`.
+→ **`/design-eval-plan`** — interview, produce a minimal spec. Skip only if the
+user already knows exactly what they want to test. Write the plan summary into
+**Phase 2**.
+
+Then build the first set from that plan:
+
+→ **`/build-test-suite`** (or **`/generate-synthetic-data`** for a diverse batch
+from dimensions, or **`/import-dataset`** if they already have a dataset). Name
+the test type per case as you go: `tool_call` = deterministic and free;
+`response` = needs a judge of type `llm` (a reply with its conversation history,
+**not** `llm-general`). Record the `test_uuids`.
 
 ## Phase 3 — Evaluators (only if needed)
 
@@ -99,7 +108,9 @@ If any case judges response quality, it needs an evaluator:
 ## Phase 4 — Run
 
 → **`/run-tests`** — link tests to the agent, run, poll, and read results.
-Present **failures first**. Record the `task_id` and outcome in **Phase 4**.
+Present **failures first**. Record the `task_id` and outcome in **Phase 4**. If
+there are more than a couple of failures, hand to **`/analyze-failures`** to
+group them by cause and decide what to fix, rather than reacting case by case.
 
 ## Phase 5 — Calibrate the judge (offer, don't force)
 
@@ -123,8 +134,9 @@ locally. Don't force it — only when the signal is there.
 
 Evaluation is a loop, not a line. After Phase 4, expect one of:
 
-- **Expand the test set** — a defect surfaced or coverage is thin → back to
-  Phase 2 (`/build-test-suite`), re-run.
+- **Expand the test set** — a defect surfaced or coverage is thin → read the
+  failures with `/analyze-failures`, then back to Phase 2 (`/build-test-suite`
+  or `/generate-synthetic-data`), re-run.
 - **Tune the hypothesis** — the bar is too loose/strict → edit Phase 2, re-run.
 - **Add a model** — → Phase 6 (`/benchmark-models`).
 - **Tune the judge** — agreement too low → `/iterate-evaluator` +

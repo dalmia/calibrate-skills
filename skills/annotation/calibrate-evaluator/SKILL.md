@@ -38,7 +38,10 @@ If the user gave a name, `calibrate evaluators list` to find the UUID first.
 
 Gather 20–50 items the evaluator will judge. Real agent outputs are best — pull
 them from a recent run (`calibrate agent-tests get-run --task-id <t>`). Fewer
-than ~20 makes the agreement number noisy; more is steadier.
+than ~20 makes the agreement number noisy; more is steadier. Deliberately
+include **both** outputs that should pass and outputs that should fail — a sample
+that's almost all passes can't tell you whether the judge catches failures
+(Phase 4).
 
 Create the task and link the evaluator:
 
@@ -110,7 +113,22 @@ Read agreement two ways:
   ceiling, **not** against 100%. A judge that matches humans as often as humans
   match each other is as good as it can get.
 
-Report both numbers plainly. Never fabricate — if the run didn't finish, say so.
+Don't stop at one overall number. A judge can look agreeable overall while being
+blind to one class — so read the two error directions separately (the framing in
+hamelsmu's *validate-evaluator*, https://github.com/hamelsmu/evals-skills):
+
+- **true-positive rate** — of the cases humans passed, how many did the judge
+  pass? A low rate means the judge is too harsh (false failures).
+- **true-negative rate** — of the cases humans failed, how many did the judge
+  fail? A low rate means the judge is too lenient (it rubber-stamps bad output)
+  — usually the more dangerous error.
+
+This especially matters when the sample is **imbalanced**: if 90% of items pass,
+a judge that blindly passes everything scores 90% agreement while catching zero
+real failures. Make sure the sample has enough of both classes to measure both
+rates, and report them separately, not just the headline agreement.
+
+Report the numbers plainly. Never fabricate — if the run didn't finish, say so.
 
 ## Phase 5: Tune and re-check (the loop)
 

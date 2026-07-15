@@ -17,17 +17,23 @@ the automated scores are trustworthy.
 | --- | --- | --- |
 | Overview | [calibrate-resources](skills/overview/calibrate-resources/) | Orientation: primitives, CLI, auth, which skill to use |
 | Onboarding | [onboard](skills/onboarding/onboard/) | Guided end-to-end first evaluation (orchestrator) |
+| Design | [design-eval-plan](skills/design/design-eval-plan/) | Interview the user and design a minimal eval spec before building |
 | Agents | [connect-agent](skills/agents/connect-agent/) | Create an agent on Calibrate or connect your existing agent |
-| Tests | [build-test-suite](skills/tests/build-test-suite/) | Author test cases (`tool_call` / `response`) and upload |
+| Tests | [build-test-suite](skills/tests/build-test-suite/) | Author test cases (`response` / `tool_call` / `conversation`) and upload |
+| Tests | [generate-synthetic-data](skills/tests/generate-synthetic-data/) | Create diverse test inputs by combining dimensions |
 | Tests | [import-dataset](skills/tests/import-dataset/) | Turn a CSV / JSONL / HuggingFace dataset into tests |
 | Agent tests | [run-tests](skills/agent-tests/run-tests/) | Link tests to an agent, run, and read pass/fail |
+| Agent tests | [analyze-failures](skills/agent-tests/analyze-failures/) | Group a run's failures by cause and decide what to fix |
 | Agent tests | [benchmark-models](skills/agent-tests/benchmark-models/) | Compare models on the agent's tests (leaderboard) |
 | Evaluators | [design-evaluator](skills/evaluators/design-evaluator/) | Create a versioned LLM/audio judge (binary/rating) |
 | Evaluators | [iterate-evaluator](skills/evaluators/iterate-evaluator/) | Add/tune an evaluator version and pin it live |
 | Annotation | [calibrate-evaluator](skills/annotation/calibrate-evaluator/) | Measure human↔judge agreement and tune the judge |
+| Audit | [eval-audit](skills/audit/eval-audit/) | Review an existing setup and surface problems, worst first |
 
-Shared references live in [`skills/references/`](skills/references/)
-(`agent-mode.md`, `config-shapes.md`) and are linked from the skills.
+Shared references live in [`skills/references/`](skills/references/) and are
+linked from the skills: `agent-mode.md` (reading CLI output), `config-shapes.md`
+(payload shapes), `methodology.md` (how to design an eval), `judge-prompts.md`
+(writing an LLM judge), and `voice.md` (how the agent speaks to the user).
 
 Each skill maps to one of Calibrate's public API resources — and, deliberately,
 there is no persona, simulation, trace, dashboard, or report skill, because the
@@ -36,10 +42,13 @@ public API has no such resource:
 | Primitive | CLI group | Skills |
 | --- | --- | --- |
 | Agent | `agents` | connect-agent |
-| Test | `tests` | build-test-suite, import-dataset |
-| Agent-test | `agent-tests` | run-tests, benchmark-models |
+| Test | `tests` | build-test-suite, generate-synthetic-data, import-dataset |
+| Agent-test | `agent-tests` | run-tests, analyze-failures, benchmark-models |
 | Evaluator | `evaluators` | design-evaluator, iterate-evaluator |
 | Annotation task | `annotation-tasks` | calibrate-evaluator |
+
+`design-eval-plan` (design) and `eval-audit` (audit) are cross-cutting — they
+reason about the whole setup rather than mapping to a single primitive.
 
 ## Quick start
 
@@ -133,6 +142,25 @@ Full interactive reference: [calibrate.artpark.ai/api-reference](https://calibra
 
 See [calibrate.artpark.ai](https://calibrate.artpark.ai) for the full Calibrate
 documentation, CLI reference, and API keys guide.
+
+## Credits
+
+Several skills adapt ideas from
+[**hamelsmu/evals-skills**](https://github.com/hamelsmu/evals-skills) (MIT), a
+companion to the *AI Evals for Engineers & PMs* course — specifically its
+`eval-audit`, `error-analysis`, `generate-synthetic-data`, `write-judge-prompt`,
+and `validate-evaluator` skills. Here they're mapped onto Calibrate's primitives:
+`eval-audit` and `analyze-failures` (error-analysis) and `generate-synthetic-data`
+are standalone skills; `write-judge-prompt` lives in
+[`references/judge-prompts.md`](skills/references/judge-prompts.md) (used by
+`design-evaluator`/`iterate-evaluator`) and `validate-evaluator` is folded into
+`calibrate-evaluator`.
+
+The eval-design methodology in
+[`references/methodology.md`](skills/references/methodology.md) — scoring each
+independent quality dimension with its own judge, choosing match types by output
+shape, and designing unit tests on ideal inputs — draws on the FormBharo /
+FormVoiceAgentBench work on evaluating conversational agents.
 
 ## License
 

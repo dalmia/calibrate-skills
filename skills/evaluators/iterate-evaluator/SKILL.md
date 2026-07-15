@@ -19,8 +19,10 @@ Built-in **default** evaluators are editable too, not just ones you authored —
 tune them with the same flow below. So "the judge is wrong on X" is fixable even
 when the judge is one of the defaults.
 
-Reference: [`../../references/config-shapes.md`](../../references/config-shapes.md)
-(evaluator version + variable shapes). Keep what you *say* to the user plain —
+References: [`../../references/config-shapes.md`](../../references/config-shapes.md)
+(evaluator version + variable shapes) and
+[`../../references/judge-prompts.md`](../../references/judge-prompts.md) (the
+rules for rewriting the judge prompt). Keep what you *say* to the user plain —
 see [`../../references/voice.md`](../../references/voice.md).
 
 This skill is the version-mechanics half of the calibration loop in
@@ -69,9 +71,12 @@ grounded case, hand back to `/calibrate-evaluator` to produce one.
 
 ## Phase 2: Draft the new version
 
-Rewrite the `system_prompt` so it would score the failing cases correctly, and
-confirm the draft with the user. Hold these fixed unless they're the actual
-problem:
+Rewrite the `system_prompt` so it would score the failing cases correctly,
+following the judge-prompt rules in
+[`../../references/judge-prompts.md`](../../references/judge-prompts.md) — most
+often the fix is a sharper pass/fail bar or a boundary example covering exactly
+the case it got wrong. Confirm the draft with the user. Hold these fixed unless
+they're the actual problem:
 
 - **Variable names** — frozen after v1. You may change a variable's
   `description` or `default`, but you **cannot add, remove, or rename** one. If
