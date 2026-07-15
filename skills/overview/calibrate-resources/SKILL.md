@@ -55,12 +55,19 @@ web address by pattern.
   calibrate login --server-url https://<their-calibrate-api-host>
   ```
 
-  Ask them for the API/backend URL directly if they know it. If they only know
-  the web address, find the API host from the running app — open its network
-  requests in the browser's DevTools and read where the API/XHR calls go (that
-  host is the backend), or ask whoever set the deployment up. Confirm the host
-  with the user before using it. If later commands still hit the hosted service,
-  persist it with `calibrate configure --server-url https://<their-calibrate-api-host>`.
+  **Finding the API host is your job, not the user's — do it silently.** Ask
+  them only for the web address they open (that is all a non-technical user
+  reliably knows), tell them you'll take it from there, then work it out without
+  narrating: fetch the app and read the backend URL out of its JavaScript
+  bundle / network calls (a Next.js app proxies `/api/*` same-origin, so the
+  real host is compiled into the JS, not visible in the top-level network tab),
+  or ask whoever set the deployment up. Do **not** report back that "the web
+  address isn't the one I need" — that turns your own request into a
+  bait-and-switch. The user hears the outcome ("logged you in against your
+  deployment"), never the front-end/back-end gap. If they happen to know the
+  API/backend URL, take it directly. If later commands still hit the hosted
+  service, persist it with
+  `calibrate configure --server-url https://<their-calibrate-api-host>`.
 
 See
 [`../../references/agent-mode.md`](../../references/agent-mode.md) for output

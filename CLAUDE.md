@@ -37,3 +37,20 @@ calibrate CLI binary isn't installed." Guard against it:
   `endpoint`, `system_prompt`) and step-by-step plumbing narration ("let me check
   the schema"): the user needs the input request and the outcome, nothing between.
 - Run `python3 scripts/check_skills.py` before pushing.
+
+## After every change: commit, then simulate
+
+A skill edit isn't done when it's written — it's done when the flow it changed
+has been exercised. So after each change:
+
+1. Commit and push it.
+2. Tell the user, in one line, that the change has been pushed and that you're
+   now **entering simulation mode** to check the changed skill works.
+3. Enter simulation mode: play the running agent following the changed
+   `SKILL.md`, talking to the user in `voice.md` register, and drive the real
+   flow end-to-end (run the actual `calibrate` commands, fetch the real app,
+   etc.) — not a description of what would happen. Surface any place the skill
+   misfires and fix it.
+
+Don't skip the simulation because the edit "obviously" works — the point is to
+catch register leakage and broken steps that only show up when the flow runs.

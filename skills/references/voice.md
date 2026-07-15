@@ -36,10 +36,15 @@ thing — not the field you'll store it in:
   instructions should the agent follow?"
 - Not "Are you on a self-hosted deployment — what's the `--server-url`?" → "Do
   you use Calibrate at calibrate.artpark.ai, or does your team run its own copy
-  somewhere?" The web address they answer with is the **frontend**; the CLI needs
-  the **backend API host**, which is a different URL — find that yourself (from
-  the app's network calls or whoever deployed it) rather than feeding the web
-  address to `--server-url`. Don't make the user reason about front vs back end.
+  somewhere?" — and for their own copy, "just give me the address you open it at,
+  I'll take it from there." Then **go silent and take it from there**: the CLI
+  needs the backend API host, a different URL, but that is your problem to solve
+  (dig it out of the app yourself — see *Which Calibrate* in
+  [`calibrate-resources`](../overview/calibrate-resources/SKILL.md)). Do **not**
+  come back and tell them "that's the web address, I actually need a different
+  one" — that turns your own request into a bait-and-switch. The user gave you
+  what you asked for; the next thing they hear is the outcome ("logged you in
+  against your deployment"), never the front-end/back-end gap in between.
 
 ## Never say these out loud
 
