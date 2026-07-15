@@ -46,12 +46,11 @@ or tune a built-in default instead of authoring from scratch:
 calibrate evaluators list --output-format json
 ```
 
-The list includes the built-in defaults (and any of your own copies of them).
-If a judge already covers the intent, present it and ask whether to reuse it
-(hand to `/build-test-suite`) rather than create another. If a default is close
-but its rubric needs adjusting, don't rebuild it here — defaults are editable, so
-hand to `/iterate-evaluator` to tune it (the first edit forks your workspace's
-own copy of that default). Author from scratch only when no default is close.
+The list includes the built-in defaults. If a judge already covers the intent,
+present it and ask whether to reuse it (hand to `/build-test-suite`) rather than
+create another. If a default is close but its rubric needs adjusting, don't
+rebuild it here — defaults are editable, so hand to `/iterate-evaluator` to tune
+it. Author from scratch only when no default is close.
 
 ## Phase 1: Decide what it judges
 

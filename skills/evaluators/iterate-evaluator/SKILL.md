@@ -15,14 +15,9 @@ comparison and rollback. Drives the `calibrate evaluators` commands. Ask at each
 step; if `$ARGUMENTS` already carries a UUID or name, pre-fill it and skip the
 lookup.
 
-This works on the **built-in default** evaluators too, not just ones you
-authored — defaults are editable. The first time you add a version to a default,
-Calibrate forks it into your workspace's own copy (`source_default_slug` marks
-which default it came from); the shared default is left intact, and your copy
-carries its own version history from there. So "the judge is wrong on X" is
-fixable even when the judge is one of the defaults — just resolve it and run the
-same flow below. (Keep "fork"/"copy" internal — to the user it's just "your own
-copy of the built-in judge.")
+Built-in **default** evaluators are editable too, not just ones you authored —
+tune them with the same flow below. So "the judge is wrong on X" is fixable even
+when the judge is one of the defaults.
 
 Reference: [`../../references/config-shapes.md`](../../references/config-shapes.md)
 (evaluator version + variable shapes). Keep what you *say* to the user plain —
