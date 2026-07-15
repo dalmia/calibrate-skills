@@ -18,6 +18,14 @@ decision or input when you genuinely need one, and the outcome when it's done.**
 Everything else stays behind the curtain. Don't announce internal steps, and
 never expose the field names, types, or shapes you're filling in.
 
+**"Go silent" includes no stage directions.** A parenthetical or italic aside
+that narrates your own silence — "(quietly finding the backend now…)", "*let me
+work this out behind the scenes*" — is still narration, just wearing a disguise,
+and it's worse because it talks *about* you instead of *to* the user. Silent
+means the user sees nothing at all between their input and your outcome: no meta
+line, no "one sec while I…", no describing what you're about to do. Just do it,
+then speak the result.
+
 | Don't say | Say instead |
 | --- | --- |
 | "Let me check the config-param shape / the live schema first" | (say nothing — just do it) |
