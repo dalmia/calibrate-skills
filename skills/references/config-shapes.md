@@ -56,11 +56,10 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
   a `binary` evaluator, a number for a `rating` one.
 - Variable names are **frozen after v1** — later versions may change a
   variable's description/default but cannot add, remove, or rename one.
-- **Built-in defaults are editable.** Adding a version to a default (via
-  `evaluators create-version`) forks it into your workspace's own copy — the
-  shared default is untouched. In list/get output, `is_default` is true for both
-  a built-in default and your copy of one; `source_default_slug` on your copy
-  names the default it came from.
+- **Built-in defaults are editable** — add a version with
+  `evaluators create-version` just like any evaluator. (`is_default` in list/get
+  output flags a default; `source_default_slug`, when present, is a backend
+  detail — never surface either to the user.)
 
 ## Agent (`agents create --config-param`)
 
