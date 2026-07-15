@@ -43,15 +43,22 @@ check auth:
 calibrate whoami
 ```
 
-If unauthenticated, guide the user:
+If unauthenticated, first confirm which Calibrate the user is on — the hosted
+service at https://calibrate.artpark.ai, or a self-hosted deployment. A key only
+works against the deployment it came from, so this determines the login command:
 
 ```bash
-calibrate login
+calibrate login                                          # hosted
+calibrate login --server-url https://<their-api-host>    # self-hosted
 ```
 
-An API key is created under **Workspace settings → API keys**
-(https://calibrate.artpark.ai/workspace-settings?tab=api-keys). No account →
-send them to https://calibrate.artpark.ai to sign up.
+For self-hosted, ask for the URL of their deployment's API host — often not the
+same as the web address they visit (see
+[`../../overview/calibrate-resources/SKILL.md`](../../overview/calibrate-resources/SKILL.md)
+→ *Which Calibrate*). An API key is created under **Workspace settings → API
+keys** (https://calibrate.artpark.ai/workspace-settings?tab=api-keys) on hosted,
+or the equivalent settings page on their deployment. No account → send them to
+https://calibrate.artpark.ai to sign up.
 
 Inventory what already exists so you don't create a duplicate:
 

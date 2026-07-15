@@ -64,6 +64,13 @@ command -v calibrate >/dev/null || echo "calibrate CLI not installed — brew in
 calibrate whoami   # else: calibrate login
 ```
 
+Before that first login, confirm which Calibrate the user is on — the hosted
+service at https://calibrate.artpark.ai, or a self-hosted deployment. A key from
+one won't validate against the other. For self-hosted, get their deployment's
+API host and `calibrate login --server-url https://<their-calibrate-api-host>`.
+See [`calibrate-resources`](../../overview/calibrate-resources/SKILL.md)
+→ *Which Calibrate* for the details and the API-host-vs-web-address gotcha.
+
 ## Phase 1 — Describe your agent
 
 Ask what the agent does, who uses it, and where it fails today. Write a short

@@ -34,6 +34,12 @@ thing — not the field you'll store it in:
   login? If so, what is it?"
 - Not "Give me the `system_prompt` for the internal-LLM config" → "What
   instructions should the agent follow?"
+- Not "Are you on a self-hosted deployment — what's the `--server-url`?" → "Do
+  you use Calibrate at calibrate.artpark.ai, or does your team run its own copy
+  somewhere?" The web address they answer with is the **frontend**; the CLI needs
+  the **backend API host**, which is a different URL — find that yourself (from
+  the app's network calls or whoever deployed it) rather than feeding the web
+  address to `--server-url`. Don't make the user reason about front vs back end.
 
 ## Never say these out loud
 
