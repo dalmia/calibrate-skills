@@ -19,8 +19,14 @@ drive the `calibrate` CLI against the public API.
 ```bash
 brew install dalmia/tap/calibrate    # install the CLI
 calibrate login                      # authenticate (API key from workspace settings)
-calibrate whoami                     # confirm auth
+calibrate agents list                # confirm auth with a real call
 ```
+
+**Confirm auth with a real read, not `whoami`.** `calibrate whoami` only prints
+the locally configured key and its source — it never calls the server, so it
+"passes" even when the key is invalid or belongs to a different deployment. Use a
+real read like `calibrate agents list`: a `401` there means not signed in, or a
+key for the wrong deployment (see *Which Calibrate* below).
 
 API key: **Workspace settings → API keys**
 (https://calibrate.artpark.ai/workspace-settings?tab=api-keys).

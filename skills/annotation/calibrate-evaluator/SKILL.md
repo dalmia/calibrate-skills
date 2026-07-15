@@ -23,7 +23,7 @@ References: [`../../references/agent-mode.md`](../../references/agent-mode.md)
 ## Phase 0: Setup check
 
 ```bash
-calibrate whoami
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 Resolve the target evaluator and confirm its live version + data-type:

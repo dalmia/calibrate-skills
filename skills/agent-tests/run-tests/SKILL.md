@@ -23,7 +23,7 @@ what you *say* to the user plain — see
 ## Phase 0: Setup check
 
 ```bash
-calibrate whoami
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user to `calibrate login` and stop until they are

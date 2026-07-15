@@ -40,7 +40,7 @@ brew install dalmia/tap/calibrate
 check auth:
 
 ```bash
-calibrate whoami
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, first confirm which Calibrate the user is on — the hosted
