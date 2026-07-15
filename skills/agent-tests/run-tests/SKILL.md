@@ -27,7 +27,11 @@ calibrate whoami
 ```
 
 If unauthenticated, guide the user to `calibrate login` and stop until they are
-signed in.
+signed in. Confirm first whether they're on the hosted service
+(https://calibrate.artpark.ai) or a self-hosted deployment — the latter needs
+`calibrate login --server-url https://<their-api-host>`, or its key will 401.
+See [`../../overview/calibrate-resources/SKILL.md`](../../overview/calibrate-resources/SKILL.md)
+→ *Which Calibrate*.
 
 Resolve the agent. If `$ARGUMENTS` is already a UUID, use it. If it's a name, or
 you need to pick one:
