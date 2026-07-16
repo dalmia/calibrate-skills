@@ -23,13 +23,14 @@ what you *say* to the user plain — see
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or (self-hosted) --server-url is missing
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user to `calibrate login` and stop until they are
 signed in. Confirm first whether they're on the hosted service
 (https://calibrate.artpark.ai) or a self-hosted deployment — the latter needs
-`calibrate login --server-url https://<their-api-host>`, or its key will 401.
+`calibrate configure --no-interactive --server-url https://<their-api-host>` set
+once *before* `calibrate login`, or its key will 401.
 See [`../../overview/calibrate-resources/SKILL.md`](../../overview/calibrate-resources/SKILL.md)
 → *Which Calibrate*.
 

@@ -66,9 +66,10 @@ calibrate agents list   # real read — 401 (not signed in / wrong deployment) �
 
 Before that first login, confirm which Calibrate the user is on — the hosted
 service at https://calibrate.artpark.ai, or a self-hosted deployment. A key from
-one won't validate against the other. For self-hosted, get their deployment's
-API host and `calibrate login --server-url https://<their-calibrate-api-host>`.
-See [`calibrate-resources`](../../overview/calibrate-resources/SKILL.md)
+one won't validate against the other. For self-hosted, find their deployment's
+API host and point the CLI at it *before* logging in:
+`calibrate configure --no-interactive --server-url https://<their-calibrate-api-host>`,
+then `calibrate login`. See [`calibrate-resources`](../../overview/calibrate-resources/SKILL.md)
 → *Which Calibrate* for the details and the API-host-vs-web-address gotcha.
 
 ## Phase 1 — Describe your agent
