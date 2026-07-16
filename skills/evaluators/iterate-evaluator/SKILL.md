@@ -31,7 +31,7 @@ changes it. Measure before and after with `/calibrate-evaluator`.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or (self-hosted) --server-url is missing
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, `calibrate login`.

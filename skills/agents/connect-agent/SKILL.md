@@ -40,19 +40,21 @@ brew install dalmia/tap/calibrate
 check auth:
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or (self-hosted) --server-url is missing
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, first confirm which Calibrate the user is on — the hosted
 service at https://calibrate.artpark.ai, or a self-hosted deployment. A key only
-works against the deployment it came from, so this determines the login command:
+works against the deployment it came from, so this determines how they log in:
 
 ```bash
-calibrate login                                          # hosted
-calibrate login --server-url https://<their-api-host>    # self-hosted
+calibrate login                                                            # hosted
+# self-hosted: point the CLI at their backend once, then log in
+calibrate configure --no-interactive --server-url https://<their-api-host>
+calibrate login
 ```
 
-For self-hosted, ask for the URL of their deployment's API host — often not the
+For self-hosted, find the URL of their deployment's API host — often not the
 same as the web address they visit (see
 [`../../overview/calibrate-resources/SKILL.md`](../../overview/calibrate-resources/SKILL.md)
 → *Which Calibrate*). An API key is created under **Workspace settings → API

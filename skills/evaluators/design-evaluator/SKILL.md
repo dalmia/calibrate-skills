@@ -26,7 +26,7 @@ one of which is live. Here you author v1. Later tuning is a separate flow
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or (self-hosted) --server-url is missing
+calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user:

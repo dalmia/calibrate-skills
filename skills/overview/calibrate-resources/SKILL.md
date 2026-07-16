@@ -22,11 +22,12 @@ calibrate login                      # authenticate (API key from workspace sett
 calibrate agents list                # confirm auth with a real call
 ```
 
-**Confirm auth with a real read, not `whoami`.** `calibrate whoami` only prints
-the locally configured key and its source — it never calls the server, so it
-"passes" even when the key is invalid or belongs to a different deployment. Use a
-real read like `calibrate agents list`: a `401` there means not signed in, or a
-key for the wrong deployment (see *Which Calibrate* below).
+**Confirm the *key works* with a real read, not `whoami`.** `calibrate whoami`
+prints the resolved server URL and the configured key's source — useful for
+checking *which* host and key are in play — but it never calls the server, so it
+can't tell you the key is actually valid. For that, use a real read like
+`calibrate agents list`: a `401` there means not signed in, or a key for the
+wrong deployment (see *Which Calibrate* below).
 
 API key: **Workspace settings → API keys**
 (https://calibrate.artpark.ai/workspace-settings?tab=api-keys).
@@ -54,12 +55,24 @@ web address by pattern.
 
 - **Hosted at https://calibrate.artpark.ai** — the CLI already defaults to the
   hosted API host, so plain `calibrate login` works; nothing extra to do.
-- **Self-hosted** — the user's team runs its own Calibrate. You need their
-  deployment's **API host**, then:
+- **Self-hosted** — the user's team runs its own Calibrate. Point the CLI at
+  their **API host** once with `configure` (it persists to
+  `~/.config/calibrate/config.yaml`), then have them log in — the key is then
+  validated against, and every later command reaches, their backend with no
+  repeated flags:
 
   ```bash
-  calibrate login --server-url https://<their-calibrate-api-host>
+  calibrate configure --no-interactive --server-url https://<their-calibrate-api-host>
+  calibrate login        # then have the user log in / paste their key
+  calibrate agents list  # verify: empty list (200) = success; 401 = key not valid there
   ```
+
+  **Order matters: `configure` the host *before* `login`.** Do the `configure`
+  step yourself once you've found the host (it's just the URL, not a secret); the
+  key is the user's to enter. Resolution is flag > env > config, so a one-off
+  `--server-url …` or `CALIBRATE_SERVER_URL` still overrides per call, and
+  `calibrate whoami` shows the resolved URL and where it came from — use it to
+  confirm the host landed.
 
   **Finding the API host is your job, not the user's — do it silently.** Ask
   them only for the web address they open (that is all a non-technical user
@@ -71,25 +84,9 @@ web address by pattern.
   address isn't the one I need" — that turns your own request into a
   bait-and-switch. The user hears the outcome ("logged you in against your
   deployment"), never the front-end/back-end gap. If they happen to know the
-  API/backend URL, take it directly.
-
-  **The host does not persist — every command needs `--server-url`.** Login
-  stores the *key* (in the keychain, reused automatically — you never pass it
-  again), but it does **not** remember the host. A later `calibrate agents list`
-  with no flag falls back to the hosted default and 401s. So for a self-hosted
-  user, `--server-url https://<their-calibrate-api-host>` must ride on **every**
-  `calibrate` call in the flow — the auth check, listing, running tests, all of
-  it — while the key is supplied once and reused:
-
-  ```bash
-  calibrate login       --server-url https://<their-calibrate-api-host>   # key stored once
-  calibrate agents list --server-url https://<their-calibrate-api-host>   # host repeated
-  ```
-
-  To avoid repeating the flag, the host *can* be persisted with
-  `calibrate configure --server-url …` or a `CALIBRATE_SERVER_URL` env var — but
-  that rewrites the user's global CLI config, so **don't do it without asking**;
-  default to threading the flag through each command instead.
+  API/backend URL, take it directly. Once `configure` has set the host, the key
+  is stored by `login` and the host by config, so plain commands (no flag) reach
+  their deployment from then on.
 
 See
 [`../../references/agent-mode.md`](../../references/agent-mode.md) for output
