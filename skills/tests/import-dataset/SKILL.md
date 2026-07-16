@@ -23,7 +23,7 @@ exact test-item shape. Keep what you *say* to the user plain — see
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list   # real read — 401 = not signed in, or (self-hosted) --server-url is missing
 ```
 
 If unauthenticated, guide the user:
