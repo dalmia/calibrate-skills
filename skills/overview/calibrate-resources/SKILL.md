@@ -77,11 +77,19 @@ web address by pattern.
   **Finding the API host is your job, not the user's — do it silently.** Ask
   them only for the web address they open (that is all a non-technical user
   reliably knows), tell them you'll take it from there, then work it out without
-  narrating: fetch the app and read the backend URL out of its JavaScript
-  bundle / network calls (a Next.js app proxies `/api/*` same-origin, so the
-  real host is compiled into the JS, not visible in the top-level network tab),
-  or ask whoever set the deployment up. Do **not** report back that "the web
-  address isn't the one I need" — that turns your own request into a
+  narrating. Don't hand-write the search each time — run the helper:
+
+  ```bash
+  scripts/find-backend.sh <web-address>   # best guess on stdout, alternates on stderr
+  host=$(scripts/find-backend.sh <web-address>)   # capture it directly
+  ```
+
+  It fetches the app and its JS (where the backend host is compiled in — a
+  Next.js app proxies `/api/*` same-origin, so it isn't visible in the top-level
+  network tab) and prints the likely API host, preferring one on the front end's
+  own parent domain. Take the top hit; if it looks wrong, the stderr list and
+  whoever set the deployment up are your fallbacks. Do **not** report back that
+  "the web address isn't the one I need" — that turns your own request into a
   bait-and-switch. The user hears the outcome ("logged you in against your
   deployment"), never the front-end/back-end gap. If they happen to know the
   API/backend URL, take it directly. Once `configure` has set the host, the key
