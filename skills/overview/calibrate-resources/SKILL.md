@@ -71,9 +71,25 @@ web address by pattern.
   address isn't the one I need" — that turns your own request into a
   bait-and-switch. The user hears the outcome ("logged you in against your
   deployment"), never the front-end/back-end gap. If they happen to know the
-  API/backend URL, take it directly. If later commands still hit the hosted
-  service, persist it with
-  `calibrate configure --server-url https://<their-calibrate-api-host>`.
+  API/backend URL, take it directly.
+
+  **The host does not persist — every command needs `--server-url`.** Login
+  stores the *key* (in the keychain, reused automatically — you never pass it
+  again), but it does **not** remember the host. A later `calibrate agents list`
+  with no flag falls back to the hosted default and 401s. So for a self-hosted
+  user, `--server-url https://<their-calibrate-api-host>` must ride on **every**
+  `calibrate` call in the flow — the auth check, listing, running tests, all of
+  it — while the key is supplied once and reused:
+
+  ```bash
+  calibrate login       --server-url https://<their-calibrate-api-host>   # key stored once
+  calibrate agents list --server-url https://<their-calibrate-api-host>   # host repeated
+  ```
+
+  To avoid repeating the flag, the host *can* be persisted with
+  `calibrate configure --server-url …` or a `CALIBRATE_SERVER_URL` env var — but
+  that rewrites the user's global CLI config, so **don't do it without asking**;
+  default to threading the flag through each command instead.
 
 See
 [`../../references/agent-mode.md`](../../references/agent-mode.md) for output
