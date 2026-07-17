@@ -88,15 +88,20 @@ item shape. You must settle:
   prompt column becomes one `user` turn; a transcript column must be parsed into
   turns.
 - **The expectation** — for `response` tests, which column supplies the judge
-  `criteria`; for `tool_call` tests, which column names the expected tool/args.
+  `criteria`; for `tool_call` tests, which column names the expected tool and
+  arguments. A `tool_call` item carries a `tool_calls` list, each argument
+  checked by a match type (`exact` / `llm_judge` / `any`) — see the shapes in
+  [`../../references/config-shapes.md`](../../references/config-shapes.md).
 
 If the mapping is ambiguous (unclear which column is the prompt vs. the
 expected answer, or whether rows are tool calls or free-text replies), **ask —
 don't guess silently.**
 
 For `response` items, each evaluator needs an `evaluator_uuid` plus its
-`variable_values` (e.g. `criteria`). If no suitable evaluator exists, hand off
-to `/design-evaluator` to create one, then come back with its UUID.
+`variable_values` (e.g. `criteria`), and must be of type `llm` (a reply read
+with its conversation history) — not `llm-general`. If no suitable evaluator
+exists, hand off to `/design-evaluator` to create one, then come back with its
+UUID.
 
 ## Phase 4: Transform rows into the items array
 
@@ -126,6 +131,8 @@ for i, r in enumerate(rows):
         "conversation_history": [{"role": "user", "content": prompt}],
         # response tests: add "evaluators": [{"evaluator_uuid": "<uuid>",
         #   "variable_values": {"criteria": r["<criteria-col>"]}}]
+        # tool_call tests: add "tool_calls": [{"tool": r["<tool-col>"],
+        #   "arguments": {"<arg>": {"match_type": "exact", "value": r["<val-col>"]}}}]
     })
 chunks = [items[i:i+500] for i in range(0, len(items), 500)]
 print(len(items), "items,", len(chunks), "chunks,", len(skipped), "skipped")

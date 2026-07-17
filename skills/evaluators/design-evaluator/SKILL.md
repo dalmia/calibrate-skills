@@ -14,9 +14,11 @@ makes v1 and sets it live. Ask at each step; if `$ARGUMENTS` already carries a
 name, pre-fill it and skip that question.
 
 See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how to
-read command output (TOON/JSON) and
+read command output (TOON/JSON),
 [`../../references/config-shapes.md`](../../references/config-shapes.md) for the
-`version-param` shape. Keep what you *say* to the user plain — see
+`version-param` shape, and
+[`../../references/judge-prompts.md`](../../references/judge-prompts.md) for
+writing the judge prompt itself. Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
 
 An evaluator is a **versioned** judge: the object holds a history of versions,
@@ -54,24 +56,51 @@ it. Author from scratch only when no default is close.
 
 ## Phase 1: Decide what it judges
 
-Two axes fix the evaluator's shape. Ask both before writing any prompt.
+Three axes fix the evaluator's shape. Settle all three before writing any prompt.
 
-- **data-type** — the modality the judge reads: `text` (grades a text reply or
-  transcript) or `audio` (grades synthesized speech / audio output).
-- **output-type** — how it scores:
-  - `binary` — pass/fail. Uses the default `Correct` / `Wrong` labels unless you
-    override them. Best for "did the reply do X?" checks.
-  - `rating` — a labeled scale (e.g. 1–5). Requires an `output_config` that
-    defines each scale point and its label. Use when a graded judgment is more
-    useful than pass/fail.
+### evaluator-type — what the judge reads (get this right first)
+
+This must match the kind of test that will use the evaluator. Getting it wrong is
+the most common mistake: the platform rejects a mismatched judge.
+
+| The test / thing being graded | evaluator-type | Notes |
+| --- | --- | --- |
+| A **reply in a conversation** (`response` test) | **`llm`** | Default. Reads the reply *plus its conversation history*. This is the one for conversational bots. |
+| A **whole conversation** (`conversation` test) | `conversation` | Judges the full multi-turn exchange. |
+| A **transcript** on its own | `stt` | Speech-to-text output. |
+| **Synthesized audio** | `tts` | Requires `data-type audio`. |
+| A **standalone input/output pair**, no conversation | `llm-general` | A bare prompt→answer with no history. |
+
+**The trap:** `llm-general` looks like the general-purpose choice, but it is
+**not accepted for `response` tests** — a response test grades a reply in a
+conversation, which needs `llm`. If you're building a judge for a chatbot's
+replies, the answer is almost always `llm`. Reserve `llm-general` for grading
+context-free input/output pairs that aren't part of a conversation.
+
+### data-type — the modality the judge reads
+
+`text` (a reply, transcript, or input/output pair) or `audio` (synthesized
+speech). `tts` evaluators use `audio`; the rest use `text`.
+
+### output-type — how it scores
+
+- `binary` — pass/fail. Uses the default `Correct` / `Wrong` labels unless you
+  override them. **Prefer this** — one judge, one clear question (see
+  [`../../references/judge-prompts.md`](../../references/judge-prompts.md)).
+- `rating` — a labeled scale (e.g. 1–5). Requires an `output_config` that
+  defines each scale point and its label. Use only when a graded judgment
+  genuinely drives a decision.
 
 If `rating`, collect the scale points and a short label for each.
 
 ## Phase 2: Write the judge prompt and variables
 
-Draft the `system_prompt`. It may contain `{{variable}}` placeholders — commonly
-a single `{{criteria}}` — filled per-test-case from that test's
-`variable_values`. This lets one evaluator score many different criteria.
+Draft the `system_prompt` following the rules in
+[`../../references/judge-prompts.md`](../../references/judge-prompts.md) — one
+judge decides one thing, define the pass/fail bar concretely, and anchor
+ambiguous calls with a boundary example. It may contain `{{variable}}`
+placeholders — commonly a single `{{criteria}}` — filled per-test-case from that
+test's `variable_values`. This lets one evaluator score many different criteria.
 
 Declare each variable as `{"name", "description", "default"}`.
 
@@ -98,17 +127,21 @@ Show a summary and confirm before creating:
 ```
 Evaluator summary
   Name:        <name>
+  Judges:      llm | conversation | stt | tts | llm-general
   Data type:   text | audio
   Output type: binary | rating
   Judge model: <judge_model>
   Variables:   <names>
 ```
 
+`--evaluator-type` defaults to `llm`. Pass it explicitly so the judge kind is
+never left to chance — for a chatbot reply that's `llm`, not `llm-general`.
+
 ```bash
 calibrate evaluators create \
   --name "<name>" \
   --data-type text \
-  --evaluator-type <type> \
+  --evaluator-type llm \
   --output-type binary \
   --version-param '{"judge_model":"openai/gpt-4.1","system_prompt":"...{{criteria}}...","variables":[{"name":"criteria","description":"what must hold","default":""}]}' \
   --output-format json

@@ -107,22 +107,34 @@ for payload shapes. Keep what you *say* to the user plain — see
 | Primitive | What it is | CLI group | Skill |
 | --- | --- | --- | --- |
 | **Agent** | The agent you're testing (endpoint or internal-LLM) | `agents` | `/connect-agent` |
-| **Test** | A conversation + evaluators (`tool_call` or `response`) | `tests` | `/build-test-suite`, `/import-dataset` |
-| **Agent-test** | Linking tests to an agent and running them | `agent-tests` | `/run-tests`, `/benchmark-models` |
+| **Test** | A conversation + expectation (`response`, `tool_call`, `conversation`) | `tests` | `/build-test-suite`, `/generate-synthetic-data`, `/import-dataset` |
+| **Agent-test** | Linking tests to an agent, running them, reading results | `agent-tests` | `/run-tests`, `/analyze-failures`, `/benchmark-models` |
 | **Evaluator** | A versioned LLM/audio judge (binary or rating) | `evaluators` | `/design-evaluator`, `/iterate-evaluator` |
 | **Annotation task** | Human labels + human↔judge agreement | `annotation-tasks` | `/calibrate-evaluator` |
 
+Two skills cut across all of these rather than mapping to one primitive:
+`/design-eval-plan` (decide *what* to evaluate before building anything) and
+`/eval-audit` (a read-only check-up of an existing setup). The design reasoning
+they apply lives in
+[`../../references/methodology.md`](../../references/methodology.md) and
+[`../../references/judge-prompts.md`](../../references/judge-prompts.md).
+
 ## Typical flow
 
-1. `/connect-agent` — register + verify the agent.
-2. `/build-test-suite` (or `/import-dataset`) — author test cases.
-3. `/design-evaluator` — if any test judges response quality.
-4. `/run-tests` — run and read pass/fail.
-5. `/calibrate-evaluator` — prove the judge agrees with humans before trusting it.
-6. `/benchmark-models` — compare models once the harness is trustworthy.
-7. `/iterate-evaluator` — tune the judge and reset its live version.
+1. `/design-eval-plan` — decide what to measure and how, before building.
+2. `/connect-agent` — register + verify the agent.
+3. `/build-test-suite`, `/generate-synthetic-data`, or `/import-dataset` — author
+   test cases.
+4. `/design-evaluator` — if any test judges response quality (type `llm` for a
+   reply in a conversation).
+5. `/run-tests` — run and read pass/fail.
+6. `/analyze-failures` — group the failures and decide what to fix.
+7. `/calibrate-evaluator` — prove the judge agrees with humans before trusting it.
+8. `/benchmark-models` — compare models once the harness is trustworthy.
+9. `/iterate-evaluator` — tune the judge and reset its live version.
 
-`/onboard` runs this whole flow interactively for a first-time user.
+`/onboard` runs this whole flow interactively for a first-time user;
+`/eval-audit` reviews a setup that already exists.
 
 ## Not in the public API
 
