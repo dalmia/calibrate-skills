@@ -11,8 +11,12 @@ Skip all of this when the user already has a live URL — go straight to
 
 Calibrate needs one HTTP route that follows a fixed contract:
 
-- **Request** — Calibrate sends `POST` with the conversation history as a
-  `messages` array in OpenAI chat format:
+- **Request** — Calibrate sends `POST`. The body has one of two shapes, decided by
+  the agent's `interaction_type` (set at creation and fixed after that — see
+  [`connection-types.md`](connection-types.md)):
+
+  `conversation` — the whole exchange so far, as a `messages` array in OpenAI
+  chat format:
 
   ```json
   { "messages": [
@@ -21,19 +25,37 @@ Calibrate needs one HTTP route that follows a fixed contract:
   ] }
   ```
 
+  `general` — only the latest user text, under `input`:
+
+  ```json
+  { "input": "Summarise this transcript in three bullets." }
+  ```
+
   An optional `model` field is added only when benchmarking across models; ignore
   it unless the agent switches models from that input.
 
-- **Response** — the route returns JSON with **at least one** of `response` (the
-  agent's text reply) or `tool_calls` (an array of `{tool, arguments}`, each
-  optionally carrying an `output`):
+- **Response** — same for both shapes: the route returns JSON with **at least
+  one** of `response` (the agent's text reply) or `tool_calls` (an array of
+  `{tool, arguments}`, each optionally carrying an `output` — whatever the tool
+  returned, any JSON value):
 
   ```json
   { "response": "Your next vaccination is at 14 weeks — OPV and DPT.",
     "tool_calls": [
-      {"tool": "get_schedule", "arguments": {"child_age_weeks": 14}}
+      {"tool": "get_schedule", "arguments": {"child_age_weeks": 14},
+       "output": {"weeks": 14, "vaccines": ["OPV", "DPT"]}}
     ] }
   ```
+
+### Which of the two shapes does this agent need?
+
+Settle it from the codebase before you ask. If the code keeps conversation
+history or is handed it on every call — a `messages` list, a thread or session
+store, turns appended to state — it's the `conversation` shape. If every call is
+a standalone instruction with no memory of the last one (summarize, classify,
+extract, rewrite), it's the `general` shape. Only when the code doesn't settle it
+do you ask, and you ask in the user's words: does the agent have a back and forth
+with the person, or does it take one instruction and give one answer?
 
 ## Inspect first — don't assume greenfield
 
@@ -42,7 +64,7 @@ exists**, so you don't add a duplicate or step on working wiring. Search the
 codebase for the tell-tale signs of the contract:
 
 ```bash
-grep -rniE "/calibrate|calibrate.?test|\"?tool_calls\"?|\"?messages\"?\s*[:=]" \
+grep -rniE "/calibrate|calibrate.?test|\"?tool_calls\"?|\"?(messages|input)\"?\s*[:=]" \
   --include=*.py --include=*.js --include=*.ts --include=*.go .
 ```
 
@@ -52,14 +74,15 @@ Also list the app's POST routes (`@app.post`, `app.post(`, `router.POST`,
 | What you find | What to do |
 | --- | --- |
 | **No route** matching the contract | Add one — go to **Add the route**. |
-| A route that **already conforms** (POST, reads a `messages` array, returns `response` and/or `tool_calls`) | **Don't touch the code.** Use its path as the endpoint and go straight to auth inference + create/verify. |
+| A route that **already conforms** (POST, reads a `messages` array or an `input` string, returns `response` and/or `tool_calls`) | **Don't touch the code.** Use its path as the endpoint, create the agent as the kind that route serves, and go straight to auth inference + create/verify. |
+| A route that conforms but to **the other kind's shape** (reads `messages` when the agent must be `general`, or `input` when it must be `conversation`) | Nothing is broken — decide which way to move. Either create the agent as the kind the route already serves, or show the minimal edit that reads the other shape. Never add a second route. |
 | A route that's **present but mis-wired** | Report the exact mismatch, propose a targeted fix — don't bolt on a second route. |
 
 When a route is present but wrong, check it against the contract point by point
 and name what's off:
 
 - Wrong method (GET instead of POST), or wrong path than the user expects.
-- Reads the body as something other than a `messages` array (e.g. a single
+- Reads the body as neither a `messages` array nor an `input` string (e.g. a
   `prompt` / `text` field, or query params).
 - Returns the reply under the wrong key (`reply`, `output`, `text`,
   `choices[0]...`) instead of `response`, or emits neither `response` nor
@@ -74,7 +97,7 @@ confirms whichever path you took actually works.
 ## Add the route
 
 Pull the model call out of the request handler into a reusable function, then
-expose a thin Calibrate route that calls it directly with `body["messages"]`.
+expose a thin Calibrate route that calls it directly with the request body.
 Match the codebase's framework and style — the shape below is FastAPI; adapt for
 Flask, Express, Next.js route handlers, etc.
 
@@ -104,8 +127,21 @@ def calibrate_test(body):
     return {"response": llm_inference(body["messages"])}
 ```
 
+That route serves a `conversation` agent. For a `general` agent the body carries
+one `input` string instead, so the route wraps it before calling the same shared
+function — everything else is identical:
+
+```python
+@app.post("/calibrate/test")                     # general agent variant
+def calibrate_test(body):
+    return {"response": llm_inference([{"role": "user", "content": body["input"]}])}
+```
+
+Write only the one the agent needs; don't accept both shapes in one route.
+
 If the agent emits tool calls, return them too:
-`{"response": ..., "tool_calls": [{"tool": name, "arguments": {...}}]}`.
+`{"response": ..., "tool_calls": [{"tool": name, "arguments": {...}}]}`, adding
+`"output": <what the tool returned>` per call when the code has it to hand.
 
 Show the user the diff and let them apply/deploy it. Calibrate can only reach a
 **publicly deployed** URL, so the route must ship before you verify.
