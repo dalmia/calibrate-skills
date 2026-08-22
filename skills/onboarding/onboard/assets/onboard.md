@@ -6,9 +6,11 @@
 
 ## Phase 1 — Describe your agent
 
-*What the agent does, who uses it, where it fails today.*
+*What the agent does, who uses it, where it fails today. And which one it is:
+does it go back and forth with a person, or take one instruction and give one
+answer? That is fixed when the agent is created and cannot be changed later.*
 
-<!-- TODO: describe your agent. -->
+<!-- TODO: describe your agent, and say which of the two it is. -->
 
 **agent_uuid:** <!-- filled by /connect-agent -->
 
@@ -45,9 +47,13 @@
 ## Glossary
 
 1. **Agent** — the agent you're testing; an endpoint or an internal-LLM config.
-2. **Test** — one conversation the agent processes, plus what passes/fails.
-3. **Evaluator** — the versioned judge that decides pass/fail. `tool_call`
-   (deterministic) or `response` (LLM judge against `criteria`).
+   It either goes back and forth with a person or takes one input and gives one
+   answer, and that is set once when it is created.
+2. **Test** — one thing the agent handles, plus what passes/fails. It has to
+   match the kind of agent it runs against.
+3. **Evaluator** — the versioned judge that decides pass/fail on the tests that
+   need one. Some tests need no judge at all: checking which action the agent
+   took is a plain comparison.
 4. **Judge model** — the LLM an evaluator delegates to.
 5. **Agent-test** — a test linked to an agent and run against it.
 6. **Benchmark** — one run across multiple models to compare them.

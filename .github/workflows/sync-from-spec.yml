@@ -1,15 +1,18 @@
 name: sync-from-spec
 
-# Drift-check the skills against the published Calibrate OpenAPI spec. The skills
-# are hand-written prose (not generated), so this does not regenerate them — it
-# fetches the latest spec, asserts every operation and payload field the skills
-# hardcode still exists, and opens a PR carrying a drift report when something
-# no longer matches. See .github/SYNC.md for how calibrate-backend triggers this.
+# Keep the skills matching the Calibrate API. The skills are hand-written prose,
+# not generated, so this does not regenerate them: it fetches the published
+# OpenAPI spec, diffs it against the copy this repo last saw, and hands that diff
+# to Claude, which reads the skills and makes the edits the change calls for.
+# The result is opened as a pull request for review, never merged automatically.
+#
+# See .github/SYNC.md for how calibrate-backend triggers this and which secrets
+# it needs.
 on:
   # Fired by calibrate-backend after it finishes publishing the spec.
   repository_dispatch:
     types: [sync-api-spec]
-  # Weekly fallback so drift is caught even without a dispatch.
+  # Weekly fallback so a change is caught even without a dispatch.
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
@@ -17,9 +20,14 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
+
+# A dispatch and the weekly cron landing together would both write the same
+# branch and one would lose. Queue them instead.
+concurrency: sync-from-spec
 
 jobs:
-  drift:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,54 +37,188 @@ jobs:
           python-version: "3.12"
 
       # Prefer a spec_url passed in the dispatch payload; else the repo variable
-      # OPENAPI_SPEC_URL (e.g. the public API's /openapi endpoint or the hosted
-      # docs openapi.json). No secret needed for a public spec.
+      # OPENAPI_SPEC_URL. No secret needed for a public spec.
+      #
+      # Both are read through the environment rather than pasted into the script
+      # with ${{ }}: whoever fires the dispatch writes that URL, and pasting it
+      # straight in would let them run their own shell here.
       - name: Resolve spec URL
         id: spec
+        env:
+          DISPATCH_URL: ${{ github.event.client_payload.spec_url }}
+          REPO_URL: ${{ vars.OPENAPI_SPEC_URL }}
         run: |
-          URL="${{ github.event.client_payload.spec_url }}"
-          [ -z "$URL" ] && URL="${{ vars.OPENAPI_SPEC_URL }}"
+          URL="${DISPATCH_URL:-$REPO_URL}"
           if [ -z "$URL" ]; then
             echo "::error::No spec URL. Set repo variable OPENAPI_SPEC_URL or pass client_payload.spec_url."
             exit 1
           fi
+          case "$URL" in
+            https://*) ;;
+            *) echo "::error::Spec URL must be https, got: $URL"; exit 1 ;;
+          esac
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Fetch published spec
-        run: curl -fsSL "${{ steps.spec.outputs.url }}" -o openapi.published.json
+        env:
+          URL: ${{ steps.spec.outputs.url }}
+        run: curl -fsSL "$URL" -o openapi.fetched.json
 
-      - name: Check drift
-        id: drift
+      # Both copies are rewritten with sorted keys and fixed indentation first,
+      # so the diff shows what actually changed in the API rather than however
+      # the server happened to order its JSON that day.
+      - name: Diff against the spec last seen
+        id: diff
         run: |
-          if python3 scripts/check_spec_drift.py --spec openapi.published.json --report SPEC_DRIFT.md; then
-            echo "drift=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "drift=true" >> "$GITHUB_OUTPUT"
-          fi
-        continue-on-error: true
+          python3 - <<'PY'
+          import json, pathlib
+          for src, dst in (("openapi.fetched.json", "openapi.new.json"),
+                           (".github/openapi.seen.json", "openapi.old.json")):
+              p = pathlib.Path(src)
+              if not p.exists():
+                  pathlib.Path(dst).write_text("")
+                  continue
+              spec = json.loads(p.read_text())
+              pathlib.Path(dst).write_text(
+                  json.dumps(spec, indent=2, sort_keys=True) + "\n"
+              )
+          PY
 
-      - name: Open PR with drift report
-        if: steps.drift.outputs.drift == 'true'
+          if diff -u openapi.old.json openapi.new.json > spec-diff.txt; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "The published spec matches the copy this repo last saw."
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+          # A rewritten spec could produce a diff far larger than is useful to
+          # read. Cap it; Claude can open openapi.new.json for anything the cap
+          # cut off.
+          LINES=$(wc -l < spec-diff.txt)
+          echo "Spec changed: $LINES diff lines."
+          if [ "$LINES" -gt 2000 ]; then
+            { head -2000 spec-diff.txt
+              printf '\n... diff truncated at 2000 of %s lines. Read openapi.new.json for the rest.\n' "$LINES"
+            } > spec-diff.capped.txt
+            mv spec-diff.capped.txt spec-diff.txt
+          fi
+
+      - name: Work out what the skills need
+        if: steps.diff.outputs.changed == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --allowed-tools "Read,Write,Edit,Glob,Grep,Bash(python3 scripts/check_skills.py)"
+          prompt: |
+            The Calibrate API changed. `spec-diff.txt` is the difference between
+            the OpenAPI spec this repo last saw and the one just published;
+            `openapi.new.json` is the full new spec.
+
+            This repo holds the Agent Skills that drive the `calibrate` CLI.
+            Read `CLAUDE.md` at the root and `skills/references/voice.md` before
+            you change any wording — the skills carry two registers and mixing
+            them is the failure this repo guards against hardest.
+
+            Your job:
+
+            1. Read `spec-diff.txt`. Ignore anything cosmetic: reworded
+               descriptions, reordered keys, version bumps, examples.
+            2. For each real change (a new or removed endpoint, a renamed or
+               added field, a changed enum, a changed requirement), search
+               `skills/` for what documents it. Most spec changes touch nothing.
+            3. Where a skill is now wrong or incomplete, edit it. Make the real
+               edit, do not write a report about what is broken. Match the file
+               you are editing: its voice, its heading style, its line wrapping.
+            4. A new endpoint does not automatically deserve a new skill. Add
+               one only if it is a whole task a user would ask for by name.
+               Otherwise fold it into the skill that already covers that ground.
+            5. Anything a skill would SAY to the user must be plain and free of
+               field names, flags and JSON. Precise mechanics stay precise in the
+               agent's own notes. `skills/references/voice.md` has the table.
+            6. Run `python3 scripts/check_skills.py` and fix anything it reports.
+
+            Then write `SYNC_SUMMARY.md`: one short section per file you changed,
+            saying what changed in the API and what you did about it, in plain
+            words. If nothing in the skills needed changing, write exactly
+            `NO CHANGES NEEDED` as the whole of `SYNC_SUMMARY.md` and edit
+            nothing else.
+
+      - name: Decide whether there is anything to open
+        if: steps.diff.outputs.changed == 'true'
+        id: outcome
+        run: |
+          # What was actually edited decides this, not what the summary claims.
+          # A run that edits skills but forgets the summary must still open a
+          # pull request rather than throw the edits away.
+          EDITED=$(git status --porcelain -- skills scripts)
+
+          # The summary is the pull request body, so it is written outside the
+          # repo. Committing it would leave it behind in the merge.
+          BODY="$RUNNER_TEMP/pr-body.md"
+          if [ -f SYNC_SUMMARY.md ] && ! grep -qx "NO CHANGES NEEDED" SYNC_SUMMARY.md; then
+            cp SYNC_SUMMARY.md "$BODY"
+          else
+            printf 'The Calibrate API changed and the skills were edited to match, but no summary was written. Read the diff.\n' > "$BODY"
+          fi
+          rm -f SYNC_SUMMARY.md
+
+          if [ -z "$EDITED" ]; then
+            echo "skills=false" >> "$GITHUB_OUTPUT"
+            echo "The spec changed but nothing in the skills depends on it."
+            exit 0
+          fi
+          echo "skills=true" >> "$GITHUB_OUTPUT"
+
+          # The snapshot only moves forward when a pull request carries it, so a
+          # change that opens no pull request stays in the next run's diff and
+          # cannot be silently lost.
+          cp openapi.new.json .github/openapi.seen.json
+
+          # Say in the pull request whether the edits are installable, so a bad
+          # one is visible before anyone opens the diff. main is served live to
+          # every `npx skills add`, so this is the gate that matters.
+          if python3 scripts/check_skills.py; then
+            echo "check=passed" >> "$GITHUB_OUTPUT"
+          else
+            echo "check=FAILED" >> "$GITHUB_OUTPUT"
+          fi
+          rm -f openapi.fetched.json openapi.new.json openapi.old.json spec-diff.txt
+
+      - name: Open the pull request
+        if: steps.outcome.outputs.skills == 'true'
+        id: pr
         uses: peter-evans/create-pull-request@v7
         with:
-          # Use a PAT (SKILLS_SYNC_TOKEN) so skill-check runs on the drift PR;
-          # PRs opened by the default GITHUB_TOKEN do not trigger further CI.
+          # A PAT so skill-check runs on this pull request; one opened with the
+          # default GITHUB_TOKEN does not start further CI.
           token: ${{ secrets.SKILLS_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
-          commit-message: "Spec drift: skills reference operations/fields no longer in the spec"
-          title: "Spec drift detected — update skills to match the API"
-          body: |
-            The published Calibrate OpenAPI spec no longer matches what the skills
-            document. `SPEC_DRIFT.md` lists each missing operation/field and the
-            skill relying on it. Fix the affected `SKILL.md` / reference files on
-            this branch, delete `SPEC_DRIFT.md`, and merge.
-
-            Opened by the [sync-from-spec](.github/workflows/sync-from-spec.yml) workflow.
-          branch: automated/spec-drift
+          commit-message: "Update the skills for the latest Calibrate API"
+          title: "Update the skills for the latest Calibrate API"
+          body-path: ${{ runner.temp }}/pr-body.md
+          branch: automated/spec-sync
           delete-branch: true
-          add-paths: SPEC_DRIFT.md
+          # Assignee only. Asking for a review from the account whose token
+          # opened the pull request is rejected by GitHub, and the email below is
+          # the notification that matters anyway.
+          assignees: dalmia
 
-      - name: Fail if drift
-        if: steps.drift.outputs.drift == 'true'
-        run: |
-          echo "::error::Spec drift detected — see the automated/spec-drift PR."
-          exit 1
+      - name: Email the pull request link
+        if: steps.pr.outputs.pull-request-number
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: ${{ secrets.MAIL_USERNAME }}
+          to: aman.dalmia@artpark.in
+          subject: "[calibrate-skills] The API changed and the skills need a look"
+          body: |
+            The Calibrate API changed, and the skills that depend on it have been
+            updated on a branch for you to review. Nothing has been merged.
+
+            Pull request: ${{ steps.pr.outputs.pull-request-url }}
+            Installable:  ${{ steps.outcome.outputs.check }}
+
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

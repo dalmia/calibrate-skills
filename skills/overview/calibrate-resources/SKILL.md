@@ -1,10 +1,10 @@
 ---
 name: calibrate-resources
 description: Orientation for evaluating agents with Calibrate — the primitives
-  (agents, tests, agent-tests, evaluators, annotation tasks), the CLI, auth, and
-  which skill to reach for. Load when the user asks "what is Calibrate", "how do
-  I evaluate with Calibrate", "what can Calibrate do", or seems unsure where to
-  start.
+  (agents, tests, agent-tests, evaluators, annotation tasks, traces), the CLI,
+  auth, and which skill to reach for. Load when the user asks "what is
+  Calibrate", "how do I evaluate with Calibrate", "what can Calibrate do", or
+  seems unsure where to start.
 ---
 
 # Calibrate: resources and orientation
@@ -102,30 +102,33 @@ formats and [`../../references/config-shapes.md`](../../references/config-shapes
 for payload shapes. Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
 
-## The five primitives
+## The six primitives
 
 | Primitive | What it is | CLI group | Skill |
 | --- | --- | --- | --- |
-| **Agent** | The agent you're testing (endpoint or internal-LLM) | `agents` | `/connect-agent` |
-| **Test** | A conversation + evaluators (`tool_call` or `response`) | `tests` | `/build-test-suite`, `/import-dataset` |
+| **Agent** | The agent you're testing (endpoint or internal-LLM), of one of two fixed kinds — `conversation` or `general` | `agents` | `/connect-agent` |
+| **Test** | One case + evaluators — `response`, `conversation`, `tool_call` or `general` | `tests` | `/build-test-suite`, `/import-dataset` |
 | **Agent-test** | Linking tests to an agent and running them | `agent-tests` | `/run-tests`, `/benchmark-models` |
 | **Evaluator** | A versioned LLM/audio judge (binary or rating) | `evaluators` | `/design-evaluator`, `/iterate-evaluator` |
 | **Annotation task** | Human labels + human↔judge agreement | `annotation-tasks` | `/calibrate-evaluator` |
+| **Trace** | One real turn the agent handled in production — what it was given, what it produced, and the tools it called | `traces` | `/send-traces` |
 
 ## Typical flow
 
 1. `/connect-agent` — register + verify the agent.
-2. `/build-test-suite` (or `/import-dataset`) — author test cases.
-3. `/design-evaluator` — if any test judges response quality.
-4. `/run-tests` — run and read pass/fail.
-5. `/calibrate-evaluator` — prove the judge agrees with humans before trusting it.
-6. `/benchmark-models` — compare models once the harness is trustworthy.
-7. `/iterate-evaluator` — tune the judge and reset its live version.
+2. `/send-traces` — if the agent already runs in production, send real turns so
+   actual failures become test cases (feeds `/build-test-suite`).
+3. `/build-test-suite` (or `/import-dataset`) — author test cases.
+4. `/design-evaluator` — if any test judges response quality.
+5. `/run-tests` — run and read pass/fail.
+6. `/calibrate-evaluator` — prove the judge agrees with humans before trusting it.
+7. `/benchmark-models` — compare models once the harness is trustworthy.
+8. `/iterate-evaluator` — tune the judge and reset its live version.
 
 `/onboard` runs this whole flow interactively for a first-time user.
 
 ## Not in the public API
 
-Calibrate's public API is single-turn tests, evaluators, and annotation-based
-judge calibration. There is **no** persona/simulation, trace, dashboard, or
-report resource — don't offer skills for those here.
+Calibrate's public API covers tests, evaluators, traces, and annotation-based
+judge calibration. There is **no** persona/simulation, dashboard, or report
+resource — don't offer skills for those here.

@@ -36,6 +36,10 @@ If it's missing, stop and have the user install it, then re-run:
 brew install dalmia/tap/calibrate
 ```
 
+An agent that takes one input at a time needs CLI 0.0.41 or newer — if
+`--interaction-type` comes back as an unknown flag, have the user run
+`brew upgrade calibrate`.
+
 (No account yet? https://calibrate.artpark.ai). Only once the command is present,
 check auth:
 
@@ -69,7 +73,9 @@ calibrate agents list --output-format json
 ```
 
 If agents exist, present a numbered list and ask whether to configure an
-existing one (skip to Phase 3) or create a new one.
+existing one (skip to Phase 3) or create a new one. When the user picks an
+existing one, read its `interaction_type` off that listing — it's already
+settled, so don't ask about it again.
 
 ## Phase 1: Identify the agent
 
@@ -79,6 +85,14 @@ Ask what the agent does and how Calibrate should reach it. Collect:
 - **type** — how the agent connects. Load
   [`references/connection-types.md`](references/connection-types.md) for the
   per-type required fields and pitfalls.
+- **interaction-type** (`-i`) — a separate question from **type**: whether the
+  agent is called with the whole exchange so far (`conversation`, the default) or
+  with a single input (`general`). Ask it in the user's words, never with those
+  values: *"Does your agent have a back and forth with the person, or does it
+  take one instruction and give one answer?"* Say once, plainly, that this one is
+  fixed once the agent is made — if it turns out wrong, they'd need to make a new
+  agent. An agent that takes one input at a time can't be used with simulations.
+  Details in [`references/connection-types.md`](references/connection-types.md).
 - **config-param** (`-c`) — behavioral config; keys depend on type. See
   [`references/connection-types.md`](references/connection-types.md) for exact keys.
 
@@ -103,6 +117,10 @@ When the user points you at a codebase instead of a URL, load
    a targeted fix. Only when none exists do you add one.
 2. Add (or fix) a thin `POST /calibrate/test` route that reuses the agent's model
    call and returns `{"response": ...}` (+ `tool_calls` if the agent emits them).
+   The request shape it must read follows the interaction type — a `messages`
+   array for `conversation`, a single `input` for `general`;
+   [`references/expose-endpoint.md`](references/expose-endpoint.md) covers both,
+   and tells you how to work out which one from the code before asking.
    Show the diff; the user applies and deploys it.
 3. **Infer auth from the code** — scan routes/middleware for the header + scheme.
    If the code requires none, create the agent with **no** `agent_headers` and don't
@@ -120,12 +138,14 @@ Show a summary and confirm before creating:
 Agent summary
   Name:        <name>
   Type:        <type>
+  Works by:    having a conversation | taking one input at a time
   Endpoint:    <url or "internal">
   Config keys: <keys set>
 ```
 
 ```bash
-calibrate agents create --name "<name>" --type <agent|connection> --config-param '<json>' --output-format json
+calibrate agents create --name "<name>" --type <agent|connection> \
+  --interaction-type <conversation|general> --config-param '<json>' --output-format json
 ```
 
 Capture `agent_uuid` from the response.
@@ -137,6 +157,9 @@ Don't declare success until Calibrate can actually reach the agent:
 ```bash
 calibrate agents verify-connection --agent-uuid <agent_uuid>
 ```
+
+An agent that takes one input at a time is checked with a single plain input
+instead of a conversation; the command is the same either way.
 
 Report the result plainly. On failure, surface the structured error (auth,
 timeout, bad URL) and fix `agent_url`/`agent_headers` with `calibrate agents update`

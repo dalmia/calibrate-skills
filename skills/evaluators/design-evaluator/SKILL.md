@@ -54,8 +54,23 @@ it. Author from scratch only when no default is close.
 
 ## Phase 1: Decide what it judges
 
-Two axes fix the evaluator's shape. Ask both before writing any prompt.
+Three axes fix the evaluator's shape. Settle all three before writing any
+prompt.
 
+- **evaluator-type** — *what* the judge is handed. `--evaluator-type` accepts
+  exactly five values:
+  - `llm` (the default) — a reply together with the conversation before it.
+  - `llm-general` — a standalone input and the output it produced.
+  - `conversation` — a whole conversation.
+  - `stt` — one transcript.
+  - `tts` — synthesized speech.
+
+  **The agent's kind decides this.** An agent that takes one input at a time and
+  gives one answer needs `llm-general`; a conversational agent needs `llm`. The
+  pairing is enforced: a `general` test case only accepts an `llm-general`
+  evaluator, a `response` test case only accepts `llm`. Mixing them is rejected
+  at creation. Check the agent's `interaction_type` in
+  `calibrate agents list --output-format json` if you're unsure which kind it is.
 - **data-type** — the modality the judge reads: `text` (grades a text reply or
   transcript) or `audio` (grades synthesized speech / audio output).
 - **output-type** — how it scores:
@@ -98,6 +113,8 @@ Show a summary and confirm before creating:
 ```
 Evaluator summary
   Name:        <name>
+  Reads:       a reply and the conversation before it | one input and one answer
+               | a whole conversation | a transcript | the audio itself
   Data type:   text | audio
   Output type: binary | rating
   Judge model: <judge_model>

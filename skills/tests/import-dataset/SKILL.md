@@ -45,9 +45,11 @@ which agent these cases belong to, or whether to import them unlinked.
 calibrate agents list --output-format json
 ```
 
-Present a numbered list; capture the chosen `agent_uuid`(s). If none exists yet
-and the user wants a link, hand off to `/connect-agent` first. Linking is
-optional — omit `--agent-uuids` to link none.
+Present a numbered list; capture the chosen `agent_uuid`(s) **and each agent's
+`interaction_type`** from the same listing — it is on every item, and it decides
+how the dataset's columns must be mapped. Never ask the user for it. If none
+exists yet and the user wants a link, hand off to `/connect-agent` first.
+Linking is optional — omit `--agent-uuids` to link none.
 
 ## Phase 2: Locate and inspect the dataset
 
@@ -80,23 +82,33 @@ Decide how each source column becomes a Calibrate test item. See
 [`../../references/config-shapes.md`](../../references/config-shapes.md) for the
 item shape. You must settle:
 
-- **`--type`** — `tool_call` (assert the agent calls tool X with args Y) or
-  `response` (an LLM judge scores the reply against `criteria`). Pick per the
-  dataset's expectation column.
-- **`conversation_history`** — which column(s) become the ordered turns. Each
-  turn is `{"role": "user"|"assistant"|"tool", "content": "..."}`. A single
-  prompt column becomes one `user` turn; a transcript column must be parsed into
-  turns.
-- **The expectation** — for `response` tests, which column supplies the judge
-  `criteria`; for `tool_call` tests, which column names the expected tool/args.
+- **`--type`** — `tool_call` (assert the agent calls tool X with args Y), or a
+  judged type: `response` / `conversation` for a `conversation` agent, `general`
+  for a `general` agent. Pick per the dataset's expectation column and the
+  agent's `interaction_type`. One `--type` applies to the whole batch.
+- **The input column(s)** — which key they become depends on the agent:
+  - `general` agent → **`input`**, one standalone prompt string per row.
+  - `conversation` agent → **`conversation_history`**, ordered turns, each
+    `{"role": "user"|"assistant"|"tool", "content": "..."}`. A single prompt
+    column becomes one `user` turn; a transcript column must be parsed into
+    turns.
+
+  So a dataset with one prompt column per row maps to `general` for a general
+  agent and to `response` for a conversation agent (as a single `user` turn).
+  Columns holding a multi-turn exchange only fit a conversation agent — there is
+  no way to import them against a general agent.
+- **The expectation** — for `response`, `conversation` and `general` tests,
+  which column supplies the judge `criteria`; for `tool_call` tests, which
+  column names the expected tool/args.
 
 If the mapping is ambiguous (unclear which column is the prompt vs. the
 expected answer, or whether rows are tool calls or free-text replies), **ask —
 don't guess silently.**
 
-For `response` items, each evaluator needs an `evaluator_uuid` plus its
-`variable_values` (e.g. `criteria`). If no suitable evaluator exists, hand off
-to `/design-evaluator` to create one, then come back with its UUID.
+For judged items, each evaluator needs an `evaluator_uuid` plus its
+`variable_values` (e.g. `criteria`) — a `general` test needs an `llm-general`
+evaluator, a `response` test an `llm` one. If no suitable evaluator exists, hand
+off to `/design-evaluator` to create one, then come back with its UUID.
 
 ## Phase 4: Transform rows into the items array
 
@@ -116,17 +128,20 @@ A small transform snippet is fine, for example:
 import json, csv
 rows = list(csv.DictReader(open("<path>")))
 slug = "<dataset-slug>"
+kind = "<general|conversation>"   # the agent's interaction_type
 items, skipped = [], []
 for i, r in enumerate(rows):
     prompt = (r.get("<prompt-col>") or "").strip()
     if not prompt:
         skipped.append(i); continue
-    items.append({
-        "name": f"{slug}-{i}",
-        "conversation_history": [{"role": "user", "content": prompt}],
-        # response tests: add "evaluators": [{"evaluator_uuid": "<uuid>",
-        #   "variable_values": {"criteria": r["<criteria-col>"]}}]
-    })
+    item = {"name": f"{slug}-{i}"}
+    if kind == "general":
+        item["input"] = prompt
+    else:
+        item["conversation_history"] = [{"role": "user", "content": prompt}]
+    # judged tests: add "evaluators": [{"evaluator_uuid": "<uuid>",
+    #   "variable_values": {"criteria": r["<criteria-col>"]}}]
+    items.append(item)
 chunks = [items[i:i+500] for i in range(0, len(items), 500)]
 print(len(items), "items,", len(chunks), "chunks,", len(skipped), "skipped")
 for n, c in enumerate(chunks):
@@ -141,7 +156,7 @@ For each chunk, run `bulk-create` and collect the created `test_uuid`s:
 
 ```bash
 calibrate tests bulk-create \
-  --type <tool_call|response> \
+  --type <response|conversation|tool_call|general> \
   --tests "$(cat chunk-0.json)" \
   --agent-uuids '["<agent_uuid>"]' \
   --language <lang> \
@@ -175,7 +190,7 @@ it.
 
 ## Handoffs
 
-- **Response cases need a judge** → `/design-evaluator`
+- **Judged cases need a judge** → `/design-evaluator`
 - **Author cases by hand instead** → `/build-test-suite`
 - **Run the imported tests** → `/run-tests`
 - **Full first-eval flow** → `/onboard`
