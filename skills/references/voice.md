@@ -88,6 +88,11 @@ Keep the mechanics internal; translate before you speak.
 | structured error / stderr | say what went wrong in plain words |
 | the `calibrate` binary | "the `calibrate` command" |
 | preflight | "a quick setup check" |
+| `interaction_type` | describe what the agent does, not the setting |
+| `conversation` / `general` as labels for the kind of agent | "goes back and forth with a person" / "takes one input and gives one answer" |
+| `llm`, `llm-general`, `conversation`, `stt`, `tts` as evaluator types | "the judge that reads a conversation" / "…that reads one input and one answer" / "…that reads a transcript" / "…that listens to the audio" |
+| `agent_id`, `input`, `output`, `tool_calls` on a trace | "what your agent was given, what it replied, and the tools it used" |
+| ingest / instrument / payload | "send us the real turns your agent handles" |
 | `$ARGUMENTS`, agent mode, greenfield, clobber, mis-wired | never surface these at all |
 
 ## Introduce domain terms once, then use them
@@ -101,6 +106,8 @@ them in plain words the first time, then use the term normally:
   don't agree with each other 100% either, and that's the ceiling"
 - **tool-call vs response test** — "a tool-call test checks which action the
   agent took; a response test grades what it said"
+- **trace** — "a trace — a record of one real thing your agent handled, kept so
+  you can look back at real traffic later"
 - **live version** — "the version currently in use"
 - **endpoint / headers** — "the URL Calibrate calls" / "the login it sends"
 
