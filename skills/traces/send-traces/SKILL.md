@@ -192,10 +192,14 @@ terminal against the same agent:
 
 ```bash
 calibrate traces create --agent-id <agent_uuid> \
-  --input '<json: array of turns, or a plain string>' \
+  --input '[{"role": "user", "content": "..."}]' \
   --output-param '{"response": "...", "tool_calls": [{"tool": "...", "arguments": {}, "output": {}}]}' \
   --output-format json
 ```
+
+`--input` is parsed as JSON, so a `general` agent's plain string carries its own
+double quotes: `--input '"Summarise this transcript."'`. Bare text fails with
+`invalid character 'S' looking for beginning of value`.
 
 Add `--conversation-id`, `--message-id` or `--metadata '[{"key": "...", "value":
 "..."}]'` only if the codebase actually carries them.
