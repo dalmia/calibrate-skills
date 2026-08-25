@@ -140,9 +140,16 @@ See [`agents/connect-agent/references/connection-types.md`](../agents/connect-ag
 }
 ```
 
-- `payload` — **required**. Its shape follows the task `--type`
-  (`conversation`, `stt`, `tts`, …), but `payload.name` is **always required**
-  and must be unique within the task.
+- `payload` — **required**. `payload.name` is always required and unique within
+  the task; the rest follows the task's `--type`, which itself has to match what
+  the linked evaluator judges:
+  - `llm` → `chat_history` (turns ending at the user turn), `agent_response`
+  - `llm-general` → `input`, `output`
+  - `conversation` → `transcript`
+  - `stt` → `reference_transcript`, `predicted_transcript`
+
+  Any of them may also carry `evaluator_variables`, mapping an evaluator UUID to
+  that evaluator's `{{variable}}` values for this item.
 - `annotations` — **optional**. Human labels to seed, keyed by evaluator UUID
   (each must be linked to the task). `value` is a bool for a `binary` evaluator
   or a number for a `rating` one; `reasoning` is optional. Whenever any item
