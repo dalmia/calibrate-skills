@@ -103,6 +103,15 @@ jobs:
             mv spec-diff.capped.txt spec-diff.txt
           fi
 
+      # Claude Code stops at its first-run setup when it has never run as this
+      # user before. On a runner there is nobody to answer it, so it exits before
+      # making a single request — the run just fails with no reason given.
+      # Saying the setup is already done is what lets the token be used.
+      - name: Say the first-run setup is already done
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          echo '{"hasCompletedOnboarding": true}' > "$HOME/.claude.json"
+
       - name: Work out what the skills need
         if: steps.diff.outputs.changed == 'true'
         uses: anthropics/claude-code-action@v1
