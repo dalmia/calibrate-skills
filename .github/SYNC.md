@@ -107,7 +107,7 @@ it move. This watches for it.
 ## How it triggers
 
 `calibrate-frontend` fires a `repository_dispatch` on every push to its `prod`
-branch, carrying the commit that shipped.
+branch, carrying the commits that push went from and to.
 
 ```
 calibrate-frontend ──(push to prod)──► repository_dispatch: frontend-released
@@ -132,12 +132,13 @@ jobs:
         env:
           TOKEN: ${{ secrets.SKILLS_DISPATCH_TOKEN }}
           SHA: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
         run: |
           curl -fsSL -X POST \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/dalmia/calibrate-skills/dispatches \
-            -d "{\"event_type\":\"frontend-released\",\"client_payload\":{\"sha\":\"$SHA\"}}"
+            -d "{\"event_type\":\"frontend-released\",\"client_payload\":{\"sha\":\"$SHA\",\"before\":\"$BEFORE\"}}"
 ```
 
 `SKILLS_DISPATCH_TOKEN` is a PAT with `contents: write` on
@@ -146,22 +147,22 @@ repos.
 
 ## What the run does
 
-1. Reads every commit on `prod` between
-   [`frontend-seen.txt`](frontend-seen.txt), the last commit this repo looked
-   at, and the one that just shipped: the commit subjects, the files they
-   touched, and the diff capped at 1500 lines.
+1. Reads exactly what that push contained — the commit subjects, the files they
+   touched, and the diff capped at 1500 lines. The push says what it went from
+   and to, so there is nothing to keep track of between runs and no release is
+   ever read twice.
 2. Claude checks that against the only four things the skills take from the web
    app — the addresses they print, the names people are told to click, the names
    the app shows for things the skills also say out loud, and what the product
    can or cannot do. **Most releases touch none of it, and dropping them is the
    expected outcome.**
-3. Nothing relevant, no pull request opens, and the marker is left alone so that
-   stretch of prod is read again next time rather than skipped.
-4. Something relevant, one pull request opens on `automated/frontend-sync`, the
-   marker moves to the commit just read, and an email goes out with the link.
+3. Nothing relevant: no pull request, nothing to do.
+4. Something relevant: one pull request opens on `automated/frontend-sync` and an
+   email goes out with the link.
 
-Run it by hand from the Actions tab to re-check a stretch of prod; the `since`
-input takes any commit to compare from.
+If a run fails before it gets that far, that release goes unread. The failed run
+shows in the Actions tab, and re-running it reads the same range again. The
+`since` and `until` inputs on a manual run read any stretch of prod on demand.
 
 ## Config on this repo
 

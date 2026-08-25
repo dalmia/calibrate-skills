@@ -6,20 +6,25 @@ name: sync-from-frontend
 # out loud. None of that is in the API description, so sync-from-spec cannot see
 # it move.
 #
-# So when the frontend ships to prod, Claude reads everything that shipped since
-# the last time it looked, decides whether any of it changes what the skills say,
-# and either edits them or drops it.
+# So on every push to prod, Claude reads exactly what that push contained,
+# decides whether any of it changes what the skills say, and either edits them or
+# drops it. The push carries its own before and after commits, so there is no
+# marker to keep and no chance of reading the same release twice.
 #
 # See .github/SYNC.md for how calibrate-frontend triggers this.
 on:
   # Fired by calibrate-frontend on every push to its prod branch.
   repository_dispatch:
     types: [frontend-released]
-  # Run by hand, optionally from an older commit to re-check a stretch of prod.
+  # Run by hand — to re-read a release whose run failed, or to check a stretch of
+  # prod on demand.
   workflow_dispatch:
     inputs:
       since:
-        description: "Frontend commit to compare from. Blank uses the last one seen."
+        description: "Frontend commit to read from. Blank reads the latest release on its own."
+        required: false
+      until:
+        description: "Frontend commit to read up to. Blank uses whatever prod is on now."
         required: false
 
 concurrency: sync-from-frontend
@@ -42,13 +47,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Work out the stretch of prod to read
+      - name: Read what that release contained
         id: range
         env:
           # Read through the environment, never pasted into the script with
           # ${{ }}: whoever fires the dispatch writes these.
-          DISPATCHED_SHA: ${{ github.event.client_payload.sha }}
-          MANUAL_SINCE: ${{ inputs.since }}
+          PUSHED_FROM: ${{ github.event.client_payload.before }}
+          PUSHED_TO: ${{ github.event.client_payload.sha }}
+          MANUAL_FROM: ${{ inputs.since }}
+          MANUAL_TO: ${{ inputs.until }}
           GH_TOKEN: ${{ secrets.FRONTEND_READ_TOKEN }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
@@ -56,12 +63,16 @@ jobs:
             exit 1
           fi
 
-          FROM="${MANUAL_SINCE:-$(cat .github/frontend-seen.txt 2>/dev/null || true)}"
-          TO="$DISPATCHED_SHA"
-          # A manual run carries no sha, so ask what prod is on right now.
+          TO="${MANUAL_TO:-$PUSHED_TO}"
+          # Run by hand with nothing given: read whatever prod is on now.
           [ -n "$TO" ] || TO=$(gh api "repos/$FRONTEND/branches/prod" --jq .commit.sha)
-          # No marker yet: read just this one release rather than all of history.
-          [ -n "$FROM" ] || FROM=$(gh api "repos/$FRONTEND/commits/$TO" --jq '.parents[0].sha')
+
+          FROM="${MANUAL_FROM:-$PUSHED_FROM}"
+          # A brand new branch pushes from all zeros, and a manual run may give
+          # nothing. Either way, read this one release on its own.
+          case "$FROM" in
+            ""|*[!0-9a-f]*|0000000*) FROM=$(gh api "repos/$FRONTEND/commits/$TO" --jq '.parents[0].sha') ;;
+          esac
 
           case "$FROM$TO" in
             *[!0-9a-f]*|"") echo "::error::Not a commit id: from=$FROM to=$TO"; exit 1 ;;
@@ -69,12 +80,11 @@ jobs:
 
           if [ "$FROM" = "$TO" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "prod has not moved since the last look."
+            echo "Nothing between $FROM and $TO."
             exit 0
           fi
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
-          echo "to=$TO" >> "$GITHUB_OUTPUT"
           echo "Reading $FROM..$TO"
 
           # What shipped: the commit subjects and the files they touched. Small,
@@ -153,8 +163,6 @@ jobs:
       - name: Decide whether there is anything to open
         if: steps.range.outputs.changed == 'true'
         id: outcome
-        env:
-          TO: ${{ steps.range.outputs.to }}
         run: |
           # What was actually edited decides this, not what the summary claims,
           # so a run that edits skills but forgets the summary still opens a pull
@@ -177,11 +185,6 @@ jobs:
             exit 0
           fi
           echo "skills=true" >> "$GITHUB_OUTPUT"
-
-          # The marker only moves forward when a pull request carries it, so a
-          # release that opens no pull request stays in the next stretch read and
-          # cannot be silently skipped.
-          printf '%s\n' "$TO" > .github/frontend-seen.txt
 
           if python3 scripts/check_skills.py; then
             echo "check=passed" >> "$GITHUB_OUTPUT"
