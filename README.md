@@ -60,7 +60,7 @@ npx skills add dalmia/calibrate-skills --agent windsurf
 npx skills add dalmia/calibrate-skills --agent codex
 ```
 
-If the skills are installed correctly, you should see a new `/onboard` skill along with a few other skills mentioned [here](https://calibrate.artpark.ai/docs/agents/skills#available-skills). If the skills don't appear instantly, restart your session and open a new chat session after installing so the skills are picked up.
+If the skills are installed correctly, you should see a new `/onboard` skill along with a few other skills mentioned [here](https://docs.calibrate.artpark.ai/agents/skills#available-skills). If the skills don't appear instantly, restart your session and open a new chat session after installing so the skills are picked up.
 
 Then install the CLI, authenticate, and run the guided onboarding skill:
 
@@ -131,7 +131,7 @@ Full interactive reference: [calibrate.artpark.ai/api-reference](https://calibra
 
 ## Documentation
 
-See [calibrate.artpark.ai](https://calibrate.artpark.ai) for the full Calibrate
+See [docs.calibrate.artpark.ai](https://docs.calibrate.artpark.ai) for the full Calibrate
 documentation, CLI reference, and API keys guide.
 
 ## License
