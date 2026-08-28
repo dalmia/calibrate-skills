@@ -93,7 +93,7 @@ def check_update_line(problems: list[str]) -> None:
     the file from disk.
     """
     for f in sorted(SKILLS.rglob("SKILL.md")):
-        want = f"npx -y skills update {f.parent.name} -g -y"
+        want = f"npx -y skills update {f.parent.name} -g -y ; npx -y skills update {f.parent.name} -p -y"
         if want not in f.read_text(encoding="utf-8"):
             fail(
                 f"{f.relative_to(ROOT)}: missing the self-update line "
