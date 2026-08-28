@@ -45,6 +45,42 @@ Calibrate sends conversations to an HTTP endpoint you host.
 }
 ```
 
+## `interaction_type` — what the agent is called *with*
+
+**This is a second, independent question, not part of `--type`.** `--type` says
+*where the agent lives* (inside Calibrate, or behind your own endpoint);
+`interaction_type` says *what Calibrate sends it when it calls*. All four
+combinations are valid — an agent built inside Calibrate and a connected one can
+each be either kind.
+
+- **`--interaction-type conversation`** (short `-i`; the CLI default) — the agent
+  is called with the whole exchange so far:
+
+  ```json
+  { "messages": [
+      {"role": "assistant", "content": "Hi, how can I help?"},
+      {"role": "user", "content": "What's my vaccination schedule?"}
+  ] }
+  ```
+
+- **`--interaction-type general`** — the agent is called with only the latest
+  user text:
+
+  ```json
+  { "input": "Summarise this transcript in three bullets." }
+  ```
+
+- **Set at creation, and fixed after that.** `calibrate agents update` has no flag
+  for it and the API's update body doesn't accept it — changing an agent's kind
+  means creating a new agent.
+- **Simulations need `conversation`.** A simulation always sends the exchange so
+  far, so a `general` agent can't be used with one.
+- **Reading it back**: `calibrate agents list --output-format json` returns
+  `interaction_type` on every item — when the user reuses an existing agent, take
+  it from there instead of asking again.
+- **CLI floor**: `--interaction-type` exists from CLI 0.0.41 onward. Omitting it
+  keeps today's behavior (`conversation`).
+
 ## Choosing
 
 | Have a running service at a URL? | Use |
@@ -53,4 +89,5 @@ Calibrate sends conversations to an HTTP endpoint you host.
 | Yes | `type=connection` |
 
 When in doubt default to `type=agent` so the user isn't blocked on standing up
-an endpoint they don't have.
+an endpoint they don't have. That table settles `--type` only — the kind of call
+the agent takes is the separate question above, and you have to answer both.

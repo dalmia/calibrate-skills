@@ -61,12 +61,24 @@ Gather 20–50 items the evaluator will judge. Real agent outputs are best — p
 them from a recent run (`calibrate agent-tests get-run --task-id <t>`). Fewer
 than ~20 makes the agreement number noisy; more is steadier.
 
-Create the task and link the evaluator:
+Create the task and link the evaluator. **`--type` has to match what the
+evaluator judges** — the task type sets the shape of every item, so a mismatch
+hands the judge something it can't read:
+
+| Evaluator being calibrated | `--type` | Each item's `payload` |
+| --- | --- | --- |
+| `llm` (a reply, with the conversation before it) | `llm` | `name`, `chat_history`, `agent_response` |
+| `llm-general` (one input and one answer) | `llm-general` | `name`, `input`, `output` |
+| `conversation` (a whole conversation) | `conversation` | `name`, `transcript` |
+| `stt` (a transcript) | `stt` | `name`, `reference_transcript`, `predicted_transcript` |
+
+An agent that takes one input at a time is judged by an `llm-general` evaluator,
+so its calibration task is `llm-general` too.
 
 ```bash
 calibrate annotation-tasks create \
   --name "<evaluator> calibration" \
-  --type conversation \
+  --type <llm|llm-general|conversation|stt|tts> \
   --evaluator-ids '["<evaluator_uuid>"]' \
   --output-format json
 ```

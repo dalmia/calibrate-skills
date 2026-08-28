@@ -95,8 +95,12 @@ then `calibrate login`. See [`calibrate-resources`](../../overview/calibrate-res
 
 ## Phase 1 — Describe your agent
 
-Ask what the agent does, who uses it, and where it fails today. Write a short
-summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate:
+Ask what the agent does, who uses it, and where it fails today. Also settle
+which kind it is — ask it in their words ("does it go back and forth with a
+person, or take one instruction and give one answer?"), never by the field name.
+That answer sets `interaction_type` at creation and can never be changed
+afterwards, and it decides which test and evaluator types are allowed later.
+Write a short summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate:
 
 → **`/connect-agent`** — register + `verify-connection`. Record the resulting
 `agent_uuid` in the state file. Don't proceed until the connection verifies.
@@ -107,8 +111,11 @@ Turn the goal into a falsifiable claim ("when the user gives an ORD-\d+ id, the
 agent calls `check_order` with that id"). Write it into **Phase 2**. Then:
 
 → **`/build-test-suite`** (or **`/import-dataset`** if they already have a
-dataset). Name the evaluator type per case as you go: `tool_call` = deterministic
-and free; `response` = needs a judge. Record the `test_uuids`.
+dataset). Name the test type per case as you go: `tool_call` = deterministic and
+free; `response`, `conversation` and `general` all need a judge. Phase 1's answer
+fixes the choice — a back-and-forth agent takes `response` or `conversation`
+cases, a one-instruction-one-answer agent takes `general` ones. Record the
+`test_uuids`.
 
 ## Phase 3 — Evaluators (only if needed)
 

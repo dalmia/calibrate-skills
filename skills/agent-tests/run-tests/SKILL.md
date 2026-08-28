@@ -86,6 +86,15 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
 
   Already-linked tests are skipped, so re-linking is safe.
 
+  **Linking is rejected when the test was built for the other kind of agent.**
+  A `general` test only links to a `general` agent; `response` and
+  `conversation` tests only link to a `conversation` agent; a `tool_call` test
+  links to whichever kind matches the key it carries (`input` or `history`).
+  Tell the user plainly that the test was written for a different kind of agent
+  than this one, so it can't be run here — a test has to be built for the kind
+  of agent it runs against. Either pick a matching agent, or send them to
+  `/build-test-suite` to write cases for this one.
+
 Confirm the linked set matches what the user expects before running.
 
 ## Phase 2: Launch the run
