@@ -32,7 +32,7 @@ calibrate CLI binary isn't installed." Guard against it:
 
 - Link `../../references/voice.md` from the skill's reference line.
 - Open the skill with a `## Get the latest instructions` section that runs
-  `npx -y skills update <skill-name> -g -y` and tells the agent to re-read the
+  `npx -y skills update <name> -g -y ; npx -y skills update <name> -p -y` and tells the agent to re-read the
   file from disk. `main` is served live, so an installed copy can be months
   old; copy the wording from any existing skill. CI checks the line is there.
 - Keep agent-only mechanics (UUIDs, `config-param`, TOON, polling, error shapes)
