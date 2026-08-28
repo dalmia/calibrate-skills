@@ -9,6 +9,7 @@ Since `npx skills add dalmia/calibrate-skills` serves the default branch live,
   - no broken relative links between skill files
   - no echo-prone jargon in headings (the agent quotes headings verbatim)
   - every SKILL.md links the voice reference (how to speak to the user)
+  - every SKILL.md tells the agent to update itself before running
   - the onboarding setup-check script fails on a blank intake and passes on a
     filled one
 
@@ -84,6 +85,24 @@ def check_voice_link(problems: list[str]) -> None:
             )
 
 
+def check_update_line(problems: list[str]) -> None:
+    """Every skill must tell the agent to pull the latest copy of itself first.
+
+    `main` is served live, so a user's installed SKILL.md can be months old.
+    The fix is in-band: each skill opens by updating itself, then re-reading
+    the file from disk.
+    """
+    for f in sorted(SKILLS.rglob("SKILL.md")):
+        want = f"npx -y skills update {f.parent.name} -g -y"
+        if want not in f.read_text(encoding="utf-8"):
+            fail(
+                f"{f.relative_to(ROOT)}: missing the self-update line "
+                f"`{want}` (see the 'Get the latest instructions' section in "
+                f"any other skill)",
+                problems,
+            )
+
+
 def check_links(problems: list[str]) -> None:
     for f in sorted(ROOT.rglob("*.md")):
         for m in re.finditer(r"\]\((\.\.?/[^)]+\.md)\)", f.read_text(encoding="utf-8")):
@@ -126,6 +145,7 @@ def main() -> int:
     check_frontmatter(problems)
     check_heading_jargon(problems)
     check_voice_link(problems)
+    check_update_line(problems)
     check_links(problems)
     check_preflight(problems)
     if problems:
