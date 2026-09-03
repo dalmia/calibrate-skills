@@ -86,6 +86,15 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
 
   Already-linked tests are skipped, so re-linking is safe.
 
+- **Tests linked that the user no longer wants run** → unlink them:
+
+  ```bash
+  calibrate agent-tests unlink --agent-uuid <agent_uuid> \
+    --test-uuids '["<test_uuid>", ...]'
+  ```
+
+  Tests that aren't linked are skipped, so this is safe to call broadly.
+
 Confirm the linked set matches what the user expects before running.
 
 ## Phase 2: Launch the run
@@ -117,6 +126,12 @@ calibrate agent-tests get-run --task-id <task_id> --output-format json
 Continue until `status` is `completed` or `failed`. Report only the status the
 command actually returns — do not assume completion.
 
+A run can end without every case having actually run: `aborted` means a user
+stopped it partway (results collected so far are kept); `stopped_early` means
+the run auto-stopped itself after too many cases failed in a row. Either way,
+carry the flag into Phase 4 rather than presenting the run as if it went the
+distance.
+
 ## Phase 4: Present results
 
 Lead with the outcome, **failures first**. For each case show PASS or FAIL and,
@@ -134,6 +149,17 @@ PASSED
   ✓ <test name>
   ...
 ```
+
+If `aborted` or `stopped_early` is set, say so up front — "stopped after 6 of 20,
+someone ended it early" or "auto-stopped after too many failures in a row" —
+before giving the tally, and count only cases that actually ran.
+
+A case can also come back **unanswered** (`unanswered: true`) rather than
+pass or fail — the agent or the judge couldn't be reached, so `reasoning` holds
+the underlying error, not a verdict on the agent. List these separately from
+real failures; folding them into the fail count makes the pass rate look worse
+than the agent actually is. A case marked `not_run: true` never started (the
+run was stopped first) — leave it out of both the pass and fail counts.
 
 **Known pattern to flag, not to over-report:** a case where the agent made a
 tool call without a text reply often surfaces as a FAIL even though it's usually

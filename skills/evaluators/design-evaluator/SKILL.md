@@ -71,11 +71,20 @@ The list includes the built-in defaults. If a judge already covers the intent,
 present it and ask whether to reuse it (hand to `/build-test-suite`) rather than
 create another. If a default is close but its rubric needs adjusting, don't
 rebuild it here — defaults are editable, so hand to `/iterate-evaluator` to tune
-it. Author from scratch only when no default is close.
+it (unless `is_protected` locks it to prompt-only edits — `/iterate-evaluator`
+handles that check). Author from scratch only when no default is close.
 
 ## Phase 1: Decide what it judges
 
-Two axes fix the evaluator's shape. Ask both before writing any prompt.
+This flow is for a judge that scores automatically — model-graded (`llm`,
+`llm-general`, `conversation`) or audio-graded (`tts`, `stt`). If what the
+user actually wants is a **person** to grade whether the agent called the
+right tool (the `tool-call` evaluator type), that's not a prompt/model
+exercise — it has no judge to design. Point them to `/calibrate-evaluator`
+to set up that annotation instead.
+
+Two axes fix the evaluator's shape for everything else. Ask both before
+writing any prompt.
 
 - **data-type** — the modality the judge reads: `text` (grades a text reply or
   transcript) or `audio` (grades synthesized speech / audio output).
