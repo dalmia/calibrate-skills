@@ -55,6 +55,12 @@ calibrate evaluators get --evaluator-uuid <id> --output-format json
 
 If the user gave a name, `calibrate evaluators list` to find the UUID first.
 
+A `tool-call` evaluator is a different case: there's no judge prompt to run,
+because a person is the judge — Phase 2 collects the human label directly
+(did the agent call the right tool?) and Phase 3 doesn't apply. Skip straight
+from Phase 2 to Phase 4, comparing annotators against each other rather than
+against a judge.
+
 ## Phase 1: Assemble the sample
 
 Gather 20–50 items the evaluator will judge. Real agent outputs are best — pull

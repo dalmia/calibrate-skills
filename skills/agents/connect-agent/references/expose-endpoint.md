@@ -24,6 +24,12 @@ Calibrate needs one HTTP route that follows a fixed contract:
   An optional `model` field is added only when benchmarking across models; ignore
   it unless the agent switches models from that input.
 
+  Every request Calibrate sends here also carries `X-Calibrate-Eval: 1`. The
+  route can read that header to tell a Calibrate test call apart from a real
+  user request — for example to skip writing it into production logs, or to
+  tag the trace it sends elsewhere. Optional: only mention it if the user
+  cares about separating test traffic from real traffic.
+
 - **Response** — the route returns JSON with **at least one** of `response` (the
   agent's text reply) or `tool_calls` (an array of `{tool, arguments}`, each
   optionally carrying an `output`):

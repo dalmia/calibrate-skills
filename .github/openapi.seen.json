@@ -13,7 +13,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\nFor `type=agent`, omitted keys inherit managed defaults. Omit `config` entirely to use all defaults. For `type=connection`, `config` is stored as-is and must contain `agent_url`"
+            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nFor `type=agent`, omitted keys inherit managed defaults. Omit `config` entirely to use all defaults. For `type=connection`, `config` is stored as-is and must contain `agent_url`"
           },
           "interaction_type": {
             "default": "conversation",
@@ -216,6 +216,41 @@
         "title": "AgentSummary",
         "type": "object"
       },
+      "AgentTestBulkDelete": {
+        "properties": {
+          "agent_uuid": {
+            "description": "Agent to unlink tests from",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Agent Uuid",
+            "type": "string"
+          },
+          "test_uuids": {
+            "description": "Tests to unlink from the agent",
+            "examples": [
+              [
+                "b1c2d3e4-f5a6-7890-bcde-f12345678901"
+              ]
+            ],
+            "items": {
+              "maxLength": 36,
+              "minLength": 36,
+              "type": "string"
+            },
+            "title": "Test Uuids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "agent_uuid",
+          "test_uuids"
+        ],
+        "title": "AgentTestBulkDelete",
+        "type": "object"
+      },
       "AgentTestRunCreateResponse": {
         "properties": {
           "status": {
@@ -247,6 +282,12 @@
       },
       "AgentTestRunListItem": {
         "properties": {
+          "aborted": {
+            "default": false,
+            "description": "Whether a user stopped this run before it finished. The results collected up to that point are kept, and test cases that never ran are counted neither as passed nor as failed",
+            "title": "Aborted",
+            "type": "boolean"
+          },
           "cost": {
             "anyOf": [
               {
@@ -271,9 +312,9 @@
             "type": "boolean"
           },
           "evaluators": {
-            "description": "Names of the evaluators that judged this run, deduplicated and in display order. `Tool call` is appended when any test in the run was a tool-call test. Empty when the run had no evaluators",
+            "description": "The evaluators that judged this run, deduplicated and in display order. A `Tool call` entry is appended when any test in the run was a tool-call test. That entry has no `uuid`, because it is not an evaluator in the library. Empty when the run had no evaluators",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RunListEvaluator"
             },
             "title": "Evaluators",
             "type": "array"
@@ -324,7 +365,7 @@
             "title": "Model Results"
           },
           "name": {
-            "description": "Display name, such as `Run 1` for a unit test or `Benchmark 1` for a benchmark",
+            "description": "Name of the run. A run nobody has renamed shows its number instead, such as `Run 1` for a test run or `Benchmark 1` for a benchmark",
             "title": "Name",
             "type": "string"
           },
@@ -404,6 +445,18 @@
             "title": "Type",
             "type": "string"
           },
+          "unanswered_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of test cases that produced no answer because the agent or the judge could not be reached, which makes the pass rate an unfair measure of the agent",
+            "title": "Unanswered Tests"
+          },
           "updated_at": {
             "description": "When the run was last updated (ISO 8601 UTC)",
             "title": "Updated At",
@@ -431,6 +484,26 @@
         "title": "AgentTestRunListItem",
         "type": "object"
       },
+      "AgentTestsBulkUnlinkResponse": {
+        "properties": {
+          "deleted_count": {
+            "description": "Number of links removed. Tests that were not linked are excluded",
+            "title": "Deleted Count",
+            "type": "integer"
+          },
+          "message": {
+            "description": "Confirmation message",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted_count",
+          "message"
+        ],
+        "title": "AgentTestsBulkUnlinkResponse",
+        "type": "object"
+      },
       "AgentTestsCreate": {
         "properties": {
           "agent_uuid": {
@@ -451,6 +524,8 @@
               ]
             ],
             "items": {
+              "maxLength": 36,
+              "minLength": 36,
               "type": "string"
             },
             "title": "Test Uuids",
@@ -490,7 +565,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\nReplaces the stored config. Omit to leave unchanged\n\nFor `type=connection`, changing `agent_url` or `agent_headers` resets the connection and benchmark verification flags"
+            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nReplaces the stored config. Omit to leave unchanged\n\nFor `type=connection`, changing `agent_url` or `agent_headers` resets the connection and benchmark verification flags"
           },
           "name": {
             "anyOf": [
@@ -573,6 +648,27 @@
                 "f47ac10b-58cc-4372-a567-0e02b2c3d479": {
                   "reasoning": "meets the bar",
                   "value": true
+                }
+              }
+            ]
+          },
+          "evaluator_results": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Evaluator scores to record, keyed by evaluator ID. Each evaluator ID must be linked to the task. Put the score in `value`, a bool for binary or a number within the scale for rating, with optional `reasoning` and `version_number`. Omit `version_number` to record against the evaluator's live version. An item recording a tool call takes the tool-call evaluator and no other, and every other item takes any evaluator except that one",
+            "examples": [
+              {
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479": {
+                  "reasoning": "meets the bar",
+                  "value": true,
+                  "version_number": 2
                 }
               }
             ]
@@ -759,7 +855,7 @@
           },
           "items": {
             "default": [],
-            "description": "The task's items, each with its agreement stats. You get these when you fetch one task by ID, not when you list tasks",
+            "description": "The task's items, each with its agreement stats and an `is_tool_call` flag marking the rows a person labels on the tool call rather than a text reply. You get these when you fetch one task by ID, not when you list tasks",
             "items": {
               "additionalProperties": true,
               "type": "object"
@@ -1065,10 +1161,11 @@
             "type": "string"
           },
           "reason": {
-            "description": "Why this agent was not run:\n- `no_linked_tests`: the agent has no tests linked\n- `connection_not_verified`: the agent's connection is not verified",
+            "description": "Why this agent was not run:\n- `no_linked_tests`: the agent has no tests linked\n- `connection_not_verified`: the agent's connection is not verified\n- `over_row_limit`: the agent has more linked tests than this workspace allows in one run",
             "enum": [
               "no_linked_tests",
-              "connection_not_verified"
+              "connection_not_verified",
+              "over_row_limit"
             ],
             "title": "Reason",
             "type": "string"
@@ -1102,6 +1199,8 @@
             "anyOf": [
               {
                 "items": {
+                  "maxLength": 36,
+                  "minLength": 36,
                   "type": "string"
                 },
                 "type": "array"
@@ -1127,6 +1226,12 @@
       },
       "BenchmarkStatusResponse": {
         "properties": {
+          "aborted": {
+            "default": false,
+            "description": "Whether a user stopped this run before it finished. The results collected up to that point are kept, and test cases that never ran are counted neither as passed nor as failed",
+            "title": "Aborted",
+            "type": "boolean"
+          },
           "error": {
             "default": false,
             "description": "True if the run failed",
@@ -1206,6 +1311,11 @@
             "description": "Results for each model",
             "title": "Model Results"
           },
+          "name": {
+            "description": "Name of the run. A run nobody has renamed shows its number instead, such as `Run 1` for a test run or `Benchmark 1` for a benchmark",
+            "title": "Name",
+            "type": "string"
+          },
           "share_token": {
             "anyOf": [
               {
@@ -1250,6 +1360,7 @@
         },
         "required": [
           "task_id",
+          "name",
           "status"
         ],
         "title": "BenchmarkStatusResponse",
@@ -1273,6 +1384,30 @@
             "description": "How many items the request resolved to",
             "title": "Count",
             "type": "integer"
+          },
+          "evaluator_result_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many evaluator scores were stored, present only when you send `evaluator_results` with the items",
+            "title": "Evaluator Result Count"
+          },
+          "evaluator_run_job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the evaluator-run job that holds the scores you provided, present only when you send `evaluator_results` with the items",
+            "title": "Evaluator Run Job Id"
           },
           "existing_item_ids": {
             "anyOf": [
@@ -1788,13 +1923,14 @@
           },
           "evaluator_type": {
             "default": "llm",
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
             "enum": [
               "tts",
               "stt",
               "llm",
               "llm-general",
-              "conversation"
+              "conversation",
+              "tool-call"
             ],
             "title": "Evaluator Type",
             "type": "string"
@@ -1886,13 +2022,14 @@
             "title": "Description"
           },
           "evaluator_type": {
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
             "enum": [
               "tts",
               "stt",
               "llm",
               "llm-general",
-              "conversation"
+              "conversation",
+              "tool-call"
             ],
             "title": "Evaluator Type",
             "type": "string"
@@ -1900,6 +2037,11 @@
           "is_default": {
             "description": "True when the evaluator is a built-in default or your workspace's editable copy of one. False for an evaluator you created yourself",
             "title": "Is Default",
+            "type": "boolean"
+          },
+          "is_protected": {
+            "description": "True when the evaluator is locked. A locked evaluator cannot be deleted, and only its name, description and rubric can change",
+            "title": "Is Protected",
             "type": "boolean"
           },
           "live_version_id": {
@@ -1988,6 +2130,7 @@
           "data_type",
           "output_type",
           "is_default",
+          "is_protected",
           "created_at",
           "updated_at",
           "versions"
@@ -3428,12 +3571,41 @@
         "title": "ResolveAgentNamesResponse",
         "type": "object"
       },
+      "RunListEvaluator": {
+        "description": "One evaluator on a run-LIST row: just enough to name it and open it.\nThe rubric, prompt and version live on the run-DETAIL endpoint.",
+        "properties": {
+          "name": {
+            "description": "Name of the evaluator",
+            "title": "Name",
+            "type": "string"
+          },
+          "uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the evaluator. Absent for the `Tool call` entry, which is not an evaluator in the library",
+            "title": "Uuid"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "RunListEvaluator",
+        "type": "object"
+      },
       "RunTestRequest": {
         "properties": {
           "test_uuids": {
             "anyOf": [
               {
                 "items": {
+                  "maxLength": 36,
+                  "minLength": 36,
                   "type": "string"
                 },
                 "type": "array"
@@ -3649,6 +3821,12 @@
             "description": "Name of the test",
             "title": "Name"
           },
+          "not_run": {
+            "default": false,
+            "description": "Whether this case never started, because a user stopped the run first. It is counted neither as passed nor as failed",
+            "title": "Not Run",
+            "type": "boolean"
+          },
           "output": {
             "anyOf": [
               {
@@ -3707,6 +3885,45 @@
             ],
             "description": "ID of the test case within the run",
             "title": "Test Case Id"
+          },
+          "test_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "response",
+                  "tool_call",
+                  "conversation",
+                  "general"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the test asks of the agent, which decides how a reader draws the case",
+            "title": "Test Type"
+          },
+          "test_uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the test this case ran, which is what you pass to read the case on its own",
+            "examples": [
+              "b1c2d3e4-f5a6-7890-bcde-f12345678901"
+            ],
+            "title": "Test Uuid"
+          },
+          "unanswered": {
+            "default": false,
+            "description": "Whether this case produced no answer because the agent or the judge could not be reached, in which case `reasoning` carries the error and `passed` is not a verdict on the agent",
+            "title": "Unanswered",
+            "type": "boolean"
           }
         },
         "title": "TestCaseResult",
@@ -4012,7 +4229,7 @@
                 "type": "null"
               }
             ],
-            "description": "Whether the case passed (null if it errored or is still running)",
+            "description": "Whether the case passed (null while the case is still running)",
             "title": "Passed"
           }
         },
@@ -4143,6 +4360,12 @@
       },
       "TestRunStatusResponse": {
         "properties": {
+          "aborted": {
+            "default": false,
+            "description": "Whether a user stopped this run before it finished. The results collected up to that point are kept, and test cases that never ran are counted neither as passed nor as failed",
+            "title": "Aborted",
+            "type": "boolean"
+          },
           "cost": {
             "anyOf": [
               {
@@ -4160,6 +4383,21 @@
             "description": "True if the run failed",
             "title": "Error",
             "type": "boolean"
+          },
+          "evaluator_summary": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Totals for each evaluator over the whole run, matching the shape a benchmark reports for each model. Only evaluators that returned a verdict appear"
           },
           "evaluators": {
             "anyOf": [
@@ -4206,6 +4444,11 @@
             ],
             "description": "Aggregated response latency in milliseconds, as `{p50, p95, p99, count}`"
           },
+          "name": {
+            "description": "Name of the run. A run nobody has renamed shows its number instead, such as `Run 1` for a test run or `Benchmark 1` for a benchmark",
+            "title": "Name",
+            "type": "string"
+          },
           "passed": {
             "anyOf": [
               {
@@ -4248,6 +4491,12 @@
           "status": {
             "$ref": "#/components/schemas/TaskStatus",
             "description": "Current status of the run"
+          },
+          "stopped_early": {
+            "default": false,
+            "description": "Whether the run stopped before starting every test case, after too many failed in a row",
+            "title": "Stopped Early",
+            "type": "boolean"
           },
           "task_id": {
             "description": "Test run job ID",
@@ -4297,10 +4546,23 @@
               }
             ],
             "description": "Aggregated token usage as `{mean, min, max, count}`"
+          },
+          "unanswered_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of test cases that produced no answer because the agent or the judge could not be reached, which makes the pass rate an unfair measure of the agent",
+            "title": "Unanswered Tests"
           }
         },
         "required": [
           "task_id",
+          "name",
           "status"
         ],
         "title": "TestRunStatusResponse",
@@ -4468,6 +4730,17 @@
             ],
             "description": "What the agent was given for this turn. For a `general` agent, the standalone prompt as a string. For a `conversation` agent, the history up to the reported output, oldest turn first, in OpenAI chat format",
             "title": "Input"
+          },
+          "labels": {
+            "description": "Your own tags for this turn, such as an environment or a release. Matched exactly when filtering, so keep the spelling stable. Omit if you have none",
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Labels",
+            "type": "array"
           },
           "message_id": {
             "anyOf": [
@@ -4847,13 +5120,14 @@
             "title": "Description"
           },
           "evaluator_type": {
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
             "enum": [
               "tts",
               "stt",
               "llm",
               "llm-general",
-              "conversation"
+              "conversation",
+              "tool-call"
             ],
             "title": "Evaluator Type",
             "type": "string"
@@ -4861,6 +5135,11 @@
           "is_default": {
             "description": "True when the evaluator is a built-in default or your workspace's editable copy of one. False for an evaluator you created yourself",
             "title": "Is Default",
+            "type": "boolean"
+          },
+          "is_protected": {
+            "description": "True when the evaluator is locked. A locked evaluator cannot be deleted, and only its name, description and rubric can change",
+            "title": "Is Protected",
             "type": "boolean"
           },
           "live_version": {
@@ -4952,6 +5231,7 @@
           "data_type",
           "output_type",
           "is_default",
+          "is_protected",
           "created_at",
           "updated_at"
         ],
@@ -5433,7 +5713,28 @@
             }
           },
           {
-            "description": "Case-insensitive substring search on `name`. Blank is a no-op",
+            "description": "Keep only tests of these types. Repeat the parameter or pass one comma-separated value. Accepts `response`, `tool_call`, `conversation`, `general`",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only tests of these types. Repeat the parameter or pass one comma-separated value. Accepts `response`, `tool_call`, `conversation`, `general`",
+              "title": "Type"
+            }
+          },
+          {
+            "description": "Case-insensitive search on `name`. Blank is a no-op",
             "in": "query",
             "name": "q",
             "required": false,
@@ -5446,8 +5747,26 @@
                   "type": "null"
                 }
               ],
-              "description": "Case-insensitive substring search on `name`. Blank is a no-op",
+              "description": "Case-insensitive search on `name`. Blank is a no-op",
               "title": "Q"
+            }
+          },
+          {
+            "description": "How to match `q` against the searched fields",
+            "in": "query",
+            "name": "q_mode",
+            "required": false,
+            "schema": {
+              "default": "contains",
+              "description": "How to match `q` against the searched fields",
+              "enum": [
+                "contains",
+                "starts_with",
+                "ends_with",
+                "exact"
+              ],
+              "title": "Q Mode",
+              "type": "string"
             }
           },
           {
@@ -5565,6 +5884,22 @@
             }
           },
           {
+            "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "full",
+              "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
             "description": "Return a compact response that omits heavy detail fields (`model_results.test_results`, `evaluators.output_config`), keeping only the lightweight decision fields. Omit for full detail",
             "in": "query",
             "name": "compact",
@@ -5621,6 +5956,71 @@
           }
         ],
         "summary": "Get benchmark status",
+        "tags": [
+          "agent-tests"
+        ]
+      }
+    },
+    "/agent-tests/bulk-unlink": {
+      "post": {
+        "description": "Unlink one or more tests from an agent. Tests that are not linked are skipped.",
+        "operationId": "bulk_delete_agent_test_links_agent_tests_bulk_unlink_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentTestBulkDelete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTestsBulkUnlinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Bulk unlink tests from agent",
         "tags": [
           "agent-tests"
         ]
@@ -5730,6 +6130,22 @@
             }
           },
           {
+            "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "full",
+              "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
             "description": "Return a compact response that omits heavy detail fields (`results.output`, `results.test_case`, `results.judge_results`, `results.reasoning`, `evaluators.output_config`), keeping only the lightweight decision fields. Omit for full detail",
             "in": "query",
             "name": "compact",
@@ -5786,6 +6202,110 @@
           }
         ],
         "summary": "Get test run status",
+        "tags": [
+          "agent-tests"
+        ]
+      }
+    },
+    "/agent-tests/run/{task_id}/results/{test_uuid}": {
+      "get": {
+        "description": "Get the full result of one test case in a run",
+        "operationId": "get_agent_test_case_result_agent_tests_run__task_id__results__test_uuid__get",
+        "parameters": [
+          {
+            "description": "Test run or benchmark the case was run in",
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "description": "Test run or benchmark the case was run in",
+              "examples": [
+                "a3b2c1d0-e5f4-3210-abcd-ef1234567890"
+              ],
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The test whose result to read, as `test_uuid` on the case",
+            "in": "path",
+            "name": "test_uuid",
+            "required": true,
+            "schema": {
+              "description": "The test whose result to read, as `test_uuid` on the case",
+              "examples": [
+                "b1c2d3e4-f5a6-7890-bcde-f12345678901"
+              ],
+              "title": "Test Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Which model's answer to read. Required for a benchmark, which runs every test once per model",
+            "in": "query",
+            "name": "model",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Which model's answer to read. Required for a benchmark, which runs every test once per model",
+              "examples": [
+                "openai/gpt-4.1"
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestCaseResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Get test case result",
         "tags": [
           "agent-tests"
         ]
@@ -7729,7 +8249,8 @@
                     "stt",
                     "llm",
                     "llm-general",
-                    "conversation"
+                    "conversation",
+                    "tool-call"
                   ],
                   "type": "string"
                 },

@@ -59,6 +59,13 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
 - Evaluators are either **built-in defaults** or **custom** ones you authored —
   both are editable the same way (add a version with `evaluators create-version`).
   In list/get output, `is_default` flags which kind it is.
+- `is_protected` flags a **locked** evaluator: it can't be deleted, and a new
+  version can only change the prompt, name, or description — not `judge_model`,
+  the variable set, or `output_config`.
+- `evaluator_type` (`tts`, `stt`, `llm`, `llm-general`, `conversation`,
+  `tool-call`) is the modality/shape the judge works over. `tool-call` is the
+  odd one out: it's graded by a person in an annotation task, not by a model —
+  it has no `judge_model` or `system_prompt`.
 
 ## Agent (`agents create --config-param`)
 
@@ -88,3 +95,10 @@ See [`agents/connect-agent/references/connection-types.md`](../agents/connect-ag
   carries `annotations`, the request must set `--annotator-id <id>` (the
   annotator those labels belong to). Omit `annotations` to leave items unlabeled
   for annotators to fill.
+- `evaluator_results` — **optional**. Same shape as `annotations`
+  (`{value, reasoning?}`, keyed by evaluator UUID) plus an optional
+  `version_number` (defaults to the evaluator's live version), but these are
+  **evaluator/judge scores**, not human labels — use it to seed already-computed
+  results instead of running `create-evaluator-run`. An item scored for a
+  `tool-call` evaluator takes that evaluator and no other; every other item
+  takes any evaluator except `tool-call`.

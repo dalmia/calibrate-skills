@@ -17,7 +17,7 @@ lookup.
 
 Built-in **default** evaluators are editable too, not just ones you authored —
 tune them with the same flow below. So "the judge is wrong on X" is fixable even
-when the judge is one of the defaults.
+when the judge is one of the defaults, unless it's **locked** (Phase 0).
 
 Reference: [`../../references/config-shapes.md`](../../references/config-shapes.md)
 (evaluator version + variable shapes). Keep what you *say* to the user plain —
@@ -73,6 +73,13 @@ calibrate evaluators list --output-format json
 Note the live version and the variable names — you'll need both. The variable
 names are frozen (Phase 3); capture them now.
 
+Also check `is_protected`. A locked evaluator can't be deleted, and the only
+things you can change on it are its name, description, and the prompt itself
+— not `judge_model`, not the variable set, not `output_config`. If the fix the
+user wants needs one of those to change, say so up front and route to
+`/design-evaluator` for a new evaluator instead of trying to force it through
+a version.
+
 ## Phase 1: Diagnose
 
 Pin down what the judge gets wrong before touching the prompt. The strongest
@@ -100,7 +107,8 @@ problem:
   version — hand off to `/design-evaluator`.
 - **`judge_model`** — keep the same model unless model choice is the failure
   (e.g. the judge can't follow a nuanced rubric at all). Prompt changes are the
-  first lever; swap the model only when the prompt can't carry it.
+  first lever; swap the model only when the prompt can't carry it. On a
+  **locked** evaluator (Phase 0), this isn't optional — it can't change at all.
 - **`output_config`** — keep the same scale points/labels so old and new
   versions stay comparable. A `rating` evaluator requires `output_config`; a
   `binary` one keeps the default Correct/Wrong unless overridden.

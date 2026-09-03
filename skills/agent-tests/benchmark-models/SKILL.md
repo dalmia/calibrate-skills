@@ -125,6 +125,10 @@ calibrate agent-tests get-benchmark --task-id <task_id> --output-format json
 
 Report progress to the user as it advances; don't block silently.
 
+If the terminal result has `aborted: true`, someone stopped the benchmark
+before every model finished every test — say so before building the
+leaderboard, and rank only the cases that actually ran.
+
 ## Phase 6: Present the leaderboard
 
 Build a leaderboard from the terminal `get-benchmark` result — one row per
@@ -147,6 +151,11 @@ Two caveats to surface with the ranking:
 - **Tool-call-without-text is a known non-failure.** A turn where the agent
   emits a tool call and no user-facing text is expected behavior, not a miss —
   don't count it against a model.
+- **Unanswered and not-run cases aren't failures.** A case can come back
+  `unanswered` (the agent or judge couldn't be reached — `reasoning` holds the
+  error, not a verdict) or `not_run` (the benchmark was stopped before it got
+  there). Exclude both from a model's pass-rate instead of scoring them as
+  losses, and mention how many were excluded if the count is non-trivial.
 
 ## Handoffs
 
