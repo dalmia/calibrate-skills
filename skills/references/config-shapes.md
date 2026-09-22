@@ -88,3 +88,9 @@ See [`agents/connect-agent/references/connection-types.md`](../agents/connect-ag
   carries `annotations`, the request must set `--annotator-id <id>` (the
   annotator those labels belong to). Omit `annotations` to leave items unlabeled
   for annotators to fill.
+- `evaluator_results` — **optional**. Judge scores to seed instead of running
+  the evaluator yourself, keyed by evaluator UUID (each must be linked to the
+  task). Same `value`/`reasoning` shape as `annotations`, plus an optional
+  `version_number` (omit to record against the evaluator's live version). An
+  item that scores a tool call takes the `tool-call` evaluator and no other;
+  every other item takes any evaluator except that one.

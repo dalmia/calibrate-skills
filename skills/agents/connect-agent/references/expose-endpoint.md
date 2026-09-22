@@ -35,6 +35,11 @@ Calibrate needs one HTTP route that follows a fixed contract:
     ] }
   ```
 
+- **Test-traffic header** — every request Calibrate sends carries
+  `X-Calibrate-Eval: 1`. Mention it when you add the route: the handler can read
+  it to tell a test call from a real user, e.g. to skip logging it as production
+  traffic. Optional — don't add handling for it unless the user wants that.
+
 ## Inspect first — don't assume greenfield
 
 Before editing anything, find out whether a Calibrate-style route **already

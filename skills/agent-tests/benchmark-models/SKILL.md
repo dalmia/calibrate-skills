@@ -95,6 +95,11 @@ runs, plus judging" — and confirm before spending it.
 Offer to narrow the run: `--test-uuids` restricts the benchmark to a subset of
 the linked tests (each ID must be linked). Omit it to run all linked tests.
 
+Models run several at a time by default. If the agent under test is the user's
+own service and they're worried about the load a burst of parallel calls would
+put on it, offer to run the models one after another instead — slower, easier
+on their agent.
+
 ## Phase 4: Launch
 
 ```bash
@@ -110,6 +115,9 @@ To restrict to a subset of linked tests, add:
   --test-uuids '["<test_uuid>", "..."]'
 ```
 
+To run the models one after another instead of several at once, add
+`--parallel-models false`.
+
 Capture `task_id` from the JSON response. Never fabricate it — if it's missing,
 report the structured error instead of guessing.
 
@@ -123,7 +131,9 @@ The benchmark runs as a background job. Poll until the status is final
 calibrate agent-tests get-benchmark --task-id <task_id> --output-format json
 ```
 
-Report progress to the user as it advances; don't block silently.
+Report progress to the user as it advances; don't block silently. If the
+status comes back `failed`, the output carries an `error` message saying why —
+translate it into plain words rather than just saying "it failed."
 
 ## Phase 6: Present the leaderboard
 
@@ -147,6 +157,12 @@ Two caveats to surface with the ranking:
 - **Tool-call-without-text is a known non-failure.** A turn where the agent
   emits a tool call and no user-facing text is expected behavior, not a miss —
   don't count it against a model.
+- **A pass-rate isn't the full picture if a model's run didn't finish
+  cleanly.** If the result shows a model's run was stopped early or gave up
+  part way after too many failures in a row, say so next to that model's row
+  rather than ranking it on a partial count. Same for cases that came back with
+  no answer because the agent or the judge couldn't be reached — call those out
+  separately instead of folding them into the failures.
 
 ## Handoffs
 
