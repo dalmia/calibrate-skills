@@ -86,6 +86,17 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
 
   Already-linked tests are skipped, so re-linking is safe.
 
+- **Wants some removed instead?** Unlink them:
+
+  ```bash
+  calibrate agent-tests unlink --agent-uuid <agent_uuid> \
+    --test-uuids '["<test_uuid>", ...]'
+  ```
+
+  Tests that aren't linked are skipped, so this is safe to re-run too. This
+  only removes the link — the test itself still exists and can be relinked or
+  used with other agents.
+
 Confirm the linked set matches what the user expects before running.
 
 ## Phase 2: Launch the run
@@ -115,7 +126,9 @@ calibrate agent-tests get-run --task-id <task_id> --output-format json
 ```
 
 Continue until `status` is `completed` or `failed`. Report only the status the
-command actually returns — do not assume completion.
+command actually returns — do not assume completion. If it's `failed`, the
+output carries an `error` message saying why the run couldn't be carried out —
+translate it into plain words for the user rather than just saying "it failed."
 
 ## Phase 4: Present results
 
@@ -140,6 +153,15 @@ tool call without a text reply often surfaces as a FAIL even though it's usually
 correct behavior. Call this out as a likely non-issue rather than treating it as
 a real regression — unless the test's hypothesis was specifically about that
 tool call, in which case it matters.
+
+**Don't report a bare pass/total if the run didn't cleanly finish every case.**
+If the output shows the user stopped the run early, or it gave up part way
+after too many failures in a row, say so plainly instead of presenting the
+partial count as the full picture — e.g. "stopped after 12 of 20; here's what
+ran." Separately, if any cases came back with no answer because the agent or
+the judge couldn't be reached, call those out on their own rather than folding
+them into the failure count — a case with no answer isn't a verdict on the
+agent.
 
 ## Phase 5: Compare against history
 

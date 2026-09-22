@@ -115,6 +115,13 @@ Capture `job_uuid` and poll to completion:
 calibrate annotation-tasks get-evaluator-run --task-uuid <t> --job-uuid <j>
 ```
 
+If the user already has judge scores from elsewhere (say, a prior run they want
+to compare against these human labels) and doesn't need Calibrate to re-judge
+the items, seed those scores directly instead of running the judge: pass
+`evaluator_results` alongside (or instead of) `annotations` on `add-items`, keyed
+the same way. See the shape in
+[`../../references/config-shapes.md`](../../references/config-shapes.md).
+
 ## Phase 4: Measure agreement
 
 ```bash

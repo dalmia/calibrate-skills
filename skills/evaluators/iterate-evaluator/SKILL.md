@@ -73,6 +73,12 @@ calibrate evaluators list --output-format json
 Note the live version and the variable names — you'll need both. The variable
 names are frozen (Phase 3); capture them now.
 
+Also check `is_protected`. A locked evaluator can take a new version, but only
+its prompt/rubric — its `judge_model` cannot change on a locked evaluator, on
+top of the variable-name freeze that already applies to every evaluator. If the
+fix needs a different model, this one can't take it; hand off to
+`/design-evaluator` for a new evaluator instead.
+
 ## Phase 1: Diagnose
 
 Pin down what the judge gets wrong before touching the prompt. The strongest
@@ -100,7 +106,9 @@ problem:
   version — hand off to `/design-evaluator`.
 - **`judge_model`** — keep the same model unless model choice is the failure
   (e.g. the judge can't follow a nuanced rubric at all). Prompt changes are the
-  first lever; swap the model only when the prompt can't carry it.
+  first lever; swap the model only when the prompt can't carry it, and only if
+  the evaluator isn't locked (`is_protected`, checked in Phase 0) — a locked
+  one can't change models at all.
 - **`output_config`** — keep the same scale points/labels so old and new
   versions stay comparable. A `rating` evaluator requires `output_config`; a
   `binary` one keeps the default Correct/Wrong unless overridden.
