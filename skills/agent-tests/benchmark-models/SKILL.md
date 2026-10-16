@@ -110,6 +110,11 @@ To restrict to a subset of linked tests, add:
   --test-uuids '["<test_uuid>", "..."]'
 ```
 
+By default the models run several at a time. If the user wants to go easy on
+their own agent's servers, run them one after another with `--parallel-models
+false` (slower; check `calibrate agent-tests benchmark --help` for the exact
+flag).
+
 Capture `task_id` from the JSON response. Never fabricate it — if it's missing,
 report the structured error instead of guessing.
 
@@ -137,6 +142,14 @@ openai/gpt-4.1               16/20  (80%)
 ```
 
 Use only the numbers the command returned. **Never invent scores.**
+
+Check each model's `unanswered_tests` and `stopped_early` first. Cases with no
+answer (the agent or judge couldn't be reached) are already counted as not
+passed, so a model with unanswered cases is ranked unfairly low: show them as a
+separate count beside its score and suggest re-running that model. If a model
+`stopped_early`, it gave up after too many failures in a row — say so. If the
+run was `aborted`, the user stopped it and unstarted cases count as neither
+passed nor failed.
 
 Two caveats to surface with the ranking:
 

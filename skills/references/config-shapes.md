@@ -59,6 +59,9 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
 - Evaluators are either **built-in defaults** or **custom** ones you authored —
   both are editable the same way (add a version with `evaluators create-version`).
   In list/get output, `is_default` flags which kind it is.
+- An evaluator's type can also be `tool-call` (a person checks the agent called
+  the right tool). One with `is_protected` true is locked: it can't be deleted,
+  and only its name, description and rubric can change.
 
 ## Agent (`agents create --config-param`)
 
@@ -79,9 +82,32 @@ See [`agents/connect-agent/references/connection-types.md`](../agents/connect-ag
 }
 ```
 
-- `payload` — **required**. Its shape follows the task `--type`
-  (`conversation`, `stt`, `tts`, …), but `payload.name` is **always required**
-  and must be unique within the task.
+- `payload` — **required**. Its shape follows the task `--type`, but
+  `payload.name` is **always required** and must be unique within the task, and
+  `description` is accepted on every type. Other keys by type:
+  - `stt`: `predicted_transcript`, `reference_transcript`
+  - `tts`: `audio_path` (storage key or `s3://` URI), `text`
+  - `llm`: `agent_response`, `chat_history` (turns ending at the user turn);
+    optional `evaluator_variables`
+  - `llm-general`: `input`, `output`; optional `evaluator_variables`
+  - `conversation`: `transcript`; optional `evaluator_variables`
+  - A turn is `{role, content}`, plus optional `label` and `versions`. Likewise
+    `agent_response`, `input` and `output` take either a string or
+    `{content, label?, versions?}`: `content` is what the judge reads,
+    `versions` maps a name to another form (a translation, a human rewrite)
+    shown to annotators only.
+  - For `llm` and `llm-general`, `actual_tool_calls`, `expected_tool_calls` or
+    `tool_calls` (each a list of `{tool, arguments?, output?}`) mark the item as
+    a tool call for a person to judge (`is_tool_call` is then set on the item).
+    Those items are labelled with the `tool-call` evaluator type and no other.
+- `metadata` — **optional**, beside `payload`: a list of `{key, value}` strings
+  (up to 100) shown next to the item on the labelling form. On update, omit it
+  to keep what is stored; an empty list clears it.
+- `evaluator_results` — **optional**, beside `payload`: judge scores you already
+  have, keyed by evaluator UUID (each linked to the task), as
+  `{value, reasoning?, version_number?}`. Omit `version_number` to record against
+  the live version. The reply then carries `evaluator_result_count` and
+  `evaluator_run_job_id`.
 - `annotations` — **optional**. Human labels to seed, keyed by evaluator UUID
   (each must be linked to the task). `value` is a bool for a `binary` evaluator
   or a number for a `rating` one; `reasoning` is optional. Whenever any item
