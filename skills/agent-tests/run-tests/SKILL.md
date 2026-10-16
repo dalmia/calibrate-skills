@@ -85,6 +85,13 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
   ```
 
   Already-linked tests are skipped, so re-linking is safe.
+- **The user wants some tests taken off the agent** → unlink them in one call
+  (tests not linked are skipped; the reply says how many links were removed):
+
+  ```bash
+  calibrate agent-tests bulk-unlink --agent-uuid <agent_uuid> \
+    --test-uuids '["<test_uuid>", ...]'
+  ```
 
 Confirm the linked set matches what the user expects before running.
 
@@ -102,7 +109,9 @@ report the error and stop.
 - To run only a subset, add `--test-uuids '["<test_uuid>", ...]'` (each ID must
   be linked to the agent).
 - To run across **multiple agents** in one shot, mention
-  `calibrate agent-tests run-batch` as the batch option.
+  `calibrate agent-tests run-batch` as the batch option. An agent comes back as
+  not run with `over_row_limit` when it has more linked tests than the workspace
+  allows in one run — run a subset with `--test-uuids`, or unlink some tests.
 
 ## Phase 3: Poll for results
 
@@ -115,7 +124,16 @@ calibrate agent-tests get-run --task-id <task_id> --output-format json
 ```
 
 Continue until `status` is `completed` or `failed`. Report only the status the
-command actually returns — do not assume completion.
+command actually returns — do not assume completion. When a run fails before
+producing any result, `error` is a text explaining why; tell the user that
+reason in plain words.
+
+To keep a large run's output small, add `--mode summary` to `get-run`: one light
+row per case (name, verdict, short reason), without the conversation or judge
+verdicts. Read a single case in full with
+`calibrate agent-tests get-case-result --task-id <task_id> --test-uuid <test_uuid>`
+(from the case's `test_uuid`; for a benchmark add `--model <model>`). If either
+command rejects the flag or name, check `calibrate agent-tests --help`.
 
 ## Phase 4: Present results
 
@@ -134,6 +152,19 @@ PASSED
   ✓ <test name>
   ...
 ```
+
+Read the run's flags before calling it a pass rate:
+
+- `unanswered_tests` > 0 (or a case marked `unanswered`) — the agent or the judge
+  could not be reached for those cases. They are counted as not passed, but they
+  say nothing about the agent: report them separately ("4 cases got no answer —
+  the agent didn't respond"), put their reasoning (it holds the error) in plain
+  words, and suggest re-running rather than treating them as regressions.
+- `aborted` — the user stopped the run. Cases marked `not_run` never started and
+  count as neither passed nor failed; say the run was stopped partway.
+- `stopped_early` — the run gave up after too many cases failed in a row, so
+  some cases never started. Say so, and point to the likely cause (agent down,
+  a broken setup) before the pass rate.
 
 **Known pattern to flag, not to over-report:** a case where the agent made a
 tool call without a text reply often surfaces as a FAIL even though it's usually

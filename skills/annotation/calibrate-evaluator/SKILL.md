@@ -75,7 +75,8 @@ Capture `task_uuid`. (To link an evaluator later:
 `calibrate annotation-tasks set-evaluators --task-uuid <t> --evaluator-ids '["<e>"]'`.)
 
 Seed the items to be labeled. Each item is an `AnnotationItemPayload`: a
-required `payload` (its shape depends on the task `--type`, but `payload.name` is
+required `payload` (its shape depends on the task `--type`, see
+[`config-shapes.md`](../../references/config-shapes.md); `payload.name` is
 always required and must be unique in the task) and an optional `annotations`
 map. Unlabeled to start:
 

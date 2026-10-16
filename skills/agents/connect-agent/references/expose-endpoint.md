@@ -35,6 +35,10 @@ Calibrate needs one HTTP route that follows a fixed contract:
     ] }
   ```
 
+Every request Calibrate sends carries the header `X-Calibrate-Eval: 1`. Use it
+to tell a test run from a real user, e.g. to skip logging or to tag the trace
+the agent sends back. Nothing requires reading it.
+
 ## Inspect first — don't assume greenfield
 
 Before editing anything, find out whether a Calibrate-style route **already
