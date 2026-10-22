@@ -19,6 +19,11 @@ Built-in **default** evaluators are editable too, not just ones you authored —
 tune them with the same flow below. So "the judge is wrong on X" is fixable even
 when the judge is one of the defaults.
 
+Some evaluators are **locked** (`is_protected` in `evaluators get`): they can't
+be deleted, and only their name, description and rubric can change. If the
+user wants something else changed on one, say it's locked and offer to make a
+copy as a new evaluator instead.
+
 Reference: [`../../references/config-shapes.md`](../../references/config-shapes.md)
 (evaluator version + variable shapes). Keep what you *say* to the user plain —
 see [`../../references/voice.md`](../../references/voice.md).

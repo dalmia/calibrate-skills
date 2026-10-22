@@ -95,6 +95,12 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
   of agent it runs against. Either pick a matching agent, or send them to
   `/build-test-suite` to write cases for this one.
 
+- **Some linked tests should come off** → unlink them in one call with
+  `calibrate agent-tests bulk-unlink --agent-uuid <agent_uuid> --test-uuids '["<test_uuid>", ...]'`
+  (check `--help` for the exact flags). Tests that weren't linked are skipped;
+  the response's `deleted_count` is how many links were removed. Confirm the
+  list with the user first.
+
 Confirm the linked set matches what the user expects before running.
 
 ## Phase 2: Launch the run
@@ -111,7 +117,10 @@ report the error and stop.
 - To run only a subset, add `--test-uuids '["<test_uuid>", ...]'` (each ID must
   be linked to the agent).
 - To run across **multiple agents** in one shot, mention
-  `calibrate agent-tests run-batch` as the batch option.
+  `calibrate agent-tests run-batch` as the batch option. An agent can come back
+  skipped with reason `over_row_limit` (more linked tests than the workspace
+  allows in one run): tell the user, and offer to run a subset with
+  `--test-uuids`.
 
 ## Phase 3: Poll for results
 
@@ -125,6 +134,18 @@ calibrate agent-tests get-run --task-id <task_id> --output-format json
 
 Continue until `status` is `completed` or `failed`. Report only the status the
 command actually returns — do not assume completion.
+
+Read the flags on the result before you present it:
+
+- `error` is a string (the reason the run couldn't be carried out), not a
+  boolean. If it is set, report that reason in plain words instead of a score.
+- `aborted` — someone stopped the run. Results so far are kept; cases that never
+  ran have `not_run` set and count as neither passed nor failed.
+- `stopped_early` — the run gave up before starting every case because too many
+  failed in a row.
+- `unanswered_tests` — cases where the agent or the judge couldn't be reached.
+  These are included in `failed`, but they say nothing about the agent
+  (`unanswered` is set on each such case, with the error in `reasoning`).
 
 ## Phase 4: Present results
 
@@ -143,6 +164,18 @@ PASSED
   ✓ <test name>
   ...
 ```
+
+If the run was stopped, ended early, or has unanswered cases, say so right under
+the headline count and don't read the pass rate as a verdict on the agent. For
+unanswered cases, offer to re-run once the agent is reachable. Show those and
+cases that never ran in their own groups, not under FAILURES. In plain words:
+"4 of the 20 tests couldn't get an answer from your agent, so I'd treat 12/16 as
+the real score" — not field names.
+
+For a big run, `get-run` can return light rows per case (`mode=summary`: ID,
+name, verdict, short reason). Read a single case in full with
+`GET /agent-tests/run/{task_id}/results/{test_uuid}` (`test_uuid` is on each
+case) when the user asks why one failed.
 
 **Known pattern to flag, not to over-report:** a case where the agent made a
 tool call without a text reply often surfaces as a FAIL even though it's usually

@@ -96,6 +96,11 @@ calibrate annotation-tasks add-items --task-uuid <t> \
   --items '[{"payload":{"name":"item-1", ...}}]'
 ```
 
+Field names per task type, translations or rewrites shown to annotators,
+tool-call items, `metadata`, and `evaluator_results` are in
+[`config-shapes.md`](../../references/config-shapes.md). If the agent's reply is
+a tool call, label it with a `tool-call` evaluator, not a text judge.
+
 ## Phase 2: Collect human labels
 
 Have annotators label every item. Seed known human labels inline, one call per

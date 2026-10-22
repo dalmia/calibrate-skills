@@ -156,3 +156,39 @@ See [`agents/connect-agent/references/connection-types.md`](../agents/connect-ag
   carries `annotations`, the request must set `--annotator-id <id>` (the
   annotator those labels belong to). Omit `annotations` to leave items unlabeled
   for annotators to fill.
+
+Payload fields by task `--type` (`name`, unique in the task, and `description`
+are accepted by every type; unknown fields are rejected):
+
+- `stt`: `reference_transcript`, `predicted_transcript`
+- `tts`: `text`, `audio_path` (storage key or `s3://` URI)
+- `llm`: `chat_history` (list of `{role, content}` turns ending at the user
+  turn), `agent_response`, optional `evaluator_variables`
+- `llm-general`: `input`, `output`, optional `evaluator_variables`
+- `conversation`: `transcript` (list of `{role, content}` turns), optional
+  `evaluator_variables`
+
+`agent_response`, `input` and `output` take a string, or
+`{content, label, versions}` — `label` names the text for annotators and
+`versions` holds other forms of it (a translation, a human rewrite) keyed by the
+name annotators see; the judge reads only `content`. Turns in `chat_history` /
+`transcript` take `label` and `versions` too.
+
+Tool-call items (`llm`, `llm-general`): send `tool_calls`, or
+`expected_tool_calls` / `actual_tool_calls`, as
+`[{tool, arguments?, output?, accept_any_arguments?}]`. Any of these marks the
+item as a tool call for a person to judge (`is_tool_call` on the fetched item);
+use the `tool-call` evaluator type for it. For a tool call with no text reply,
+`agent_response` is `""`.
+
+Other optional keys on an item, beside `payload`:
+
+- `metadata` — `[{key, value}]` (up to 100) shown beside the item on the
+  labelling form. On update, omit to keep the stored pairs, send `[]` to clear.
+- `evaluator_results` — scores to record without running a judge, keyed by
+  evaluator UUID (each linked to the task): `{value, reasoning?,
+  version_number?}`. A tool-call item takes only the tool-call evaluator; every
+  other item takes any evaluator except that one. The response then includes
+  `evaluator_result_count` and `evaluator_run_job_id`.
+
+Updating an item replaces its whole payload.

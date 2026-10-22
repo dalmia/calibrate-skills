@@ -13,7 +13,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\nFor `type=agent`, omitted keys inherit managed defaults. Omit `config` entirely to use all defaults. For `type=connection`, `config` is stored as-is and must contain `agent_url`"
+            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\n**Either type**:\n- `traces.scoring.enabled`: whether the traces you send for this agent are scored by its linked evaluators. On unless you set it to `false`. Turning it back on needs at least one linked evaluator that can score traces\n\n```json\n{\"traces\": {\"scoring\": {\"enabled\": false}}}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nFor `type=agent`, omitted keys inherit managed defaults. Omit `config` entirely to use all defaults. For `type=connection`, `config` is stored as-is and must contain `agent_url`"
           },
           "interaction_type": {
             "default": "conversation",
@@ -216,6 +216,41 @@
         "title": "AgentSummary",
         "type": "object"
       },
+      "AgentTestBulkDelete": {
+        "properties": {
+          "agent_uuid": {
+            "description": "Agent to unlink tests from",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Agent Uuid",
+            "type": "string"
+          },
+          "test_uuids": {
+            "description": "Tests to unlink from the agent",
+            "examples": [
+              [
+                "b1c2d3e4-f5a6-7890-bcde-f12345678901"
+              ]
+            ],
+            "items": {
+              "maxLength": 36,
+              "minLength": 36,
+              "type": "string"
+            },
+            "title": "Test Uuids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "agent_uuid",
+          "test_uuids"
+        ],
+        "title": "AgentTestBulkDelete",
+        "type": "object"
+      },
       "AgentTestRunCreateResponse": {
         "properties": {
           "status": {
@@ -247,6 +282,12 @@
       },
       "AgentTestRunListItem": {
         "properties": {
+          "aborted": {
+            "default": false,
+            "description": "Whether a user stopped this run before it finished. The results collected up to that point are kept, and test cases that never ran are counted neither as passed nor as failed",
+            "title": "Aborted",
+            "type": "boolean"
+          },
           "cost": {
             "anyOf": [
               {
@@ -271,9 +312,9 @@
             "type": "boolean"
           },
           "evaluators": {
-            "description": "Names of the evaluators that judged this run, deduplicated and in display order. `Tool call` is appended when any test in the run was a tool-call test. Empty when the run had no evaluators",
+            "description": "The evaluators that judged this run, deduplicated and in display order. A `Tool call` entry is appended when any test in the run was a tool-call test. That entry has no `uuid`, because it is not an evaluator in the library. Empty when the run had no evaluators",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RunListEvaluator"
             },
             "title": "Evaluators",
             "type": "array"
@@ -287,7 +328,7 @@
                 "type": "null"
               }
             ],
-            "description": "Number of test cases that failed",
+            "description": "Number of test cases that did not pass, which includes the ones that produced no answer",
             "title": "Failed"
           },
           "is_public": {
@@ -324,7 +365,7 @@
             "title": "Model Results"
           },
           "name": {
-            "description": "Display name, such as `Run 1` for a unit test or `Benchmark 1` for a benchmark",
+            "description": "Name of the run. A run nobody has renamed shows its number instead, such as `Run 1` for a test run or `Benchmark 1` for a benchmark",
             "title": "Name",
             "type": "string"
           },
@@ -371,6 +412,12 @@
             "$ref": "#/components/schemas/TaskStatus",
             "description": "Current status of the run"
           },
+          "stopped_early": {
+            "default": false,
+            "description": "Whether the run stopped before starting every test case, after too many failed in a row",
+            "title": "Stopped Early",
+            "type": "boolean"
+          },
           "total_tests": {
             "anyOf": [
               {
@@ -404,6 +451,18 @@
             "title": "Type",
             "type": "string"
           },
+          "unanswered_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of test cases that produced no answer because the agent or the judge could not be reached, which makes the pass rate an unfair measure of the agent",
+            "title": "Unanswered Tests"
+          },
           "updated_at": {
             "description": "When the run was last updated (ISO 8601 UTC)",
             "title": "Updated At",
@@ -431,6 +490,26 @@
         "title": "AgentTestRunListItem",
         "type": "object"
       },
+      "AgentTestsBulkUnlinkResponse": {
+        "properties": {
+          "deleted_count": {
+            "description": "Number of links removed. Tests that were not linked are excluded",
+            "title": "Deleted Count",
+            "type": "integer"
+          },
+          "message": {
+            "description": "Confirmation message",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted_count",
+          "message"
+        ],
+        "title": "AgentTestsBulkUnlinkResponse",
+        "type": "object"
+      },
       "AgentTestsCreate": {
         "properties": {
           "agent_uuid": {
@@ -451,6 +530,8 @@
               ]
             ],
             "items": {
+              "maxLength": 36,
+              "minLength": 36,
               "type": "string"
             },
             "title": "Test Uuids",
@@ -490,7 +571,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\nReplaces the stored config. Omit to leave unchanged\n\nFor `type=connection`, changing `agent_url` or `agent_headers` resets the connection and benchmark verification flags"
+            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\n**Either type**:\n- `traces.scoring.enabled`: whether the traces you send for this agent are scored by its linked evaluators. On unless you set it to `false`. Turning it back on needs at least one linked evaluator that can score traces\n\n```json\n{\"traces\": {\"scoring\": {\"enabled\": false}}}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nReplaces the stored config. Omit to leave unchanged\n\nFor `type=connection`, changing `agent_url` or `agent_headers` resets the connection and benchmark verification flags"
           },
           "name": {
             "anyOf": [
@@ -577,13 +658,56 @@
               }
             ]
           },
+          "evaluator_results": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Evaluator scores to record, keyed by evaluator ID. Each evaluator ID must be linked to the task. Put the score in `value`, a bool for binary or a number within the scale for rating, with optional `reasoning` and `version_number`. Omit `version_number` to record against the evaluator's live version. An item recording a tool call takes the tool-call evaluator and no other, and every other item takes any evaluator except that one",
+            "examples": [
+              {
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479": {
+                  "reasoning": "meets the bar",
+                  "value": true,
+                  "version_number": 2
+                }
+              }
+            ]
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ItemMetadataEntry"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Key-value pairs stored with the item and shown beside it on the labelling form. Omit if you have none",
+            "title": "Metadata"
+          },
           "payload": {
-            "description": "The item's payload. `name` is required and unique within the task for every type. The other fields depend on the task `type`:\n\n- `stt`: `name`, `reference_transcript`, `predicted_transcript`\n- `llm`: `name`, `chat_history` (list of `{role, content}` turns ending at the user turn), `agent_response` (the reply to judge), optional `evaluator_variables`\n- `llm-general`: `name`, `input`, `output`, optional `evaluator_variables`\n- `conversation`: `name`, `transcript` (list of `{role, content}` turns), optional `evaluator_variables`\n\n`evaluator_variables` maps an evaluator ID to that evaluator's `{{variable}}` values for this item",
+            "$ref": "#/components/schemas/ItemPayload",
+            "description": "The item's payload. `name` is unique within the task for every type, and `description` is accepted by every type. The other fields depend on the task `type`:\n\n- `stt`: `predicted_transcript`, `reference_transcript`\n- `tts`: `audio_path`, `text`\n- `llm`: `agent_response`, `chat_history`, optional `actual_tool_calls`, `evaluator_variables`, `expected_tool_calls`, `tool_calls`\n- `llm-general`: `input`, `output`, optional `actual_tool_calls`, `evaluator_variables`, `expected_tool_calls`, `tool_calls`\n- `conversation`: `transcript`, optional `evaluator_variables`",
             "examples": [
               {
                 "name": "clip-001",
                 "predicted_transcript": "the quick brown fax",
                 "reference_transcript": "the quick brown fox"
+              },
+              {
+                "audio_path": "tts/media/f47ac10b-58cc-4372-a567-0e02b2c3d479.wav",
+                "name": "clip-001",
+                "text": "the quick brown fox"
               },
               {
                 "agent_response": "Your balance is $42.00.",
@@ -594,6 +718,36 @@
                   }
                 ],
                 "name": "case-001"
+              },
+              {
+                "agent_response": {
+                  "content": "Keep her hydrated and check again in four hours. If it goes above 104, go to the nearest hospital.",
+                  "label": "AI draft",
+                  "versions": {
+                    "AI draft (Translated)": "\u0909\u0938\u0947 \u092a\u093e\u0928\u0940 \u092a\u093f\u0932\u093e\u0924\u0947 \u0930\u0939\u0947\u0902 \u0914\u0930 \u091a\u093e\u0930 \u0918\u0902\u091f\u0947 \u092c\u093e\u0926 \u092b\u093f\u0930 \u091c\u093e\u0902\u091a\u0947\u0902\u0964 104 \u0938\u0947 \u090a\u092a\u0930 \u091c\u093e\u090f \u0924\u094b \u0928\u091c\u093c\u0926\u0940\u0915\u0940 \u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u091c\u093e\u090f\u0902\u0964",
+                    "Nurse (Translated)": "\u0909\u0938\u0947 \u0924\u0930\u0932 \u092a\u0926\u093e\u0930\u094d\u0925 \u0926\u0947\u0924\u0947 \u0930\u0939\u0947\u0902\u0964 \u0905\u0917\u0930 \u092c\u0941\u0916\u093e\u0930 104 \u0938\u0947 \u090a\u092a\u0930 \u091c\u093e\u090f \u092f\u093e \u0926\u094c\u0930\u093e \u092a\u0921\u093c\u0947, \u0924\u094b \u0924\u0941\u0930\u0902\u0924 \u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u0932\u0947 \u091c\u093e\u090f\u0902\u0964"
+                  }
+                },
+                "chat_history": [
+                  {
+                    "content": "My child has had a fever since last night.",
+                    "role": "user"
+                  },
+                  {
+                    "content": "How old is your child, and what is the temperature now?",
+                    "label": "AI draft",
+                    "role": "assistant",
+                    "versions": {
+                      "AI draft (Translated)": "\u0906\u092a\u0915\u093e \u092c\u091a\u094d\u091a\u093e \u0915\u093f\u0924\u0928\u0947 \u0938\u093e\u0932 \u0915\u093e \u0939\u0948, \u0914\u0930 \u0905\u092d\u0940 \u0924\u093e\u092a\u092e\u093e\u0928 \u0915\u093f\u0924\u0928\u093e \u0939\u0948?",
+                      "Nurse": "How old is she? Please check her temperature now and tell me."
+                    }
+                  },
+                  {
+                    "content": "She is two. It is 102 now.",
+                    "role": "user"
+                  }
+                ],
+                "name": "case-002"
               },
               {
                 "input": "Summarize: the meeting is moved to 3pm.",
@@ -617,8 +771,7 @@
                   }
                 ]
               }
-            ],
-            "title": "Payload"
+            ]
           }
         },
         "required": [
@@ -759,7 +912,7 @@
           },
           "items": {
             "default": [],
-            "description": "The task's items, each with its agreement stats. You get these when you fetch one task by ID, not when you list tasks",
+            "description": "The task's items, each with its agreement stats and an `is_tool_call` flag marking the rows a person labels on the tool call rather than a text reply. You get these when you fetch one task by ID, not when you list tasks",
             "items": {
               "additionalProperties": true,
               "type": "object"
@@ -1065,10 +1218,11 @@
             "type": "string"
           },
           "reason": {
-            "description": "Why this agent was not run:\n- `no_linked_tests`: the agent has no tests linked\n- `connection_not_verified`: the agent's connection is not verified",
+            "description": "Why this agent was not run:\n- `no_linked_tests`: the agent has no tests linked\n- `connection_not_verified`: the agent's connection is not verified\n- `over_row_limit`: the agent has more linked tests than this workspace allows in one run",
             "enum": [
               "no_linked_tests",
-              "connection_not_verified"
+              "connection_not_verified",
+              "over_row_limit"
             ],
             "title": "Reason",
             "type": "string"
@@ -1098,10 +1252,18 @@
             "title": "Models",
             "type": "array"
           },
+          "parallel_models": {
+            "default": true,
+            "description": "How to run the models. `true` runs several at a time, `false` runs each one only after the one before it has finished. Use `false` to keep the load on your own agent down",
+            "title": "Parallel Models",
+            "type": "boolean"
+          },
           "test_uuids": {
             "anyOf": [
               {
                 "items": {
+                  "maxLength": 36,
+                  "minLength": 36,
                   "type": "string"
                 },
                 "type": "array"
@@ -1127,11 +1289,23 @@
       },
       "BenchmarkStatusResponse": {
         "properties": {
-          "error": {
+          "aborted": {
             "default": false,
-            "description": "True if the run failed",
-            "title": "Error",
+            "description": "Whether a user stopped this run before it finished. The results collected up to that point are kept, and test cases that never ran are counted neither as passed nor as failed",
+            "title": "Aborted",
             "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the run could not be carried out, when it failed before producing any result",
+            "title": "Error"
           },
           "evaluators": {
             "anyOf": [
@@ -1206,6 +1380,23 @@
             "description": "Results for each model",
             "title": "Model Results"
           },
+          "name": {
+            "description": "Name of the run. A run nobody has renamed shows its number instead, such as `Run 1` for a test run or `Benchmark 1` for a benchmark",
+            "title": "Name",
+            "type": "string"
+          },
+          "parallel_models": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the models were run. `true` means several ran at a time, `false` means each one ran only after the one before it had finished",
+            "title": "Parallel Models"
+          },
           "share_token": {
             "anyOf": [
               {
@@ -1221,6 +1412,12 @@
           "status": {
             "$ref": "#/components/schemas/TaskStatus",
             "description": "Current status of the run"
+          },
+          "stopped_early": {
+            "default": false,
+            "description": "Whether any model's run stopped before starting every test case, after too many failed in a row",
+            "title": "Stopped Early",
+            "type": "boolean"
           },
           "task_id": {
             "description": "Benchmark run job ID",
@@ -1250,9 +1447,31 @@
         },
         "required": [
           "task_id",
+          "name",
           "status"
         ],
         "title": "BenchmarkStatusResponse",
+        "type": "object"
+      },
+      "Body_upload_stt_item_datasets__dataset_id__items_upload_post": {
+        "properties": {
+          "audio": {
+            "description": "WAV file of the spoken audio, at most 25 MB and 10 minutes long",
+            "format": "binary",
+            "title": "Audio",
+            "type": "string"
+          },
+          "text": {
+            "description": "Ground-truth transcript of the audio",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "audio",
+          "text"
+        ],
+        "title": "Body_upload_stt_item_datasets__dataset_id__items_upload_post",
         "type": "object"
       },
       "BulkCreateItemsResponse": {
@@ -1273,6 +1492,30 @@
             "description": "How many items the request resolved to",
             "title": "Count",
             "type": "integer"
+          },
+          "evaluator_result_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many evaluator scores were stored, present only when you send `evaluator_results` with the items",
+            "title": "Evaluator Result Count"
+          },
+          "evaluator_run_job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the evaluator-run job that holds the scores you provided, present only when you send `evaluator_results` with the items",
+            "title": "Evaluator Run Job Id"
           },
           "existing_item_ids": {
             "anyOf": [
@@ -1653,6 +1896,63 @@
         "title": "ChatMessage",
         "type": "object"
       },
+      "ChatTurn": {
+        "additionalProperties": true,
+        "description": "One message in a conversation, in OpenAI chat format",
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "maxLength": 50000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Message text. Omit for turns that only carry tool calls",
+            "title": "Content"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Display name for the text in `content`, shown to annotators",
+            "title": "Label"
+          },
+          "role": {
+            "description": "Message author role in the conversation history",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          },
+          "versions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Other forms of the same text, such as a translation or a human rewrite, keyed by the name annotators see for each. Shown to annotators only. Requires text in `content`"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "title": "ChatTurn",
+        "type": "object"
+      },
       "CreateJobsRequest": {
         "properties": {
           "annotator_ids": {
@@ -1762,6 +2062,210 @@
         "title": "CreateJobsResponse",
         "type": "object"
       },
+      "DatasetCreateRequest": {
+        "properties": {
+          "dataset_type": {
+            "description": "`stt` items carry audio + ground-truth text. `tts` items carry text only",
+            "enum": [
+              "stt",
+              "tts"
+            ],
+            "title": "Dataset Type",
+            "type": "string"
+          },
+          "name": {
+            "description": "Dataset name, unique within the workspace",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "dataset_type"
+        ],
+        "title": "DatasetCreateRequest",
+        "type": "object"
+      },
+      "DatasetDetailResponse": {
+        "properties": {
+          "created_at": {
+            "description": "When the dataset was created (ISO 8601 UTC)",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dataset_type": {
+            "description": "Dataset type (`stt` or `tts`)",
+            "title": "Dataset Type",
+            "type": "string"
+          },
+          "eval_count": {
+            "description": "Number of evaluation jobs that used this dataset",
+            "title": "Eval Count",
+            "type": "integer"
+          },
+          "item_count": {
+            "description": "Number of items in the dataset",
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "items": {
+            "description": "All items in the dataset, ordered by `order_index`",
+            "items": {
+              "$ref": "#/components/schemas/DatasetItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "name": {
+            "description": "Dataset name",
+            "title": "Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "When the dataset was last updated (ISO 8601 UTC)",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "uuid": {
+            "description": "Dataset ID",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "name",
+          "dataset_type",
+          "item_count",
+          "eval_count",
+          "created_at",
+          "updated_at",
+          "items"
+        ],
+        "title": "DatasetDetailResponse",
+        "type": "object"
+      },
+      "DatasetItemResponse": {
+        "properties": {
+          "audio_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Presigned download URL for the item's audio",
+            "title": "Audio Path"
+          },
+          "created_at": {
+            "description": "When the dataset item was created (ISO 8601 UTC)",
+            "title": "Created At",
+            "type": "string"
+          },
+          "order_index": {
+            "description": "Position of the item within the dataset. The first item is 0",
+            "title": "Order Index",
+            "type": "integer"
+          },
+          "text": {
+            "description": "Ground-truth transcript (STT) or synthesis text (TTS)",
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the dataset item was last updated (ISO 8601 UTC)",
+            "title": "Updated At"
+          },
+          "uuid": {
+            "description": "Dataset item ID",
+            "examples": [
+              "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "text",
+          "order_index",
+          "created_at"
+        ],
+        "title": "DatasetItemResponse",
+        "type": "object"
+      },
+      "DatasetResponse": {
+        "properties": {
+          "created_at": {
+            "description": "When the dataset was created (ISO 8601 UTC)",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dataset_type": {
+            "description": "Dataset type (`stt` or `tts`)",
+            "title": "Dataset Type",
+            "type": "string"
+          },
+          "eval_count": {
+            "description": "Number of evaluation jobs that used this dataset",
+            "title": "Eval Count",
+            "type": "integer"
+          },
+          "item_count": {
+            "description": "Number of items in the dataset",
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "name": {
+            "description": "Dataset name",
+            "title": "Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "When the dataset was last updated (ISO 8601 UTC)",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "uuid": {
+            "description": "Dataset ID",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "name",
+          "dataset_type",
+          "item_count",
+          "eval_count",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DatasetResponse",
+        "type": "object"
+      },
       "EvaluatorCreate": {
         "properties": {
           "data_type": {
@@ -1788,13 +2292,14 @@
           },
           "evaluator_type": {
             "default": "llm",
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
             "enum": [
               "tts",
               "stt",
               "llm",
               "llm-general",
-              "conversation"
+              "conversation",
+              "tool-call"
             ],
             "title": "Evaluator Type",
             "type": "string"
@@ -1886,13 +2391,14 @@
             "title": "Description"
           },
           "evaluator_type": {
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
             "enum": [
               "tts",
               "stt",
               "llm",
               "llm-general",
-              "conversation"
+              "conversation",
+              "tool-call"
             ],
             "title": "Evaluator Type",
             "type": "string"
@@ -1900,6 +2406,11 @@
           "is_default": {
             "description": "True when the evaluator is a built-in default or your workspace's editable copy of one. False for an evaluator you created yourself",
             "title": "Is Default",
+            "type": "boolean"
+          },
+          "is_protected": {
+            "description": "True when the evaluator is locked. A locked evaluator cannot be deleted, and only its name, description and rubric can change",
+            "title": "Is Protected",
             "type": "boolean"
           },
           "live_version_id": {
@@ -1988,6 +2499,7 @@
           "data_type",
           "output_type",
           "is_default",
+          "is_protected",
           "created_at",
           "updated_at",
           "versions"
@@ -2684,11 +3196,338 @@
         "title": "HumanAgreementBlock",
         "type": "object"
       },
+      "ItemMetadataEntry": {
+        "additionalProperties": false,
+        "description": "One key-value pair stored with an item and shown beside it on the labelling form",
+        "properties": {
+          "key": {
+            "description": "Name of the metadata entry",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value of the metadata entry",
+            "maxLength": 8192,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "ItemMetadataEntry",
+        "type": "object"
+      },
+      "ItemPayload": {
+        "additionalProperties": false,
+        "description": "What an annotation item holds. Which fields apply depends on the task type",
+        "properties": {
+          "actual_tool_calls": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ToolCall"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tool calls the agent made. Sending this marks the item as a tool call for a person to judge. For `llm` and `llm-general` tasks",
+            "title": "Actual Tool Calls"
+          },
+          "agent_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/TurnText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The reply to judge. An empty string when the reply was a tool call. For `llm` tasks",
+            "title": "Agent Response"
+          },
+          "audio_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Storage key or `s3://` URI of the audio clip. For `tts` tasks",
+            "title": "Audio Path"
+          },
+          "chat_history": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ChatTurn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The conversation up to the reply being judged, ending at the user turn. For `llm` tasks",
+            "title": "Chat History"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A description of the item. For every task type",
+            "title": "Description"
+          },
+          "evaluator_variables": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Values for each evaluator's `{{variable}}` placeholders, keyed by evaluator ID. For `llm`, `llm-general` and `conversation` tasks"
+          },
+          "expected_tool_calls": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ToolCall"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tool calls the agent should have made. Sending this marks the item as a tool call for a person to judge. For `llm` and `llm-general` tasks",
+            "title": "Expected Tool Calls"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/TurnText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The standalone input the agent was given. For `llm-general` tasks",
+            "title": "Input"
+          },
+          "name": {
+            "description": "Name of the item, unique within the task. For every task type",
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/TurnText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The output to judge. For `llm-general` tasks",
+            "title": "Output"
+          },
+          "predicted_transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The transcript to judge. For `stt` tasks",
+            "title": "Predicted Transcript"
+          },
+          "reference_transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The correct transcript. For `stt` tasks",
+            "title": "Reference Transcript"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The text that was spoken. For `tts` tasks",
+            "title": "Text"
+          },
+          "tool_calls": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ToolCall"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tool calls the agent made in place of a text reply. With no text reply, sending this marks the item as a tool call for a person to judge. For `llm` and `llm-general` tasks",
+            "title": "Tool Calls"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ChatTurn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The full conversation to judge. For `conversation` tasks",
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ItemPayload",
+        "type": "object"
+      },
       "ItemUpdatePayload": {
         "properties": {
+          "metadata": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ItemMetadataEntry"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Key-value pairs stored with the item and shown beside it on the labelling form. Omit to leave the stored pairs as they are. Send an empty list to clear them",
+            "title": "Metadata"
+          },
           "payload": {
-            "description": "The item's new payload. `payload['name']` is still required and must be unique within the task",
-            "title": "Payload"
+            "$ref": "#/components/schemas/ItemPayload",
+            "description": "The item's new payload. It replaces the stored one. `name` is unique within the task for every type, and `description` is accepted by every type. The other fields depend on the task `type`:\n\n- `stt`: `predicted_transcript`, `reference_transcript`\n- `tts`: `audio_path`, `text`\n- `llm`: `agent_response`, `chat_history`, optional `actual_tool_calls`, `evaluator_variables`, `expected_tool_calls`, `tool_calls`\n- `llm-general`: `input`, `output`, optional `actual_tool_calls`, `evaluator_variables`, `expected_tool_calls`, `tool_calls`\n- `conversation`: `transcript`, optional `evaluator_variables`",
+            "examples": [
+              {
+                "name": "clip-001",
+                "predicted_transcript": "the quick brown fax",
+                "reference_transcript": "the quick brown fox"
+              },
+              {
+                "audio_path": "tts/media/f47ac10b-58cc-4372-a567-0e02b2c3d479.wav",
+                "name": "clip-001",
+                "text": "the quick brown fox"
+              },
+              {
+                "agent_response": "Your balance is $42.00.",
+                "chat_history": [
+                  {
+                    "content": "What is my account balance?",
+                    "role": "user"
+                  }
+                ],
+                "name": "case-001"
+              },
+              {
+                "agent_response": {
+                  "content": "Keep her hydrated and check again in four hours. If it goes above 104, go to the nearest hospital.",
+                  "label": "AI draft",
+                  "versions": {
+                    "AI draft (Translated)": "\u0909\u0938\u0947 \u092a\u093e\u0928\u0940 \u092a\u093f\u0932\u093e\u0924\u0947 \u0930\u0939\u0947\u0902 \u0914\u0930 \u091a\u093e\u0930 \u0918\u0902\u091f\u0947 \u092c\u093e\u0926 \u092b\u093f\u0930 \u091c\u093e\u0902\u091a\u0947\u0902\u0964 104 \u0938\u0947 \u090a\u092a\u0930 \u091c\u093e\u090f \u0924\u094b \u0928\u091c\u093c\u0926\u0940\u0915\u0940 \u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u091c\u093e\u090f\u0902\u0964",
+                    "Nurse (Translated)": "\u0909\u0938\u0947 \u0924\u0930\u0932 \u092a\u0926\u093e\u0930\u094d\u0925 \u0926\u0947\u0924\u0947 \u0930\u0939\u0947\u0902\u0964 \u0905\u0917\u0930 \u092c\u0941\u0916\u093e\u0930 104 \u0938\u0947 \u090a\u092a\u0930 \u091c\u093e\u090f \u092f\u093e \u0926\u094c\u0930\u093e \u092a\u0921\u093c\u0947, \u0924\u094b \u0924\u0941\u0930\u0902\u0924 \u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u0932\u0947 \u091c\u093e\u090f\u0902\u0964"
+                  }
+                },
+                "chat_history": [
+                  {
+                    "content": "My child has had a fever since last night.",
+                    "role": "user"
+                  },
+                  {
+                    "content": "How old is your child, and what is the temperature now?",
+                    "label": "AI draft",
+                    "role": "assistant",
+                    "versions": {
+                      "AI draft (Translated)": "\u0906\u092a\u0915\u093e \u092c\u091a\u094d\u091a\u093e \u0915\u093f\u0924\u0928\u0947 \u0938\u093e\u0932 \u0915\u093e \u0939\u0948, \u0914\u0930 \u0905\u092d\u0940 \u0924\u093e\u092a\u092e\u093e\u0928 \u0915\u093f\u0924\u0928\u093e \u0939\u0948?",
+                      "Nurse": "How old is she? Please check her temperature now and tell me."
+                    }
+                  },
+                  {
+                    "content": "She is two. It is 102 now.",
+                    "role": "user"
+                  }
+                ],
+                "name": "case-002"
+              },
+              {
+                "input": "Summarize: the meeting is moved to 3pm.",
+                "name": "pair-001",
+                "output": "The meeting is now at 3pm."
+              },
+              {
+                "name": "convo-001",
+                "transcript": [
+                  {
+                    "content": "Hi, how can I help?",
+                    "role": "assistant"
+                  },
+                  {
+                    "content": "I lost my card.",
+                    "role": "user"
+                  },
+                  {
+                    "content": "I can block it now. Can you confirm the last 4 digits?",
+                    "role": "assistant"
+                  }
+                ]
+              }
+            ]
           },
           "uuid": {
             "description": "ID of the item to update",
@@ -2913,7 +3752,7 @@
                 "type": "null"
               }
             ],
-            "description": "Number of test cases that failed",
+            "description": "Number of test cases that did not pass, which includes the ones that produced no answer",
             "title": "Failed"
           },
           "latency_ms": {
@@ -2952,6 +3791,12 @@
             ],
             "description": "Number of test cases that passed",
             "title": "Passed"
+          },
+          "stopped_early": {
+            "default": false,
+            "description": "Whether this model's run stopped before starting every test case, after too many failed in a row",
+            "title": "Stopped Early",
+            "type": "boolean"
           },
           "success": {
             "anyOf": [
@@ -3003,6 +3848,18 @@
               }
             ],
             "description": "Aggregated token usage as `{mean, min, max, count}`"
+          },
+          "unanswered_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of test cases that produced no answer because the agent or the judge could not be reached, which makes the pass rate an unfair measure of the agent",
+            "title": "Unanswered Tests"
           }
         },
         "required": [
@@ -3024,7 +3881,7 @@
                 "type": "null"
               }
             ],
-            "description": "Number of test cases that failed for this model",
+            "description": "Number of test cases that did not pass for this model, which includes the ones that produced no answer",
             "title": "Failed"
           },
           "message": {
@@ -3076,6 +3933,18 @@
             ],
             "description": "Total test cases for this model",
             "title": "Total Tests"
+          },
+          "unanswered_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of this model's test cases that produced no answer, already counted in `failed`",
+            "title": "Unanswered Tests"
           }
         },
         "required": [
@@ -3428,12 +4297,41 @@
         "title": "ResolveAgentNamesResponse",
         "type": "object"
       },
+      "RunListEvaluator": {
+        "description": "One evaluator on a run-LIST row: just enough to name it and open it.\nThe rubric, prompt and version live on the run-DETAIL endpoint.",
+        "properties": {
+          "name": {
+            "description": "Name of the evaluator",
+            "title": "Name",
+            "type": "string"
+          },
+          "uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the evaluator. Absent for the `Tool call` entry, which is not an evaluator in the library",
+            "title": "Uuid"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "RunListEvaluator",
+        "type": "object"
+      },
       "RunTestRequest": {
         "properties": {
           "test_uuids": {
             "anyOf": [
               {
                 "items": {
+                  "maxLength": 36,
+                  "minLength": 36,
                   "type": "string"
                 },
                 "type": "array"
@@ -3649,6 +4547,12 @@
             "description": "Name of the test",
             "title": "Name"
           },
+          "not_run": {
+            "default": false,
+            "description": "Whether this case never started, because a user stopped the run first. It is counted neither as passed nor as failed",
+            "title": "Not Run",
+            "type": "boolean"
+          },
           "output": {
             "anyOf": [
               {
@@ -3707,6 +4611,45 @@
             ],
             "description": "ID of the test case within the run",
             "title": "Test Case Id"
+          },
+          "test_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "response",
+                  "tool_call",
+                  "conversation",
+                  "general"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the test asks of the agent, which decides how a reader draws the case",
+            "title": "Test Type"
+          },
+          "test_uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the test this case ran, which is what you pass to read the case on its own",
+            "examples": [
+              "b1c2d3e4-f5a6-7890-bcde-f12345678901"
+            ],
+            "title": "Test Uuid"
+          },
+          "unanswered": {
+            "default": false,
+            "description": "Whether this case produced no answer because the agent or the judge could not be reached, in which case `reasoning` carries the error and `passed` is not a verdict on the agent",
+            "title": "Unanswered",
+            "type": "boolean"
           }
         },
         "title": "TestCaseResult",
@@ -4012,7 +4955,7 @@
                 "type": "null"
               }
             ],
-            "description": "Whether the case passed (null if it errored or is still running)",
+            "description": "Whether the case passed (null while the case is still running)",
             "title": "Passed"
           }
         },
@@ -4143,6 +5086,12 @@
       },
       "TestRunStatusResponse": {
         "properties": {
+          "aborted": {
+            "default": false,
+            "description": "Whether a user stopped this run before it finished. The results collected up to that point are kept, and test cases that never ran are counted neither as passed nor as failed",
+            "title": "Aborted",
+            "type": "boolean"
+          },
           "cost": {
             "anyOf": [
               {
@@ -4156,10 +5105,31 @@
             "description": "Aggregated cost as `{mean, min, max, count}` (USD)"
           },
           "error": {
-            "default": false,
-            "description": "True if the run failed",
-            "title": "Error",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the run could not be carried out, when it failed before producing any result",
+            "title": "Error"
+          },
+          "evaluator_summary": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Totals for each evaluator over the whole run, matching the shape a benchmark reports for each model. Only evaluators that returned a verdict appear"
           },
           "evaluators": {
             "anyOf": [
@@ -4185,7 +5155,7 @@
                 "type": "null"
               }
             ],
-            "description": "Number of test cases that failed",
+            "description": "Number of test cases that did not pass, which includes the ones that produced no answer",
             "title": "Failed"
           },
           "is_public": {
@@ -4205,6 +5175,11 @@
               }
             ],
             "description": "Aggregated response latency in milliseconds, as `{p50, p95, p99, count}`"
+          },
+          "name": {
+            "description": "Name of the run. A run nobody has renamed shows its number instead, such as `Run 1` for a test run or `Benchmark 1` for a benchmark",
+            "title": "Name",
+            "type": "string"
           },
           "passed": {
             "anyOf": [
@@ -4248,6 +5223,12 @@
           "status": {
             "$ref": "#/components/schemas/TaskStatus",
             "description": "Current status of the run"
+          },
+          "stopped_early": {
+            "default": false,
+            "description": "Whether the run stopped before starting every test case, after too many failed in a row",
+            "title": "Stopped Early",
+            "type": "boolean"
           },
           "task_id": {
             "description": "Test run job ID",
@@ -4297,10 +5278,23 @@
               }
             ],
             "description": "Aggregated token usage as `{mean, min, max, count}`"
+          },
+          "unanswered_tests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of test cases that produced no answer because the agent or the judge could not be reached, which makes the pass rate an unfair measure of the agent",
+            "title": "Unanswered Tests"
           }
         },
         "required": [
           "task_id",
+          "name",
           "status"
         ],
         "title": "TestRunStatusResponse",
@@ -4385,6 +5379,52 @@
         "title": "TestUpdate",
         "type": "object"
       },
+      "ToolCall": {
+        "additionalProperties": false,
+        "description": "One call to a tool",
+        "properties": {
+          "accept_any_arguments": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When `true`, only the tool name had to match and `arguments` was ignored. Carried over from a tool-call test's expected calls",
+            "title": "Accept Any Arguments"
+          },
+          "arguments": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Argument values the agent passed to the tool. Omit when the call had none"
+          },
+          "output": {
+            "description": "What the tool returned for this call. Any JSON value. Omit when you do not record it",
+            "title": "Output"
+          },
+          "tool": {
+            "description": "Name of the tool the agent called",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "ToolCall",
+        "type": "object"
+      },
       "ToolCallOutput": {
         "properties": {
           "arguments": {
@@ -4447,7 +5487,7 @@
                 "type": "null"
               }
             ],
-            "description": "Your own ID for the conversation this turn belongs to, stored for reference only. Omit if you have none",
+            "description": "Your own ID for the conversation this turn belongs to. Turns sharing it are grouped into one conversation. Omit if you have none",
             "title": "Conversation Id"
           },
           "input": {
@@ -4468,6 +5508,17 @@
             ],
             "description": "What the agent was given for this turn. For a `general` agent, the standalone prompt as a string. For a `conversation` agent, the history up to the reported output, oldest turn first, in OpenAI chat format",
             "title": "Input"
+          },
+          "labels": {
+            "description": "Your own tags for this turn, such as an environment or a release. Matched exactly when filtering, so keep the spelling stable. Omit if you have none",
+            "items": {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Labels",
+            "type": "array"
           },
           "message_id": {
             "anyOf": [
@@ -4684,6 +5735,48 @@
         "title": "TraceTurn",
         "type": "object"
       },
+      "TurnText": {
+        "additionalProperties": false,
+        "description": "Text with a display name and other forms of it, sent in place of a plain string",
+        "properties": {
+          "content": {
+            "description": "The text the LLM judge reads and annotators see by default",
+            "title": "Content",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Display name for the text in `content`, shown to annotators",
+            "title": "Label"
+          },
+          "versions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Other forms of the same text, such as a translation or a human rewrite, keyed by the name annotators see for each. Shown to annotators only. Requires text in `content`"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "title": "TurnText",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -4847,13 +5940,14 @@
             "title": "Description"
           },
           "evaluator_type": {
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
             "enum": [
               "tts",
               "stt",
               "llm",
               "llm-general",
-              "conversation"
+              "conversation",
+              "tool-call"
             ],
             "title": "Evaluator Type",
             "type": "string"
@@ -4861,6 +5955,11 @@
           "is_default": {
             "description": "True when the evaluator is a built-in default or your workspace's editable copy of one. False for an evaluator you created yourself",
             "title": "Is Default",
+            "type": "boolean"
+          },
+          "is_protected": {
+            "description": "True when the evaluator is locked. A locked evaluator cannot be deleted, and only its name, description and rubric can change",
+            "title": "Is Protected",
             "type": "boolean"
           },
           "live_version": {
@@ -4952,6 +6051,7 @@
           "data_type",
           "output_type",
           "is_default",
+          "is_protected",
           "created_at",
           "updated_at"
         ],
@@ -5295,7 +6395,7 @@
             }
           },
           {
-            "description": "Filter by whether the run has any failing test case or model. `true` returns only runs with failures (or errors), `false` only clean runs. Omit for both",
+            "description": "Filter by whether a test in the run did not pass. `true` returns only runs with a failing test, `false` only runs that got through every test and passed them all. A run that broke, was stopped, or gave up part way with no failing test is in neither: filter by `status` for those. Omit for both",
             "in": "query",
             "name": "has_failures",
             "required": false,
@@ -5308,7 +6408,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by whether the run has any failing test case or model. `true` returns only runs with failures (or errors), `false` only clean runs. Omit for both",
+              "description": "Filter by whether a test in the run did not pass. `true` returns only runs with a failing test, `false` only runs that got through every test and passed them all. A run that broke, was stopped, or gave up part way with no failing test is in neither: filter by `status` for those. Omit for both",
               "title": "Has Failures"
             }
           },
@@ -5433,7 +6533,28 @@
             }
           },
           {
-            "description": "Case-insensitive substring search on `name`. Blank is a no-op",
+            "description": "Keep only tests of these types. Repeat the parameter or pass one comma-separated value. Accepts `response`, `tool_call`, `conversation`, `general`",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keep only tests of these types. Repeat the parameter or pass one comma-separated value. Accepts `response`, `tool_call`, `conversation`, `general`",
+              "title": "Type"
+            }
+          },
+          {
+            "description": "Case-insensitive search on `name`. Blank is a no-op",
             "in": "query",
             "name": "q",
             "required": false,
@@ -5446,8 +6567,26 @@
                   "type": "null"
                 }
               ],
-              "description": "Case-insensitive substring search on `name`. Blank is a no-op",
+              "description": "Case-insensitive search on `name`. Blank is a no-op",
               "title": "Q"
+            }
+          },
+          {
+            "description": "How to match `q` against the searched fields",
+            "in": "query",
+            "name": "q_mode",
+            "required": false,
+            "schema": {
+              "default": "contains",
+              "description": "How to match `q` against the searched fields",
+              "enum": [
+                "contains",
+                "starts_with",
+                "ends_with",
+                "exact"
+              ],
+              "title": "Q Mode",
+              "type": "string"
             }
           },
           {
@@ -5565,6 +6704,22 @@
             }
           },
           {
+            "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "full",
+              "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
             "description": "Return a compact response that omits heavy detail fields (`model_results.test_results`, `evaluators.output_config`), keeping only the lightweight decision fields. Omit for full detail",
             "in": "query",
             "name": "compact",
@@ -5621,6 +6776,71 @@
           }
         ],
         "summary": "Get benchmark status",
+        "tags": [
+          "agent-tests"
+        ]
+      }
+    },
+    "/agent-tests/bulk-unlink": {
+      "post": {
+        "description": "Unlink one or more tests from an agent. Tests that are not linked are skipped.",
+        "operationId": "bulk_delete_agent_test_links_agent_tests_bulk_unlink_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentTestBulkDelete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTestsBulkUnlinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Bulk unlink tests from agent",
         "tags": [
           "agent-tests"
         ]
@@ -5730,6 +6950,22 @@
             }
           },
           {
+            "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "full",
+              "description": "How much of each test case to return. `full` returns every field of every case. `summary` returns one light row per case, with its ID, name, verdict and short reason, leaving out the conversation, the agent's output and the evaluator verdicts. Read those one case at a time from `GET /agent-tests/run/{task_id}/results/{test_uuid}`",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
             "description": "Return a compact response that omits heavy detail fields (`results.output`, `results.test_case`, `results.judge_results`, `results.reasoning`, `evaluators.output_config`), keeping only the lightweight decision fields. Omit for full detail",
             "in": "query",
             "name": "compact",
@@ -5786,6 +7022,110 @@
           }
         ],
         "summary": "Get test run status",
+        "tags": [
+          "agent-tests"
+        ]
+      }
+    },
+    "/agent-tests/run/{task_id}/results/{test_uuid}": {
+      "get": {
+        "description": "Get the full result of one test case in a run",
+        "operationId": "get_agent_test_case_result_agent_tests_run__task_id__results__test_uuid__get",
+        "parameters": [
+          {
+            "description": "Test run or benchmark the case was run in",
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "description": "Test run or benchmark the case was run in",
+              "examples": [
+                "a3b2c1d0-e5f4-3210-abcd-ef1234567890"
+              ],
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The test whose result to read, as `test_uuid` on the case",
+            "in": "path",
+            "name": "test_uuid",
+            "required": true,
+            "schema": {
+              "description": "The test whose result to read, as `test_uuid` on the case",
+              "examples": [
+                "b1c2d3e4-f5a6-7890-bcde-f12345678901"
+              ],
+              "title": "Test Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Which model's answer to read. Required for a benchmark, which runs every test once per model",
+            "in": "query",
+            "name": "model",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Which model's answer to read. Required for a benchmark, which runs every test once per model",
+              "examples": [
+                "openai/gpt-4.1"
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestCaseResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Get test case result",
         "tags": [
           "agent-tests"
         ]
@@ -7711,6 +9051,219 @@
         ]
       }
     },
+    "/datasets": {
+      "post": {
+        "description": "Create a new empty dataset. Add items separately",
+        "operationId": "create_new_dataset_datasets_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Create dataset",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/datasets/{dataset_id}": {
+      "get": {
+        "description": "Get a dataset with all of its items",
+        "operationId": "get_dataset_detail_datasets__dataset_id__get",
+        "parameters": [
+          {
+            "description": "The dataset to retrieve",
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "description": "The dataset to retrieve",
+              "examples": [
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              ],
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Get dataset",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/datasets/{dataset_id}/items/upload": {
+      "post": {
+        "description": "Upload one audio clip with its transcript and append it to an STT dataset",
+        "operationId": "upload_stt_item_datasets__dataset_id__items_upload_post",
+        "parameters": [
+          {
+            "description": "The STT dataset to add the item to",
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "description": "The STT dataset to add the item to",
+              "examples": [
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              ],
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_stt_item_datasets__dataset_id__items_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Upload STT dataset item",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
     "/evaluators": {
       "get": {
         "description": "List your evaluators",
@@ -7729,7 +9282,8 @@
                     "stt",
                     "llm",
                     "llm-general",
-                    "conversation"
+                    "conversation",
+                    "tool-call"
                   ],
                   "type": "string"
                 },
