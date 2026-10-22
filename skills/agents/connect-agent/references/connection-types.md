@@ -45,6 +45,10 @@ Calibrate sends conversations to an HTTP endpoint you host.
 }
 ```
 
+Every request Calibrate sends to the endpoint carries the header
+`X-Calibrate-Eval: 1`. The endpoint can read it to tell a test run from a real
+user — e.g. to tag the trace it sends back, or to skip sending one.
+
 ## `interaction_type` — what the agent is called *with*
 
 **This is a second, independent question, not part of `--type`.** `--type` says
@@ -80,6 +84,14 @@ each be either kind.
   it from there instead of asking again.
 - **CLI floor**: `--interaction-type` exists from CLI 0.0.41 onward. Omitting it
   keeps today's behavior (`conversation`).
+## Either type: trace scoring
+
+`config.traces.scoring.enabled` (default on) controls whether traces sent for the
+agent are scored by its linked evaluators. Set it to `false` to stop scoring;
+turning it back on needs at least one linked evaluator that can score traces.
+Traces also take optional `labels` (your own tags, up to 50, matched exactly when
+filtering), and turns sharing a `conversation_id` are grouped into one
+conversation.
 
 ## Choosing
 

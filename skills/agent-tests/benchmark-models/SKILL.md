@@ -92,6 +92,12 @@ Warn before launching. Benchmarking **N** models over **M** linked tests is
 one-line order-of-magnitude estimate — e.g. "3 models x 20 tests = 60 agent
 runs, plus judging" — and confirm before spending it.
 
+Models run several at a time by default. If the agent is the user's own service
+and could be overloaded or rate-limited, offer to run them one after another
+instead (`parallel_models` false on the benchmark call; check
+`calibrate agent-tests benchmark --help` for the flag). It's slower but gentler
+on their service.
+
 Offer to narrow the run: `--test-uuids` restricts the benchmark to a subset of
 the linked tests (each ID must be linked). Omit it to run all linked tests.
 
@@ -125,6 +131,14 @@ calibrate agent-tests get-benchmark --task-id <task_id> --output-format json
 
 Report progress to the user as it advances; don't block silently.
 
+The result carries the same flags as a single run: `error` is a string reason
+(not a boolean), `aborted` (stopped by a user; unrun cases are neither passed nor
+failed), `stopped_early` (a model quit after too many failures in a row, also
+reported per model), and `unanswered_tests` (cases where the agent or judge
+couldn't be reached — already counted in `failed`). `parallel_models` echoes how
+it ran. A model's single answer can be read in full with
+`GET /agent-tests/run/{task_id}/results/{test_uuid}?model=<model>`.
+
 ## Phase 6: Present the leaderboard
 
 Build a leaderboard from the terminal `get-benchmark` result — one row per
@@ -137,6 +151,10 @@ openai/gpt-4.1               16/20  (80%)
 ```
 
 Use only the numbers the command returned. **Never invent scores.**
+
+If any model has unanswered cases or stopped early, its pass-rate is not a fair
+comparison — say so next to the row (e.g. "5 of its tests got no answer") and
+offer to re-run it before the user acts on the ranking.
 
 Two caveats to surface with the ranking:
 

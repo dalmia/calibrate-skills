@@ -94,6 +94,11 @@ prompt.
   `calibrate agents list --output-format json` if you're unsure which kind it is.
 - **data-type** — the modality the judge reads: `text` (grades a text reply or
   transcript) or `audio` (grades synthesized speech / audio output).
+- **evaluator type** — what it judges: `llm` (a reply with its conversation
+  history), `llm-general` (a standalone input/output pair), `conversation` (a
+  whole conversation), `stt`, `tts`, or `tool-call` (whether the agent called
+  the right tool, labelled by a person — it has no judge prompt to write, so
+  don't draft one).
 - **output-type** — how it scores:
   - `binary` — pass/fail. Uses the default `Correct` / `Wrong` labels unless you
     override them. Best for "did the reply do X?" checks.
