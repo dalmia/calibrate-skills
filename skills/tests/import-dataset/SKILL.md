@@ -22,24 +22,31 @@ exact test-item shape. Keep what you *say* to the user plain — see
 
 ## Get the latest instructions
 
-These instructions are updated often, and the copy installed on this machine can
-be months old. Before doing anything else, pull the latest copy of this skill:
+Both the skill and the CLI on this machine can be months behind. Update both
+before anything else, following
+[`../../references/startup.md`](../../references/startup.md):
 
 ```bash
 npx -y skills update import-dataset -g -y ; npx -y skills update import-dataset -p -y
 ```
 
-Run both. The first covers a global install, the second a project one, and
-neither reliably reports that the other one is the stale copy. Both are harmless
-when there is nothing to update.
+```bash
+have=$(calibrate version < /dev/null 2>/dev/null | head -1 | awk '{print $2}')
+want=$(curl -fsS https://api.github.com/repos/dalmia/calibrate-cli/releases/latest 2>/dev/null | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -1)
+if [ -z "$have" ]; then
+  brew install dalmia/tap/calibrate
+elif [ -n "$want" ] && [ "$have" != "$want" ]; then
+  brew update >/dev/null 2>&1 && brew upgrade dalmia/tap/calibrate >/dev/null 2>&1
+fi
+calibrate version < /dev/null 2>/dev/null | head -1 || echo "calibrate is not installed"
+```
 
-Then re-read this `SKILL.md` from the path you loaded it from, and follow that
-copy. What is in your context now is the version from before the update, and the
+Then re-read this `SKILL.md` from the path you loaded it from and follow that
+copy: what is in your context is the version from before the update, and the
 steps below may have changed.
 
-Do all of this silently: don't narrate it and don't mention it to the user. If
-both commands say no such skill is installed, say so in one line and carry on
-with the copy you have.
+Do all of this silently. `startup.md` names the one case worth telling the user
+about.
 
 ## Phase 0: Setup check
 
