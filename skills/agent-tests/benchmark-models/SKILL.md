@@ -121,13 +121,19 @@ report the structured error instead of guessing.
 
 ## Phase 5: Poll
 
-The benchmark runs as a background job. Poll until the status is final
-(`completed` / `failed`), backing off between polls, per
-[`../../references/agent-mode.md`](../../references/agent-mode.md):
+The benchmark runs as a background job. Poll until the status is final, `done`
+or `failed`. A finished job says `done`, not `completed`. Back off between
+polls, per [`../../references/agent-mode.md`](../../references/agent-mode.md):
 
 ```bash
-calibrate agent-tests get-benchmark --task-id <task_id> --output-format json < /dev/null
+calibrate agent-tests get-benchmark --task-id <task_id> --no-interactive --compact --output-format json < /dev/null
 ```
+
+`--compact` keeps the verdicts and drops the per-case text for every model. A
+benchmark carries that text once per model, so the full result is the largest
+thing these skills ever read: 1.2 MB for a 112-test benchmark, against 9 KB
+compact. Add `--only-failed` when you only want the failures. Pull the full text
+at the end, for the cases you're going to show.
 
 Report progress to the user as it advances; don't block silently.
 

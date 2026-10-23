@@ -25,8 +25,14 @@ it, the CLI switches to **agent mode** automatically (it detects `CLAUDE_CODE`,
   half minutes returned in one second with `< /dev/null` on the end. The one
   exception is `calibrate login`, which needs the input stream because the user
   pastes their key into it.
-- **Non-interactive runs** (CI, unattended): pass `--no-interactive` to disable
-  prompts, the explorer auto-launch, and TUI forms.
+- **Always add `--no-interactive`** on every command you run, not just in CI.
+  It stops the CLI opening a prompt, a form, or the explorer when you aren't
+  there to answer.
+- **Ask for less than the whole result.** A run of a hundred-odd tests comes
+  back as about a megabyte of text, nearly all of it the agent's answers and the
+  judge's reasoning. Reading all of that on every poll is slow and buys you
+  nothing: use `--compact`, `--only-failed` or `--jq`, and pull the full text
+  once at the end for the cases you're going to show.
 - **Never fabricate a field.** If a command fails or omits a field, report the
   error — do not invent a UUID, score, or status.
 - **Toggle agent mode by hand** only if needed: `--agent-mode` /
@@ -35,5 +41,6 @@ it, the CLI switches to **agent mode** automatically (it detects `CLAUDE_CODE`,
 ## Polling pattern (runs, benchmarks, evaluator jobs)
 
 Launch commands return a `task_id` / `job_uuid`; results come from a separate
-`get-*` command. Poll it until the status is final (`completed` / `failed`),
-backing off between polls. Report progress to the user; never block silently.
+`get-*` command. Poll it until the status is final: `done` or `failed`. A
+finished run says `done`, not `completed`. Back off between polls, report
+progress to the user, and never block silently.
