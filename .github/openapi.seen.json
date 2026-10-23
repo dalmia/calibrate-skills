@@ -2062,6 +2062,31 @@
         "title": "CreateJobsResponse",
         "type": "object"
       },
+      "CurrentWorkspaceResponse": {
+        "properties": {
+          "name": {
+            "description": "Workspace display name",
+            "title": "Name",
+            "type": "string"
+          },
+          "uuid": {
+            "description": "Workspace ID. Put this at the front of a Calibrate web address to link straight to something in this workspace, as in `/<uuid>/tests`",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "name"
+        ],
+        "title": "CurrentWorkspaceResponse",
+        "type": "object"
+      },
       "DatasetCreateRequest": {
         "properties": {
           "dataset_type": {
@@ -9650,6 +9675,61 @@
         "summary": "Create evaluator version",
         "tags": [
           "evaluators"
+        ]
+      }
+    },
+    "/organizations/current": {
+      "get": {
+        "description": "Get the workspace your API key belongs to",
+        "operationId": "get_current_workspace_organizations_current_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Get the current workspace",
+        "tags": [
+          "organizations"
         ]
       }
     },

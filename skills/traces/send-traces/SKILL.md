@@ -264,8 +264,13 @@ proves the code edit works.
 ```
 Traces flowing
   Agent: <name>
-  Dashboard: https://calibrate.artpark.ai/agents/<agent_uuid>
+  Dashboard: https://calibrate.artpark.ai/<workspace_uuid>/agents/<agent_uuid>
 ```
+
+(`<workspace_uuid>` comes from *Linking to something in the web app* in
+[`calibrate-resources`](../../overview/calibrate-resources/SKILL.md); on a
+self-hosted deployment use the user's own web address. Drop the line if you
+can't get it.)
 
 Where this goes next:
 
