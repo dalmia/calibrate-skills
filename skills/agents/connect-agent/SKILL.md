@@ -173,7 +173,16 @@ Capture `agent_uuid` from the response.
 
 ## Phase 3: Verify connection
 
-Don't declare success until Calibrate can actually reach the agent:
+Don't declare success until Calibrate can actually reach the agent.
+
+An agent built inside Calibrate (`type=agent`) has no URL to reach, and
+`verify-connection` always fails on it with "This agent does not have an
+agent_url configured". Skip this phase for it. Instead read it back with
+`calibrate agents get --agent-uuid <agent_uuid> --output-format json` and check
+its `config` has a `system_prompt` and an `llm.model`. Tell the user it runs
+inside Calibrate, so it is ready to test.
+
+For an agent at the user's own URL (`type=connection`):
 
 ```bash
 calibrate agents verify-connection --agent-uuid <agent_uuid>

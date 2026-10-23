@@ -216,7 +216,8 @@ Read the evaluator back and confirm the prompt actually landed:
 calibrate evaluators get --evaluator-uuid <evaluator_uuid> --output-format json
 ```
 
-Check `live_version` on the result: `system_prompt` is the prompt you drafted,
+The result has no `live_version` field. The live version is
+`versions[live_version_index]`. Check that version: `system_prompt` is the prompt you drafted,
 `judge_model` is the model you chose, and `variables` holds every variable you
 declared. A live v1 is not enough on its own — an evaluator with an empty prompt
 is created happily and reports success.
