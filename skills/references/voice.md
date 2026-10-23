@@ -93,7 +93,7 @@ Keep the mechanics internal; translate before you speak.
 | `llm`, `llm-general`, `conversation`, `stt`, `tts` as evaluator types | "the judge that reads a conversation" / "…that reads one input and one answer" / "…that reads a transcript" / "…that listens to the audio" |
 | `agent_id`, `input`, `output`, `tool_calls` on a trace | "what your agent was given, what it replied, and the tools it used" |
 | ingest / instrument / payload | "send us the real turns your agent handles" |
-| built-in / default evaluator, LLM judge, LLM-as-a-judge | "a reviewer Calibrate already has" / "an AI reviewer that grades each answer" |
+| built-in / default evaluator, judge, LLM judge, reviewer, grader | "evaluator", every time ("an evaluator Calibrate already has") |
 | `$ARGUMENTS`, agent mode, greenfield, clobber, mis-wired | never surface these at all |
 
 ## Introduce domain terms once, then use them
@@ -101,9 +101,11 @@ Keep the mechanics internal; translate before you speak.
 Calibrate has real concepts the user has to learn — don't hide them, but land
 them in plain words the first time, then use the term normally:
 
-- **evaluator / judge** — "an evaluator — the LLM that scores each reply"
-- **calibrate the judge** — "check the judge's scores against human ratings"
-- **agreement / human ceiling** — "how often the judge matches people; people
+- **evaluator** — "an evaluator is an AI that reads each answer from your agent
+  and marks it pass or fail on one thing you tell it to check." Say evaluator
+  every time after that, never judge or reviewer.
+- **calibrate the judge** — "check the evaluator's scores against human ratings"
+- **agreement / human ceiling** — "how often the evaluator matches people; people
   don't agree with each other 100% either, and that's the ceiling"
 - **tool-call vs response test** — "a tool-call test checks which action the
   agent took; a response test grades what it said"

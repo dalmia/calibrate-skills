@@ -37,7 +37,7 @@ tool_call.*
 
 <!-- TODO: track runs. -->
 
-## Phase 5 — Judge calibration
+## Phase 5 — Evaluator checked against people
 
 *Human↔judge agreement result, if you ran /calibrate-evaluator.*
 

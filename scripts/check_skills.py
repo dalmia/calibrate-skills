@@ -56,7 +56,7 @@ def check_frontmatter(problems: list[str]) -> None:
 # prose (precise notes for the agent), but banned in HEADINGS: the agent tends
 # to quote headings back verbatim, so "Preflight" becomes "pre-flight checks"
 # out loud. See skills/references/voice.md and CLAUDE.md.
-HEADING_JARGON = ("preflight", "system under test", "adaptive determinism")
+HEADING_JARGON = ("preflight", "system under test", "adaptive determinism", "judge")
 
 
 def check_heading_jargon(problems: list[str]) -> None:

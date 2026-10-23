@@ -136,7 +136,7 @@ judges chosen in Phase 2, one per quality, to each judged case. Record the
 → **`/run-tests`** — link tests to the agent, run, poll, and read results.
 Present **failures first**. Record the `task_id` and outcome in **Phase 4**.
 
-## Phase 5 — Calibrate the judge (offer, don't force)
+## Phase 5 — Check the evaluator against people (offer, don't force)
 
 Only if the user cares whether the automated scores are trustworthy (they mention
 "can I trust this", human review, or high-stakes decisions):

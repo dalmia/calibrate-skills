@@ -160,7 +160,7 @@ for i, r in enumerate(rows):
         item["input"] = prompt
     else:
         item["conversation_history"] = [{"role": "user", "content": prompt}]
-    # judged tests: add "evaluators": [{"evaluator_uuid": "<uuid>",
+    # tests scored by an evaluator: add "evaluators": [{"evaluator_uuid": "<uuid>",
     #   "variable_values": {"criteria": r["<criteria-col>"]}}]
     items.append(item)
 chunks = [items[i:i+500] for i in range(0, len(items), 500)]

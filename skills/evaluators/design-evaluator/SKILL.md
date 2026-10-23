@@ -72,13 +72,14 @@ Phase 1.
 ## Phase 1: Ask the user what a good answer looks like
 
 Never choose, reuse, or create a judge before this step. A first-time user does
-not know what a judge is, so explain it before asking anything. Say it in plain
-words, along these lines:
+not know what an evaluator is, so explain it in one line before asking anything:
 
-> Your agent writes its own answers, so there is no single right answer to
-> match against. Something has to read each answer and grade it. Calibrate uses
-> an AI reviewer for this: you tell it what to check, and it marks each answer
-> pass or fail (or gives it a score).
+> An evaluator is an AI that reads each answer from your agent and marks it pass
+> or fail on one thing you tell it to check.
+
+From then on, call it an **evaluator** every time. Never swap in judge,
+reviewer, grader, or LLM judge: a second word for the same thing makes the user
+think it is a second thing.
 
 Then ask what makes a good answer for **their** agent, and whether they already
 check for anything. In the same message, suggest 4 to 6 qualities built from what
@@ -106,7 +107,7 @@ Make **one evaluator per quality they chose**, so results show a separate score
 for each (medical accuracy separate from kindness). For each one:
 
 - If an existing evaluator from the list already checks exactly that quality,
-  tell the user in plain words ("Calibrate already has a reviewer that checks
+  tell the user in plain words ("Calibrate already has an evaluator that checks
   this, I'll use it") and reuse it after they agree. Never call it a built-in or
   default judge. If it is close but its prompt needs changing, hand to
   `/iterate-evaluator`.
@@ -115,7 +116,7 @@ for each (medical accuracy separate from kindness). For each one:
 Skip this phase only when every test checks which action the agent took
 (`tool_call`), since those need no judge.
 
-## Phase 2: Decide what it judges
+## Phase 2: Decide what it checks
 
 Three axes fix the evaluator's shape. Settle all three before writing any
 prompt.
@@ -150,7 +151,7 @@ prompt.
 
 If `rating`, collect the scale points and a short label for each.
 
-## Phase 3: Write the judge prompt and variables
+## Phase 3: Write the evaluator prompt and variables
 
 Draft the `system_prompt`. It may contain `{{variable}}` placeholders — commonly
 a single `{{criteria}}` — filled per-test-case from that test's
@@ -167,7 +168,7 @@ Show the drafted prompt, variables, and (for rating) the scale, and confirm.
 See the `version-param` shape in
 [`../../references/config-shapes.md`](../../references/config-shapes.md).
 
-## Phase 4: Choose the judge model
+## Phase 4: Choose the evaluator model
 
 Pick a `judge_model` sized to the expected case volume. Prefer a cheap-enough
 model (e.g. a mini model) unless the rubric genuinely needs a stronger one — a
