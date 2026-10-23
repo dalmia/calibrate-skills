@@ -239,8 +239,13 @@ calibrate agents resolve --names '["<name>"]'
 Agent connected
   ID:   <agent_uuid>
   Name: <name>
-  Dashboard: https://calibrate.artpark.ai/agents/<agent_uuid>
+  Dashboard: https://calibrate.artpark.ai/<workspace_uuid>/agents/<agent_uuid>
 ```
+
+(`<workspace_uuid>` comes from *Linking to something in the web app* in
+[`calibrate-resources`](../../overview/calibrate-resources/SKILL.md); on a
+self-hosted deployment use the user's own web address. Drop the line if you
+can't get it.)
 
 Hand off to whatever the user needs next:
 

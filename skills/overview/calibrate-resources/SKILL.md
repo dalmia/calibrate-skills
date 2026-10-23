@@ -145,6 +145,16 @@ web address by pattern.
   is stored by `login` and the host by config, so plain commands (no flag) reach
   their deployment from then on.
 
+### Linking to something in the web app
+
+Web addresses for a specific page start with the workspace ID, as in
+`<web-address>/<workspace_uuid>/tests` or
+`<web-address>/<workspace_uuid>/agents/<agent_uuid>`. Get the ID with
+`GET <api-host>/organizations/current` (header `X-API-Key`); it returns
+`uuid` and `name` for the workspace the key belongs to. Fetch it once and reuse
+it. If the call fails, skip the link rather than sending a broken one. When you
+hand the user a link, give just the address, never the lookup.
+
 See
 [`../../references/agent-mode.md`](../../references/agent-mode.md) for output
 formats and [`../../references/config-shapes.md`](../../references/config-shapes.md)
