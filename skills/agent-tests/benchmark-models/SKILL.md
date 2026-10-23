@@ -18,6 +18,8 @@ See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how t
 read command output (TOON/JSON) and for the launch-and-poll pattern used in
 Phase 5. Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for the benchmark and its results, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 ## Get the latest instructions
 

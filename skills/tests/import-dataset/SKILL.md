@@ -19,6 +19,8 @@ read command output (TOON/JSON) and
 [`../../references/config-shapes.md`](../../references/config-shapes.md) for the
 exact test-item shape. Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for the tests you just imported, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 ## Get the latest instructions
 

@@ -19,6 +19,8 @@ References: [`../../references/agent-mode.md`](../../references/agent-mode.md)
 (output/polling), [`../../references/config-shapes.md`](../../references/config-shapes.md)
 (item + evaluator shapes). Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for the labelling task and the results, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 ## Get the latest instructions
 

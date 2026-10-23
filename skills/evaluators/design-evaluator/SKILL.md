@@ -18,6 +18,8 @@ read command output (TOON/JSON) and
 [`../../references/config-shapes.md`](../../references/config-shapes.md) for the
 `version-param` shape. Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for the evaluator you just created, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 An evaluator is a **versioned** judge: the object holds a history of versions,
 one of which is live. Here you author v1. Later tuning is a separate flow
@@ -239,7 +241,9 @@ scale points under `scale`, not a `labels` map:
 
 `--name` must be unique within the workspace. Capture `evaluator_uuid` from the
 JSON response — never fabricate it. This creates the evaluator and sets **v1
-live**.
+live**. Give the user its address once it exists:
+`<app>/evaluators/<evaluator_uuid>`. See
+[`../../references/links.md`](../../references/links.md).
 
 ## Phase 6: Sanity check + next steps
 
