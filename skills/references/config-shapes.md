@@ -4,6 +4,13 @@ The JSON payloads the `calibrate` CLI accepts. These are the shapes the skills
 generate. Always confirm exact keys against the live CLI help
 (`calibrate <cmd> --help`) — this is a guide, not the schema of record.
 
+Pass these with the flag the skill shows — `--config-param`, `--version-param`.
+Every create command also takes `--body` with the whole request as one JSON
+object, and it is a trap: inside a body the section is named after the API field,
+not after the flag, so a `--version-param` payload becomes `"version"` and a
+`--config-param` one becomes `"config"`. Name it after the flag and the CLI drops
+that section without an error and creates the thing empty. Don't use `--body`.
+
 ## Test (`tests create` / `tests bulk-create`)
 
 A test feeds the agent an input and evaluates what comes back. Four types via
