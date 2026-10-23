@@ -119,7 +119,7 @@ Each evaluator UUID in `annotations` must be linked to the task.
 Use **two or more** annotators when you can — that yields an inter-annotator
 agreement number, which is your human ceiling (Phase 4).
 
-## Phase 3: Run the judge on the same items
+## Phase 3: Run the evaluator on the same items
 
 ```bash
 calibrate annotation-tasks create-evaluator-run --task-uuid <t> \
