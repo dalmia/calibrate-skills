@@ -242,8 +242,9 @@ scale points under `scale`, not a `labels` map:
 `--name` must be unique within the workspace. Capture `evaluator_uuid` from the
 JSON response — never fabricate it. This creates the evaluator and sets **v1
 live**. Give the user its address once it exists:
-`<app>/evaluators/<evaluator_uuid>`. See
-[`../../references/links.md`](../../references/links.md).
+`<app>/<workspace_uuid>/evaluators/<evaluator_uuid>`. See
+[`../../references/links.md`](../../references/links.md), which also says where
+`<workspace_uuid>` comes from.
 
 ## Phase 6: Sanity check + next steps
 

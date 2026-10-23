@@ -210,8 +210,9 @@ PASSED
 ```
 
 Then give them the address for the run itself, so they can open it:
-`<app>/tests?tab=runs&runId=<task_id>`. See
-[`../../references/links.md`](../../references/links.md).
+`<app>/<workspace_uuid>/tests?tab=runs&runId=<task_id>`. See
+[`../../references/links.md`](../../references/links.md), which also says where
+`<workspace_uuid>` comes from.
 
 If the run was stopped, ended early, or has unanswered cases, say so right under
 the headline count and don't read the pass rate as a verdict on the agent. For
