@@ -16,7 +16,9 @@ the user can see what their agent actually does and later turn real failures
 into test cases. Drives `calibrate traces create`.
 
 See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how to
-read command output (TOON/JSON). Keep what you *say* to the user plain — see
+read command output (TOON/JSON), and
+[`../../references/links.md`](../../references/links.md) for the address to hand
+the user. Keep what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
 
 ## Get the latest instructions
@@ -116,7 +118,8 @@ calibrate agents list --output-format json
 
 Match `$ARGUMENTS` against the listing if it carries a name or id; otherwise
 present a numbered list and ask which agent this code is. No agent yet →
-`/connect-agent` first. Keep two things from the chosen item: `agent_uuid`, and
+`/connect-agent` first. Keep two things from the chosen item: `uuid` (the listing calls it `uuid`,
+not `agent_uuid`), and
 `interaction_type` — that decides the shape of `input` below. **Read it from the
 listing; never ask the user.**
 
@@ -184,6 +187,8 @@ The whole accepted set of fields — anything else is rejected:
 - `metadata` — optional, a list of up to 100 `{"key": ..., "value": ...}` pairs,
   both strings — **not** a plain object. Prefer OpenTelemetry `gen_ai.*` key
   names where they fit.
+- `labels` — optional, up to 50 of the user's own tags, each 1 to 128
+  characters, for things like the environment or the release.
 
 The code needs two things from Calibrate: the backend host to post to, and a
 workspace API key for the `X-API-Key` header (**Workspace settings → API keys**).
@@ -264,7 +269,7 @@ proves the code edit works.
 ```
 Traces flowing
   Agent: <name>
-  Dashboard: https://calibrate.artpark.ai/agents/<agent_uuid>
+  Dashboard: <app>/<workspace_uuid>/agents/<uuid>
 ```
 
 Where this goes next:

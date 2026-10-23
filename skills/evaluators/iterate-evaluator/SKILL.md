@@ -161,11 +161,15 @@ calibrate evaluators create-version --evaluator-uuid <uuid> \
 - Omit `--variables` if the prompt has none.
 - Omit `--output-config` for a binary evaluator on default labels; include it
   for `rating` (required) or custom binary labels.
-- `--make-live` defaults to `true`.
+- `--make-live` defaults to **false**, so a new version does nothing until you
+  pass `--make-live true`. Leave it off and the evaluator keeps running the old
+  version while you report the new one as live.
 
-Offer **`--make-live false`** when the user wants to validate before switching
+Offer **`--make-live=false`** when the user wants to validate before switching
 production — it stages the version without repointing the live version, so you
-can A/B it against humans first and only promote it once agreement holds.
+can A/B it against humans first and only promote it once agreement holds. The
+equals sign is not optional: `--make-live false` turns it **on** and ignores the
+word, publishing the version immediately.
 
 Capture the new version id from the JSON response.
 
@@ -184,10 +188,16 @@ If it regressed, roll back by making an older version live again:
 
 ```bash
 calibrate evaluators create-version --evaluator-uuid <uuid> \
-  --judge-model <old-model> --system-prompt "<previous prompt>" --make-live true
+  --judge-model <old-model> --system-prompt "<previous prompt>" \
+  --variables '<the old variables>' --output-config '<the old output config>' \
+  --make-live true
 ```
 
-(`evaluators get` holds the full history to copy the previous version from.)
+Copy every part of the old version, not just the model and the prompt. A
+rollback that leaves out `--variables` or `--output-config` is a new version
+missing them, not the old one back. `evaluators get` holds the full history:
+`versions[live_version_index]` is the one running now, and the response has no
+`live_version` object, only `live_version_id` and `live_version_index`.
 Then re-check. Iterate until human↔judge reaches the human↔human ceiling.
 
 ## Handoffs

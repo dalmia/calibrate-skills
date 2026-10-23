@@ -87,7 +87,7 @@ a name, resolve it; if nothing was passed, list and ask which agent:
 
 ```bash
 calibrate agents list --output-format json
-calibrate agents resolve --names '["<name>"]' --output-format json
+calibrate agents resolve --names '<name>' --output-format json
 ```
 
 ## Phase 1: Confirm the agent has linked tests
@@ -164,34 +164,40 @@ report the structured error instead of guessing.
 
 ## Phase 5: Poll
 
-The benchmark runs as a background job. Poll until the status is final, `done`
-or `failed`. A finished job says `done`, not `completed`. Back off between
+The benchmark runs as a background job. Poll until the status is final: `done`,
+`failed` or `cancelled`. A finished job says `done`, never `completed`, and
+`cancelled` means someone stopped it. Back off between
 polls, per [`../../references/agent-mode.md`](../../references/agent-mode.md):
 
 ```bash
 calibrate agent-tests get-benchmark --task-id <task_id> --compact --output-format json
 ```
 
-`--compact` keeps the verdicts and drops the per-case text for every model. A
-benchmark carries that text once per model, so the full result is the largest
-thing these skills ever read: 1.2 MB for a 112-test benchmark, against 9 KB
-compact. Add `--only-failed` when you only want the failures. Pull the full text
-at the end, for the cases you're going to show.
+`--compact` does more here than it does on a single run: it drops every
+per-case row, setting each model's `test_results` to null. What survives is each
+model's counts and `leaderboard_summary`, which is all you need while polling. A
+benchmark repeats its per-case text once per model, so the full result is the
+largest thing these skills ever read. Don't pair `--compact` with
+`--only-failed`: there are no case rows left to filter. Drop `--compact` when
+you want the failures.
 
 Report progress to the user as it advances; don't block silently.
 
-The result carries the same flags as a single run: `error` is a string reason
-(not a boolean), `aborted` (stopped by a user; unrun cases are neither passed nor
+The result carries most of the same flags as a single run: `error` is a string
+reason (not a boolean), `aborted` (stopped by a user; unrun cases are neither passed nor
 failed), `stopped_early` (a model quit after too many failures in a row, also
 reported per model), and `unanswered_tests` (cases where the agent or judge
-couldn't be reached — already counted in `failed`). `parallel_models` echoes how
-it ran. A model's single answer can be read in full with
-`GET /agent-tests/run/{task_id}/results/{test_uuid}?model=<model>`.
+couldn't be reached). Unlike a single run, `unanswered_tests` is not at the top
+level here: it sits on each entry of `model_results`. `parallel_models` echoes
+how it ran, and the flag that sets it is `--parallel-models`. One model's answer on one case reads in full with
+`calibrate agent-tests get-run-case --task-id <task_id> --test-uuid <test_uuid> --model <model>`.
 
 ## Phase 6: Present the leaderboard
 
-Build a leaderboard from the terminal `get-benchmark` result — one row per
-model with its pass-rate across the tests, **best first**:
+Don't build this by hand. The result carries `leaderboard_summary` already: one
+row per model, sorted, with `model`, `passed`, `total`, `pass_rate`, latency,
+cost and tokens, plus a pass rate per evaluator. It survives `--compact`. Read
+it and show it, **best first**:
 
 ```
 Model                        Pass-rate

@@ -90,8 +90,14 @@ you need to pick one:
 
 ```bash
 calibrate agents list --output-format json
-calibrate agents resolve --names '["<name>"]'
+calibrate agents resolve --names '<name>'
 ```
+
+**One name per `--names`, no JSON.** `--names` takes a repeated flag, not a
+list: `--names 'first agent' --names 'second agent'`. Passing `'["a","b"]'`
+looks like it worked and quietly finds nothing, because the whole bracketed
+string is treated as one name. The CLI's own help example shows the JSON form;
+it is wrong.
 
 Present a numbered list if there's ambiguity and confirm the `agent_uuid` before
 going further. Never guess a UUID.
@@ -111,10 +117,13 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
 
   ```bash
   calibrate agent-tests link --agent-uuid <agent_uuid> \
-    --test-uuids '["<test_uuid>", ...]'
+    --test-uuids <test_uuid> --test-uuids <test_uuid>
   ```
 
-  Already-linked tests are skipped, so re-linking is safe.
+  Already-linked tests are skipped, so re-linking is safe. One id per
+  `--test-uuids` here, repeated: `link` and `bulk-unlink` take a repeated flag,
+  so a JSON list would be sent as a single bogus id. `run --test-uuids` is the
+  opposite and does take JSON; the two look alike and are not.
 
   **Linking is rejected when the test was built for the other kind of agent.**
   A `general` test only links to a `general` agent; `response` and
@@ -126,8 +135,8 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
   `/build-test-suite` to write cases for this one.
 
 - **Some linked tests should come off** → unlink them in one call with
-  `calibrate agent-tests bulk-unlink --agent-uuid <agent_uuid> --test-uuids '["<test_uuid>", ...]'`
-  (check `--help` for the exact flags). Tests that weren't linked are skipped;
+  `calibrate agent-tests bulk-unlink --agent-uuid <agent_uuid> --test-uuids <test_uuid> --test-uuids <test_uuid>`
+  (one id per flag, repeated, same as `link`). Tests that weren't linked are skipped;
   the response's `deleted_count` is how many links were removed. Confirm the
   list with the user first.
 
@@ -167,9 +176,10 @@ judge reasoning) and keeps the verdicts. On a run of 140 tests that's 57 KB
 instead of 429 KB. Add `--only-failed` when you just want the failures. Pull the
 full text once, at the end, and only for the cases you're going to show.
 
-Continue until `status` is `done` or `failed`. A finished run says `done`, not
-`completed`. Report only the status the command actually returns: do not assume
-completion.
+Continue until `status` is `done`, `failed` or `cancelled`. A finished run says
+`done`, never `completed`, and `cancelled` means someone stopped it, so stop
+polling then too. Report only the status the command actually returns: do not
+assume completion.
 
 Read the flags on the result before you present it:
 
@@ -223,8 +233,8 @@ the real score" — not field names.
 
 For a big run, `get-run` can return light rows per case (`mode=summary`: ID,
 name, verdict, short reason). Read a single case in full with
-`GET /agent-tests/run/{task_id}/results/{test_uuid}` (`test_uuid` is on each
-case) when the user asks why one failed.
+`calibrate agent-tests get-run-case --task-id <task_id> --test-uuid <test_uuid>`
+(`test_uuid` is on each case) when the user asks why one failed.
 
 **Known pattern to flag, not to over-report:** a case where the agent made a
 tool call without a text reply often surfaces as a FAIL even though it's usually
