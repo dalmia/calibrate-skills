@@ -150,12 +150,17 @@ Evaluator summary
 ```bash
 calibrate evaluators create \
   --name "<name>" \
+  --description "<one line on what it judges>" \
   --data-type text \
   --evaluator-type <type> \
   --output-type binary \
   --version-param '{"judge_model":"openai/gpt-4.1","system_prompt":"...{{criteria}}...","variables":[{"name":"criteria","description":"what must hold","default":""}]}' \
   --output-format json < /dev/null
 ```
+
+Quote every value that can contain a space, `--name` and `--description` above
+all. An unquoted description stops at the first space and the rest of it arrives
+as flags the command doesn't know.
 
 For a `rating` evaluator, add the scale to `version-param` — an ordered array of
 scale points under `scale`, not a `labels` map:
