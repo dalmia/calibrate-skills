@@ -59,7 +59,7 @@ brew install dalmia/tap/calibrate
 check auth:
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, first confirm which Calibrate the user is on — the hosted
@@ -69,7 +69,7 @@ works against the deployment it came from, so this determines how they log in:
 ```bash
 calibrate login                                                            # hosted
 # self-hosted: point the CLI at their backend once, then log in
-calibrate configure --no-interactive --server-url https://<their-api-host>
+calibrate configure --no-interactive --server-url https://<their-api-host> < /dev/null
 calibrate login
 ```
 
@@ -83,7 +83,7 @@ or the equivalent settings page on their deployment.
 Then resolve which agent these traces belong to:
 
 ```bash
-calibrate agents list --output-format json
+calibrate agents list --output-format json < /dev/null
 ```
 
 Match `$ARGUMENTS` against the listing if it carries a name or id; otherwise
@@ -215,7 +215,7 @@ terminal against the same agent:
 calibrate traces create --agent-id <agent_uuid> \
   --input '[{"role": "user", "content": "..."}]' \
   --output-param '{"response": "...", "tool_calls": [{"tool": "...", "arguments": {}, "output": {}}]}' \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 `--input` is parsed as JSON, so a `general` agent's plain string carries its own

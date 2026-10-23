@@ -40,7 +40,7 @@ with the copy you have.
 ```bash
 brew install dalmia/tap/calibrate    # install the CLI
 calibrate login                      # authenticate (API key from workspace settings)
-calibrate agents list                # confirm auth with a real call
+calibrate agents list < /dev/null                # confirm auth with a real call
 ```
 
 **Confirm the *key works* with a real read, not `whoami`.** `calibrate whoami`
@@ -83,9 +83,9 @@ web address by pattern.
   repeated flags:
 
   ```bash
-  calibrate configure --no-interactive --server-url https://<their-calibrate-api-host>
+  calibrate configure --no-interactive --server-url https://<their-calibrate-api-host> < /dev/null
   calibrate login        # then have the user log in / paste their key
-  calibrate agents list  # verify: empty list (200) = success; 401 = key not valid there
+  calibrate agents list < /dev/null  # verify: empty list (200) = success; 401 = key not valid there
   ```
 
   **Order matters: `configure` the host *before* `login`.** Do the `configure`

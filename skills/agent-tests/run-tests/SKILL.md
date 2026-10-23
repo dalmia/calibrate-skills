@@ -44,7 +44,7 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user to `calibrate login` and stop until they are
@@ -59,8 +59,8 @@ Resolve the agent. If `$ARGUMENTS` is already a UUID, use it. If it's a name, or
 you need to pick one:
 
 ```bash
-calibrate agents list --output-format json
-calibrate agents resolve --names '["<name>"]'
+calibrate agents list --output-format json < /dev/null
+calibrate agents resolve --names '["<name>"]' < /dev/null
 ```
 
 Present a numbered list if there's ambiguity and confirm the `agent_uuid` before
@@ -71,7 +71,7 @@ going further. Never guess a UUID.
 Tests only run once they're linked to the agent. Check what's linked:
 
 ```bash
-calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format json
+calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format json < /dev/null
 ```
 
 - **No tests at all** → the agent has nothing to run. Hand off to
@@ -81,7 +81,7 @@ calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format j
 
   ```bash
   calibrate agent-tests link --agent-uuid <agent_uuid> \
-    --test-uuids '["<test_uuid>", ...]'
+    --test-uuids '["<test_uuid>", ...]' < /dev/null
   ```
 
   Already-linked tests are skipped, so re-linking is safe.
@@ -108,7 +108,7 @@ Confirm the linked set matches what the user expects before running.
 Run all linked tests and capture the `task_id`:
 
 ```bash
-calibrate agent-tests run --agent-uuid <agent_uuid> --output-format json
+calibrate agent-tests run --agent-uuid <agent_uuid> --output-format json < /dev/null
 ```
 
 Read `task_id` from the JSON. Never fabricate it — if the field is missing,
@@ -129,7 +129,7 @@ polling pattern in `agent-mode.md`). Report progress each time; never block
 silently.
 
 ```bash
-calibrate agent-tests get-run --task-id <task_id> --output-format json
+calibrate agent-tests get-run --task-id <task_id> --output-format json < /dev/null
 ```
 
 Continue until `status` is `completed` or `failed`. Report only the status the
@@ -188,7 +188,7 @@ tool call, in which case it matters.
 Put this run in context against prior baselines:
 
 ```bash
-calibrate agent-tests list-runs-for-agent --agent-uuid <agent_uuid> --output-format json
+calibrate agent-tests list-runs-for-agent --agent-uuid <agent_uuid> --output-format json < /dev/null
 ```
 
 Highlight regressions (cases that passed before and now fail) and new passes.

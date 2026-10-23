@@ -17,6 +17,14 @@ it, the CLI switches to **agent mode** automatically (it detects `CLAUDE_CODE`,
 
 - **Always add `--output-format json`** on any command whose result you need to
   read a field out of (creates, run launches, status polls).
+- **End every command with `< /dev/null`.** The CLI reads standard input before
+  it sends its request, so a command run with an input stream nobody writes to
+  and nobody closes just sits there: nothing printed, nothing sent, no exit, for
+  as long as you leave it. It looks exactly like a slow server, and
+  `--no-interactive` does not stop it. The same `get-run` that sat for two and a
+  half minutes returned in one second with `< /dev/null` on the end. The one
+  exception is `calibrate login`, which needs the input stream because the user
+  pastes their key into it.
 - **Non-interactive runs** (CI, unattended): pass `--no-interactive` to disable
   prompts, the explorer auto-launch, and TUI forms.
 - **Never fabricate a field.** If a command fails or omits a field, report the

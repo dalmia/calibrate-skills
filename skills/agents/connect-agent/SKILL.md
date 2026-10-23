@@ -65,7 +65,7 @@ An agent that takes one input at a time needs CLI 0.0.41 or newer — if
 check auth:
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, first confirm which Calibrate the user is on — the hosted
@@ -75,7 +75,7 @@ works against the deployment it came from, so this determines how they log in:
 ```bash
 calibrate login                                                            # hosted
 # self-hosted: point the CLI at their backend once, then log in
-calibrate configure --no-interactive --server-url https://<their-api-host>
+calibrate configure --no-interactive --server-url https://<their-api-host> < /dev/null
 calibrate login
 ```
 
@@ -90,7 +90,7 @@ https://calibrate.artpark.ai to sign up.
 Inventory what already exists so you don't create a duplicate:
 
 ```bash
-calibrate agents list --output-format json
+calibrate agents list --output-format json < /dev/null
 ```
 
 If agents exist, present a numbered list and ask whether to configure an
@@ -166,7 +166,7 @@ Agent summary
 
 ```bash
 calibrate agents create --name "<name>" --type <agent|connection> \
-  --interaction-type <conversation|general> --config-param '<json>' --output-format json
+  --interaction-type <conversation|general> --config-param '<json>' --output-format json < /dev/null
 ```
 
 Capture `agent_uuid` from the response.
@@ -176,7 +176,7 @@ Capture `agent_uuid` from the response.
 Don't declare success until Calibrate can actually reach the agent:
 
 ```bash
-calibrate agents verify-connection --agent-uuid <agent_uuid>
+calibrate agents verify-connection --agent-uuid <agent_uuid> < /dev/null
 ```
 
 An agent that takes one input at a time is checked with a single plain input
@@ -187,13 +187,13 @@ timeout, bad URL) and fix `agent_url`/`agent_headers` with `calibrate agents upd
 rather than moving on:
 
 ```bash
-calibrate agents update --agent-uuid <agent_uuid> --config-param '<json>'
+calibrate agents update --agent-uuid <agent_uuid> --config-param '<json>' < /dev/null
 ```
 
 To turn agent names into UUIDs elsewhere:
 
 ```bash
-calibrate agents resolve --names '["<name>"]'
+calibrate agents resolve --names '["<name>"]' < /dev/null
 ```
 
 ## Phase 4: Summary + next steps

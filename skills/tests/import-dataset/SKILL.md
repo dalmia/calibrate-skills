@@ -44,7 +44,7 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user:
@@ -63,7 +63,7 @@ Every imported test can be linked to one or more agents (`--agent-uuids`). Ask
 which agent these cases belong to, or whether to import them unlinked.
 
 ```bash
-calibrate agents list --output-format json
+calibrate agents list --output-format json < /dev/null
 ```
 
 Present a numbered list; capture the chosen `agent_uuid`(s) **and each agent's
@@ -181,7 +181,7 @@ calibrate tests bulk-create \
   --tests "$(cat chunk-0.json)" \
   --agent-uuids '["<agent_uuid>"]' \
   --language <lang> \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 Omit `--agent-uuids` to link none; omit `--language` to leave
@@ -192,7 +192,7 @@ don't proceed as if it succeeded. Never fabricate a `test_uuid`.
 ## Phase 6: Verify and report
 
 ```bash
-calibrate tests list --output-format json
+calibrate tests list --output-format json < /dev/null
 ```
 
 Reconcile the results:

@@ -44,13 +44,13 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 Resolve the target evaluator and confirm its live version + data-type:
 
 ```bash
-calibrate evaluators get --evaluator-uuid <id> --output-format json
+calibrate evaluators get --evaluator-uuid <id> --output-format json < /dev/null
 ```
 
 If the user gave a name, `calibrate evaluators list` to find the UUID first.
@@ -80,7 +80,7 @@ calibrate annotation-tasks create \
   --name "<evaluator> calibration" \
   --type <llm|llm-general|conversation|stt|tts> \
   --evaluator-ids '["<evaluator_uuid>"]' \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 Capture `task_uuid`. (To link an evaluator later:
@@ -93,7 +93,7 @@ map. Unlabeled to start:
 
 ```bash
 calibrate annotation-tasks add-items --task-uuid <t> \
-  --items '[{"payload":{"name":"item-1", ...}}]'
+  --items '[{"payload":{"name":"item-1", ...}}]' < /dev/null
 ```
 
 Field names per task type, translations or rewrites shown to annotators,
@@ -111,7 +111,7 @@ a binary evaluator, a number for a rating one) and optional `reasoning`:
 ```bash
 calibrate annotation-tasks add-items --task-uuid <t> \
   --annotator-id <human_id> \
-  --items '[{"payload":{"name":"item-1"},"annotations":{"<evaluator_uuid>":{"value":true,"reasoning":"meets the bar"}}}]'
+  --items '[{"payload":{"name":"item-1"},"annotations":{"<evaluator_uuid>":{"value":true,"reasoning":"meets the bar"}}}]' < /dev/null
 ```
 
 Each evaluator UUID in `annotations` must be linked to the task.
@@ -123,20 +123,20 @@ agreement number, which is your human ceiling (Phase 4).
 
 ```bash
 calibrate annotation-tasks create-evaluator-run --task-uuid <t> \
-  --evaluators '["<evaluator_uuid>"]' --output-format json
+  --evaluators '["<evaluator_uuid>"]' --output-format json < /dev/null
 ```
 
 Capture `job_uuid` and poll to completion:
 
 ```bash
-calibrate annotation-tasks get-evaluator-run --task-uuid <t> --job-uuid <j>
+calibrate annotation-tasks get-evaluator-run --task-uuid <t> --job-uuid <j> < /dev/null
 ```
 
 ## Phase 4: Measure agreement
 
 ```bash
-calibrate annotation-tasks get-agreement --task-uuid <t> --output-format json
-calibrate annotation-tasks get-summary   --task-uuid <t> --output-format json
+calibrate annotation-tasks get-agreement --task-uuid <t> --output-format json < /dev/null
+calibrate annotation-tasks get-summary   --task-uuid <t> --output-format json < /dev/null
 ```
 
 Read agreement two ways:
@@ -162,7 +162,7 @@ lever:
 
    ```bash
    calibrate evaluators create-version --evaluator-uuid <id> \
-     --judge-model <model> --system-prompt "<sharpened>" --make-live true
+     --judge-model <model> --system-prompt "<sharpened>" --make-live true < /dev/null
    ```
 
 4. Re-run Phase 3–4 on the **same items** — no new human labels needed.

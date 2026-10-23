@@ -57,7 +57,7 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, `calibrate login`.
@@ -66,13 +66,13 @@ Resolve the evaluator and read its current state — the live version, its
 `system_prompt`, `judge_model`, and declared `variables`:
 
 ```bash
-calibrate evaluators get --evaluator-uuid <uuid> --output-format json
+calibrate evaluators get --evaluator-uuid <uuid> --output-format json < /dev/null
 ```
 
 If the user gave a name, find the UUID first:
 
 ```bash
-calibrate evaluators list --output-format json
+calibrate evaluators list --output-format json < /dev/null
 ```
 
 Note the live version and the variable names — you'll need both. The variable
@@ -125,7 +125,7 @@ calibrate evaluators create-version --evaluator-uuid <uuid> \
   --variables '[{"name":"criteria","description":"...","default":""}]' \
   --output-config '<json>' \
   --make-live true \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 - Omit `--variables` if the prompt has none.
@@ -154,7 +154,7 @@ If it regressed, roll back by making an older version live again:
 
 ```bash
 calibrate evaluators create-version --evaluator-uuid <uuid> \
-  --judge-model <old-model> --system-prompt "<previous prompt>" --make-live true
+  --judge-model <old-model> --system-prompt "<previous prompt>" --make-live true < /dev/null
 ```
 
 (`evaluators get` holds the full history to copy the previous version from.)

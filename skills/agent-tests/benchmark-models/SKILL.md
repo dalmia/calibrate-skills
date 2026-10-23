@@ -43,7 +43,7 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user:
@@ -56,8 +56,8 @@ Resolve the agent to a UUID. If `$ARGUMENTS` is already a UUID, use it. If it's
 a name, resolve it; if nothing was passed, list and ask which agent:
 
 ```bash
-calibrate agents list --output-format json
-calibrate agents resolve --names '["<name>"]' --output-format json
+calibrate agents list --output-format json < /dev/null
+calibrate agents resolve --names '["<name>"]' --output-format json < /dev/null
 ```
 
 ## Phase 1: Confirm the agent has linked tests
@@ -65,7 +65,7 @@ calibrate agents resolve --names '["<name>"]' --output-format json
 Only **linked** tests are benchmarked, so confirm the agent has some:
 
 ```bash
-calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format json
+calibrate agent-tests list-for-agent --agent-uuid <agent_uuid> --output-format json < /dev/null
 ```
 
 If the list is empty, don't launch — the benchmark would have nothing to run.
@@ -107,7 +107,7 @@ the linked tests (each ID must be linked). Omit it to run all linked tests.
 calibrate agent-tests benchmark \
   --agent-uuid <agent_uuid> \
   --models '["openai/gpt-4.1","anthropic/claude-sonnet-4"]' \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 To restrict to a subset of linked tests, add:
@@ -126,7 +126,7 @@ The benchmark runs as a background job. Poll until the status is final
 [`../../references/agent-mode.md`](../../references/agent-mode.md):
 
 ```bash
-calibrate agent-tests get-benchmark --task-id <task_id> --output-format json
+calibrate agent-tests get-benchmark --task-id <task_id> --output-format json < /dev/null
 ```
 
 Report progress to the user as it advances; don't block silently.

@@ -41,7 +41,7 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, run `calibrate login` (an API key lives under **Workspace
@@ -51,13 +51,13 @@ Confirm the target agent. If `$ARGUMENTS` gave a UUID, use it. If it gave a
 name, resolve it:
 
 ```bash
-calibrate agents resolve --names '["<name>"]' --output-format json
+calibrate agents resolve --names '["<name>"]' --output-format json < /dev/null
 ```
 
 Otherwise inventory agents and ask which one to test:
 
 ```bash
-calibrate agents list --output-format json
+calibrate agents list --output-format json < /dev/null
 ```
 
 No agent yet → hand off to `/connect-agent` first. Capture the `agent_uuid`
@@ -131,7 +131,7 @@ calibrate tests bulk-create \
   --tests '[<items>]' \
   --agent-uuids '["<agent_uuid>"]' \
   --language <lang> \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 For a single case, use `create` — `-c/--config-param` is the test config. It
@@ -145,7 +145,7 @@ calibrate tests create \
   --name "<name>" \
   --type <response|conversation|tool_call|general> \
   --config-param '<json>' \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 Capture the created `test_uuid`s from the JSON output. Never fabricate a UUID —
@@ -156,14 +156,14 @@ if a command fails, surface the structured error and fix the payload.
 Confirm the tests landed:
 
 ```bash
-calibrate tests list --output-format json
-calibrate tests get --test-uuid <test_uuid> --output-format json
+calibrate tests list --output-format json < /dev/null
+calibrate tests get --test-uuid <test_uuid> --output-format json < /dev/null
 ```
 
 To amend a case, edit its config and re-upload:
 
 ```bash
-calibrate tests update --test-uuid <test_uuid> --config-param '<json>'
+calibrate tests update --test-uuid <test_uuid> --config-param '<json>' < /dev/null
 ```
 
 ## Handoffs

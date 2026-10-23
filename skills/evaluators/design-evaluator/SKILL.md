@@ -47,7 +47,7 @@ with the copy you have.
 ## Phase 0: Setup check
 
 ```bash
-calibrate agents list   # real read — 401 = not signed in, or key for the wrong deployment
+calibrate agents list < /dev/null   # real read — 401 = not signed in, or key for the wrong deployment
 ```
 
 If unauthenticated, guide the user:
@@ -64,7 +64,7 @@ List existing evaluators so you don't duplicate one — and so the user can reus
 or tune a built-in default instead of authoring from scratch:
 
 ```bash
-calibrate evaluators list --output-format json
+calibrate evaluators list --output-format json < /dev/null
 ```
 
 The list includes the built-in defaults. If a judge already covers the intent,
@@ -154,7 +154,7 @@ calibrate evaluators create \
   --evaluator-type <type> \
   --output-type binary \
   --version-param '{"judge_model":"openai/gpt-4.1","system_prompt":"...{{criteria}}...","variables":[{"name":"criteria","description":"what must hold","default":""}]}' \
-  --output-format json
+  --output-format json < /dev/null
 ```
 
 For a `rating` evaluator, add the scale to `version-param` — an ordered array of
@@ -170,7 +170,7 @@ live**.
 Read the evaluator back and confirm the prompt actually landed:
 
 ```bash
-calibrate evaluators get --evaluator-uuid <evaluator_uuid> --output-format json
+calibrate evaluators get --evaluator-uuid <evaluator_uuid> --output-format json < /dev/null
 ```
 
 Check `live_version` on the result: `system_prompt` is the prompt you drafted,
