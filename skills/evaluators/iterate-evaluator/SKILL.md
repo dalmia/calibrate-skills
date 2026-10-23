@@ -27,6 +27,8 @@ copy as a new evaluator instead.
 Reference: [`../../references/config-shapes.md`](../../references/config-shapes.md)
 (evaluator version + variable shapes). Keep what you *say* to the user plain —
 see [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for the evaluator you just changed, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 This skill is the version-mechanics half of the calibration loop in
 [`../../annotation/calibrate-evaluator/SKILL.md`](../../annotation/calibrate-evaluator/SKILL.md).

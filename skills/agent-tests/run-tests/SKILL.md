@@ -19,6 +19,8 @@ See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how t
 read command output (TOON/JSON) and the polling pattern used in Phase 4. Keep
 what you *say* to the user plain — see
 [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for the run and its results, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 ## Get the latest instructions
 
@@ -206,6 +208,10 @@ PASSED
   ✓ <test name>
   ...
 ```
+
+Then give them the address for the run itself, so they can open it:
+`<app>/tests?tab=runs&runId=<task_id>`. See
+[`../../references/links.md`](../../references/links.md).
 
 If the run was stopped, ended early, or has unanswered cases, say so right under
 the headline count and don't read the pass rate as a verdict on the agent. For

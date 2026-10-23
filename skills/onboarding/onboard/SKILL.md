@@ -23,6 +23,8 @@ adaptive. This version targets the cloud API primitives.
 This is a first-time user's first contact with Calibrate, so voice matters most
 here — keep what you *say* plain and jargon-free. See
 [`../../references/voice.md`](../../references/voice.md).
+When you finish a step, give the user the address for everything you set up along the way, as
+[`../../references/links.md`](../../references/links.md) sets out.
 
 ## Get the latest instructions
 
