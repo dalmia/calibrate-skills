@@ -113,8 +113,8 @@ calibrate annotation-tasks create \
   --output-format json
 ```
 
-Capture `task_uuid`. (To link an evaluator later:
-`calibrate annotation-tasks set-evaluators --task-uuid <t> --evaluator-ids '["<e>"]'`.)
+Capture `uuid` (the response calls it `uuid`, not `task_uuid`). (To link an evaluator later:
+`calibrate annotation-tasks set-evaluators --task-uuid <t> --evaluator-ids <e> --evaluator-ids <e>`.)
 
 Seed the items to be labeled. Each item is an `AnnotationItemPayload`: a
 required `payload` (its shape depends on the task `--type`, but `payload.name` is
@@ -140,7 +140,7 @@ a binary evaluator, a number for a rating one) and optional `reasoning`:
 
 ```bash
 calibrate annotation-tasks add-items --task-uuid <t> \
-  --annotator-id <human_id> \
+  --annotator-id '"<human_id>"' \
   --items '[{"payload":{"name":"item-1"},"annotations":{"<evaluator_uuid>":{"value":true,"reasoning":"meets the bar"}}}]'
 ```
 
@@ -153,7 +153,8 @@ agreement number, which is your human ceiling (Phase 4).
 
 ```bash
 calibrate annotation-tasks create-evaluator-run --task-uuid <t> \
-  --evaluators '["<evaluator_uuid>"]' --output-format json
+  --evaluators '[{"evaluator_id": "<evaluator_uuid>"}]' \
+  --select-all true --output-format json
 ```
 
 Capture `job_uuid` and poll to completion:

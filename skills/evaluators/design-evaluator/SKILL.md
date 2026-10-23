@@ -152,10 +152,11 @@ Three axes fix the evaluator's shape. Settle all three before writing any
 prompt.
 
 - **evaluator-type** — *what* the judge is handed. `--evaluator-type` accepts
-  exactly five values:
+  six values:
   - `llm` (the default) — a reply together with the conversation before it.
   - `llm-general` — a standalone input and the output it produced.
   - `conversation` — a whole conversation.
+  - `tool-call` — the tool calls the agent made, labelled by a person.
   - `stt` — one transcript.
   - `tts` — synthesized speech.
 
@@ -223,7 +224,7 @@ Evaluator summary
 ```bash
 calibrate evaluators create \
   --name "<name>" \
-  --description "<one line on what it judges>" \
+  --description '"<one line on what it judges>"' \
   --data-type text \
   --evaluator-type <type> \
   --output-type binary \
@@ -231,9 +232,10 @@ calibrate evaluators create \
   --output-format json
 ```
 
-Quote every value that can contain a space, `--name` and `--description` above
-all. An unquoted description stops at the first space and the rest of it arrives
-as flags the command doesn't know.
+Note the quoting on `--description`: its value is read as JSON, so it needs
+double quotes *inside* the shell quotes. `--description "checks dosage advice"`
+fails with "invalid character 'c'", and so does a single word. `--name` is a
+plain string and takes `"a name with spaces"` as normal.
 
 For a `rating` evaluator, add the scale to `version-param` — an ordered array of
 scale points under `scale`, not a `labels` map:
@@ -260,11 +262,13 @@ The result has no `live_version` field. The live version is
 declared. A live v1 is not enough on its own — an evaluator with an empty prompt
 is created happily and reports success.
 
-If any of the three is empty or missing, the create didn't carry them. Variable
-names are frozen after v1, so there is nothing to repair and no later version
-fixes it. The CLI cannot delete an evaluator, so tell the user it came out empty
-and ask them to delete it in the Calibrate app, then create it again with the
-flags above.
+If any of the three is empty or missing, the create didn't carry them. An empty
+prompt or the wrong model is fixable: `create-version` replaces the prompt, the
+model, the scale, and each variable's description and default. Add a version
+with the right values and make it live. Only the **set of variable names** is
+frozen after v1. If those came out wrong, nothing later can change them, and
+since the CLI cannot delete an evaluator, tell the user and ask them to delete
+it in the Calibrate app and create it again.
 
 Then report plainly:
 
