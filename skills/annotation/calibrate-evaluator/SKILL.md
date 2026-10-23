@@ -71,6 +71,20 @@ steps below may have changed.
 Do all of this silently. `startup.md` names the one case worth telling the user
 about.
 
+## What to tell the user before labelling
+
+The user may not know that the scores come from AI and can be wrong. Before
+setting anything up, say it in plain words, along these lines:
+
+> The pass and fail scores come from AI evaluators, and they can be wrong. They
+> are weakest on things that are a matter of opinion, like whether an answer is
+> kind or simple enough, and on those even two people can disagree. So before
+> you change your agent based on these scores, let's check them: a few people
+> label about 20 of your agent's answers by hand, and we see how often the
+> evaluators agree with them, and how often the people agree with each other.
+
+Say "evaluator", never judge (see [`voice.md`](../../references/voice.md)).
+
 ## Phase 0: Setup check
 
 ```bash
@@ -87,8 +101,10 @@ If the user gave a name, `calibrate evaluators list` to find the UUID first.
 
 ## Phase 1: Assemble the sample
 
-Gather 20–50 items the evaluator will judge. Real agent outputs are best — pull
-them from a recent run (`calibrate agent-tests get-run --task-id <t>`). Fewer
+Gather about 20 items the evaluator will judge (all of them if the run has fewer).
+Real agent outputs are best — pull them from the run the user just looked at
+(`calibrate agent-tests get-run --task-id <t>`). Link every evaluator the run
+used to the task, so one round of labelling checks all of them. Fewer
 than ~20 makes the agreement number noisy; more is steadier.
 
 Create the task and link the evaluator. **`--type` has to match what the
@@ -133,10 +149,52 @@ a tool call, label it with a `tool-call` evaluator, not a text judge.
 
 ## Phase 2: Collect human labels
 
-Have annotators label every item. Seed known human labels inline, one call per
-annotator (`--annotator-id` is required whenever any item carries annotations).
-Labels go under `annotations`, keyed by evaluator UUID, with `value` (a bool for
-a binary evaluator, a number for a rating one) and optional `reasoning`:
+People label the items in Calibrate's labelling form. Each person gets a link
+of their own and needs no Calibrate account.
+
+**How many people.** At least two people must label the same items. That is
+the only way to see how often people agree with each other, which is the most
+you can expect from an evaluator (Phase 4). Ask the user who will label, by
+name. If one person labelling everything is all they can manage, say plainly
+that this leaves no way to tell an unclear rule from a weak evaluator, and ask
+for a second person on at least a shared set of about 10 items.
+
+Add each person once (`--name` is unique in the workspace; reuse an existing
+annotator from `calibrate annotators list` instead of creating a duplicate):
+
+```bash
+calibrate annotators create --name "<name>" --output-format json
+```
+
+Create one labelling job per person. By default, everyone labels every item and
+must write a reason with each score: without reasons, a disagreement between
+two people can't be explained afterwards. Repeat `--annotator-ids` once per
+person; a JSON list is sent as one id:
+
+```bash
+calibrate annotation-tasks create-labelling-jobs --task-uuid <t> \
+  --annotator-ids <annotator_1> --annotator-ids <annotator_2> \
+  --select-all --reasoning-mode required --output-format json
+```
+
+If labelling everything twice is too much work, give both people a shared set
+of about 10 items (`--item-ids` instead of `--select-all`, both annotators in
+one call), then split the remaining items between them with one call per person.
+
+Each job in the response has a `public_token`. Send every person their own
+link: `https://calibrate.artpark.ai/annotate-job/<public_token>`. On a
+self-hosted Calibrate, use the address the user opens Calibrate at in place of
+`https://calibrate.artpark.ai`.
+
+Progress is on the task: `calibrate annotation-tasks get --task-uuid <t>` lists
+each job's `completed_item_count` out of `item_count`. Wait until every job is
+done before reading agreement; a few labelled items say almost nothing.
+
+**Labels the user already has** (from a spreadsheet, say) can be added directly
+instead, one call per annotator (`--annotator-id` is required whenever any item
+carries annotations). Labels go under `annotations`, keyed by evaluator UUID,
+with `value` (a bool for a binary evaluator, a number for a rating one) and
+`reasoning`:
 
 ```bash
 calibrate annotation-tasks add-items --task-uuid <t> \
@@ -146,15 +204,18 @@ calibrate annotation-tasks add-items --task-uuid <t> \
 
 Each evaluator UUID in `annotations` must be linked to the task.
 
-Use **two or more** annotators when you can — that yields an inter-annotator
-agreement number, which is your human ceiling (Phase 4).
-
 ## Phase 3: Run the evaluator on the same items
 
 ```bash
 calibrate annotation-tasks create-evaluator-run --task-uuid <t> \
-  --evaluators '["<evaluator_uuid>"]' --output-format json
+  --evaluators '[{"evaluator_id":"<evaluator_uuid>"}]' \
+  --select-all --output-format json
 ```
+
+`--evaluators` takes objects, not plain IDs: a list of strings is refused with
+"cannot unmarshal string". Each entry runs that evaluator's live version unless
+it also carries `evaluator_version_id`. Pass `--select-all`, or list the items
+with `--item-ids`; the command needs one of them.
 
 Capture `job_uuid` and poll to completion:
 
@@ -178,7 +239,23 @@ Read agreement two ways:
   ceiling, **not** against 100%. A judge that matches humans as often as humans
   match each other is as good as it can get.
 
-Report both numbers plainly. Never fabricate — if the run didn't finish, say so.
+Read them **for each evaluator separately**. `get-agreement` gives the
+people-with-people number for the whole task only; for one evaluator, compare
+the annotators' values on that evaluator's rows in `get-summary`, using only
+items both people labelled (`null` means not labelled yet). Then:
+
+- **People often disagree on an evaluator's quality** → the rule is unclear.
+  Help the user agree on what it means, and rewrite that evaluator's
+  instructions, before judging the evaluator.
+- **People agree, the evaluator doesn't** → change the evaluator's
+  instructions (Phase 5).
+- **The evaluator agrees with people about as often as they agree with each
+  other** → it is as good as it can get. Don't push it toward 100%.
+
+Expect the weakest agreement, between people and with the evaluator, on
+qualities that are a matter of opinion. Report both numbers plainly, per
+evaluator, with how many items they rest on. Never fabricate — if the run didn't
+finish, say so.
 
 ## Phase 5: Tune and re-check (the loop)
 
@@ -198,7 +275,39 @@ lever:
 4. Re-run Phase 3–4 on the **same items** — no new human labels needed.
 
 Repeat until human↔judge agreement reaches the human↔human ceiling. Then the
-judge is safe to run unattended.
+judge is safe to run unattended, and only then go back to improving the agent:
+scores from an evaluator that disagrees with people would steer those changes
+the wrong way.
+
+## When to remind the user
+
+An evaluator checked on 20 answers may still be wrong on the 200 it scores
+later. `run-tests` and `benchmark-models` point here after showing results.
+
+Remind only when a run covers a larger set of tests than any run before it for
+this agent. Check:
+
+```bash
+calibrate agent-tests list-runs-for-agent --agent-uuid <agent_uuid> --output-format json
+```
+
+Compare this run's `total_tests` with the largest `total_tests` among the
+earlier runs. If it is not larger, say nothing. If it is larger, count, for each
+evaluator the run used, how many items people have labelled for it: find the
+tasks that link it (`calibrate annotation-tasks list`), and count that
+evaluator's rows in
+`calibrate annotation-tasks get-summary --task-uuid <t> --compact --limit 500`
+where at least one annotator's entry is not null. Every assigned annotator
+appears in `annotations` from the start, as `null` until they label the item, so
+a non-empty `annotations` map is not a label.
+If that count is below this run's test count, add one line after the results,
+naming the numbers, for example:
+
+> These evaluators were checked against people on 20 answers, and this run
+> scored 120. Want a few people to label about 20 of the new answers, to check
+> they still agree?
+
+Say it once for that run, then drop it.
 
 ## Handoffs
 
