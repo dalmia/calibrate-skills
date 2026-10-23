@@ -84,6 +84,7 @@ each be either kind.
   it from there instead of asking again.
 - **CLI floor**: `--interaction-type` exists from CLI 0.0.41 onward. Omitting it
   keeps today's behavior (`conversation`).
+
 ## Either type: trace scoring
 
 `config.traces.scoring.enabled` (default on) controls whether traces sent for the
