@@ -168,14 +168,23 @@ judges chosen in Phase 2, one per quality, to each judged case. Record the
 → **`/run-tests`** — link tests to the agent, run, poll, and read results.
 Present **failures first**. Record the `task_id` and outcome in **Phase 4**.
 
-## Phase 5 — Check the evaluator against people (offer, don't force)
+## Phase 5 — Check the evaluators against people
 
-Only if the user cares whether the automated scores are trustworthy (they mention
-"can I trust this", human review, or high-stakes decisions):
+Right after the first run, before suggesting any change to the agent, tell the
+user the scores come from AI evaluators that can be wrong, and offer to check
+them. `/calibrate-evaluator` has the words to use (*What to tell the user before
+labelling*): a few people label about 20 of the answers from this run, and you
+compare.
 
-→ **`/calibrate-evaluator`** — measure human↔judge agreement and tune until the
-judge matches humans. This is the step that makes the eval *Calibrate*, not just
-a test runner. Offer it; don't impose it.
+Offer it firmly; the user may still say no. If they do, say once that the
+changes they make next will rest on scores nobody has checked, then move on.
+Don't block the rest of the flow on it.
+
+→ **`/calibrate-evaluator`** — two or more people label the same answers,
+measure how often they agree with each other and with each evaluator, and tune
+each evaluator until it agrees with people about as often as they agree with
+each other. Then come back and improve the agent. This is the step that makes
+the eval *Calibrate*, not just a test runner.
 
 ## Phase 6 — Scale + CI
 
@@ -188,7 +197,7 @@ locally. Don't force it — only when the signal is there.
 
 ## Iterate
 
-Evaluation is a loop, not a line. After Phase 4, expect one of:
+Evaluation is a loop, not a line. After Phase 5, expect one of:
 
 - **Expand the test set** — a defect surfaced or coverage is thin → back to
   Phase 3 (`/build-test-suite`), re-run.

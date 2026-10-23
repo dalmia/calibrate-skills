@@ -232,6 +232,11 @@ correct behavior. Call this out as a likely non-issue rather than treating it as
 a real regression — unless the test's hypothesis was specifically about that
 tool call, in which case it matters.
 
+After the results, follow *When to remind the user* in
+[`calibrate-evaluator`](../../annotation/calibrate-evaluator/SKILL.md): if this
+run covers more tests than any run before it, and the evaluators were checked
+against people on fewer answers than that, say so in one line.
+
 ## Phase 5: Compare against history
 
 Put this run in context against prior baselines:
