@@ -134,9 +134,22 @@ the linked tests (each ID must be linked). Omit it to run all linked tests.
 ```bash
 calibrate agent-tests benchmark \
   --agent-uuid <agent_uuid> \
-  --models '["openai/gpt-4.1","anthropic/claude-sonnet-4"]' \
+  --models openai/gpt-4.1 \
+  --models anthropic/claude-sonnet-4 \
   --output-format json
 ```
+
+Repeat `--models` once per model. Don't pass a JSON list (`--models '["a","b"]'`),
+even though `calibrate agent-tests benchmark --help` shows one: the CLI sends it
+as a single model named `["a","b"]`, every test comes back unanswered, and the
+run still reports `done`. Check with `--dry-run` if unsure: the request should
+list each model separately.
+
+A benchmark counts one row per model per test, so 5 models over 20 tests is 100
+rows. If the workspace's per-run limit is lower, the call is refused with "This
+run would process N rows, above this workspace's limit of M". Tell the user the
+numbers, and offer to run fewer models or tests per run, or to ask a workspace
+admin to raise the limit.
 
 To restrict to a subset of linked tests, add:
 
