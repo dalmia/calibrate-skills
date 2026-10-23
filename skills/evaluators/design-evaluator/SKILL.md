@@ -167,13 +167,24 @@ live**.
 
 ## Phase 5: Sanity check + next steps
 
-Confirm the version landed and is live:
+Read the evaluator back and confirm the prompt actually landed:
 
 ```bash
-calibrate evaluators get --evaluator-uuid <evaluator_uuid>
+calibrate evaluators get --evaluator-uuid <evaluator_uuid> --output-format json
 ```
 
-This shows the full version history. Report plainly:
+Check `live_version` on the result: `system_prompt` is the prompt you drafted,
+`judge_model` is the model you chose, and `variables` holds every variable you
+declared. A live v1 is not enough on its own — an evaluator with an empty prompt
+is created happily and reports success.
+
+If any of the three is empty or missing, the create didn't carry them. Variable
+names are frozen after v1, so there is nothing to repair and no later version
+fixes it. The CLI cannot delete an evaluator, so tell the user it came out empty
+and ask them to delete it in the Calibrate app, then create it again with the
+flags above.
+
+Then report plainly:
 
 ```
 Evaluator created
