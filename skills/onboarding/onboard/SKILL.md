@@ -104,6 +104,8 @@ Write a short summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate
 
 → **`/connect-agent`** — register + `verify-connection`. Record the resulting
 `agent_uuid` in the state file. Don't proceed until the connection verifies.
+An agent built inside Calibrate has no connection to check; `/connect-agent`
+Phase 3 says what to check instead.
 
 ## Phase 2 — Decide how answers are graded
 
