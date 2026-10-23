@@ -87,9 +87,12 @@ For a `general` agent (called with one plain input):
   summarizing, extracting, classifying. Needs an `evaluator_uuid` of type
   `llm-general` plus its variable values, and costs judge tokens per run.
 
-For each behavior you want to cover, decide the type. If a judged case needs a
-judge that doesn't exist yet, hand off to `/design-evaluator` to create it, then
-come back with the `evaluator_uuid` — a `general` case needs an `llm-general`
+For each behavior you want to cover, decide the type. A judged case needs a
+judge the user chose. If the user hasn't told you what a good answer looks like
+yet, stop and hand off to `/design-evaluator`: its Phase 1 explains judges to
+the user and lets them pick the qualities to check. Never attach a judge they
+didn't choose, including one that already exists in the workspace. Come back
+with the `evaluator_uuid`s — a `general` case needs an `llm-general`
 evaluator, a `response` case an `llm` one.
 
 A test built for one kind of agent will not link to the other: the backend

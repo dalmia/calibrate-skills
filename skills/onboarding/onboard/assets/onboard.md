@@ -14,21 +14,22 @@ answer? That is fixed when the agent is created and cannot be changed later.*
 
 **agent_uuid:** <!-- filled by /connect-agent -->
 
-## Phase 2 — Hypothesis + tests
+## Phase 2 — How answers are graded
+
+*The qualities the user chose to check, one judge each. Skip if every case is
+tool_call.*
+
+<!-- TODO: list the qualities and their evaluators, or write "none — all tool_call". -->
+
+**evaluator_uuids:** <!-- filled by /design-evaluator -->
+
+## Phase 3 — Hypothesis + tests
 
 *One falsifiable claim you will measure, and the test cases that check it.*
 
 <!-- TODO: state the hypothesis. -->
 
 **test_uuids:** <!-- filled by /build-test-suite or /import-dataset -->
-
-## Phase 3 — Evaluators
-
-*Any response-quality judges these tests need. Skip if every case is tool_call.*
-
-<!-- TODO: list evaluators, or write "none — all tool_call". -->
-
-**evaluator_uuids:** <!-- filled by /design-evaluator -->
 
 ## Phase 4 — Runs
 

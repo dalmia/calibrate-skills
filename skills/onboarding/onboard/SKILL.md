@@ -105,24 +105,31 @@ Write a short summary into **Phase 1** of `.calibrate/onboard.md`. Then delegate
 → **`/connect-agent`** — register + `verify-connection`. Record the resulting
 `agent_uuid` in the state file. Don't proceed until the connection verifies.
 
-## Phase 2 — Turn goals into tests
+## Phase 2 — Decide how answers are graded
+
+Do this before writing any test: each judged test needs its judge attached when
+it is created. Never pick a judge for the user, not even an existing one.
+
+→ **`/design-evaluator`**. Its Phase 1 explains to the user what a judge is,
+suggests qualities to check based on Phase 1 here, and lets them pick one or
+more or add their own. Write the qualities they chose into **Phase 2**, and
+record the `evaluator_uuid`(s).
+
+Skip this phase only if every test will check which action the agent took
+(`tool_call`).
+
+## Phase 3 — Turn goals into tests
 
 Turn the goal into a falsifiable claim ("when the user gives an ORD-\d+ id, the
-agent calls `check_order` with that id"). Write it into **Phase 2**. Then:
+agent calls `check_order` with that id"). Write it into **Phase 3**. Then:
 
 → **`/build-test-suite`** (or **`/import-dataset`** if they already have a
 dataset). Name the test type per case as you go: `tool_call` = deterministic and
 free; `response`, `conversation` and `general` all need a judge. Phase 1's answer
 fixes the choice — a back-and-forth agent takes `response` or `conversation`
-cases, a one-instruction-one-answer agent takes `general` ones. Record the
+cases, a one-instruction-one-answer agent takes `general` ones. Attach the
+judges chosen in Phase 2, one per quality, to each judged case. Record the
 `test_uuids`.
-
-## Phase 3 — Evaluators (only if needed)
-
-If any case judges response quality, it needs an evaluator:
-
-→ **`/design-evaluator`**. Skip this phase entirely if every case is
-`tool_call`. Record the `evaluator_uuid`(s).
 
 ## Phase 4 — Run
 
@@ -152,8 +159,8 @@ locally. Don't force it — only when the signal is there.
 Evaluation is a loop, not a line. After Phase 4, expect one of:
 
 - **Expand the test set** — a defect surfaced or coverage is thin → back to
-  Phase 2 (`/build-test-suite`), re-run.
-- **Tune the hypothesis** — the bar is too loose/strict → edit Phase 2, re-run.
+  Phase 3 (`/build-test-suite`), re-run.
+- **Tune the hypothesis** — the bar is too loose/strict → edit Phase 3, re-run.
 - **Add a model** — → Phase 6 (`/benchmark-models`).
 - **Tune the judge** — agreement too low → `/iterate-evaluator` +
   `/calibrate-evaluator`.

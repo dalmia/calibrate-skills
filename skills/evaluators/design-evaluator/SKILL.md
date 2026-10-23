@@ -60,20 +60,62 @@ An API key is created under **Workspace settings → API keys**
 (https://calibrate.artpark.ai/workspace-settings?tab=api-keys). No account →
 send them to https://calibrate.artpark.ai to sign up.
 
-List existing evaluators so you don't duplicate one — and so the user can reuse
-or tune a built-in default instead of authoring from scratch:
+List existing evaluators so you know what is already there:
 
 ```bash
 calibrate evaluators list --output-format json
 ```
 
-The list includes the built-in defaults. If a judge already covers the intent,
-present it and ask whether to reuse it (hand to `/build-test-suite`) rather than
-create another. If a default is close but its rubric needs adjusting, don't
-rebuild it here — defaults are editable, so hand to `/iterate-evaluator` to tune
-it. Author from scratch only when no default is close.
+Don't pick one yet. Which judge to use is the user's call, and they make it in
+Phase 1.
 
-## Phase 1: Decide what it judges
+## Phase 1: Ask the user what a good answer looks like
+
+Never choose, reuse, or create a judge before this step. A first-time user does
+not know what a judge is, so explain it before asking anything. Say it in plain
+words, along these lines:
+
+> Your agent writes its own answers, so there is no single right answer to
+> match against. Something has to read each answer and grade it. Calibrate uses
+> an AI reviewer for this: you tell it what to check, and it marks each answer
+> pass or fail (or gives it a score).
+
+Then ask what makes a good answer for **their** agent, and whether they already
+check for anything. In the same message, suggest 4 to 6 qualities built from what
+they told you about the agent, so they have something to react to. Write each one
+as a plain sentence about their agent, not a category name. For example, for a
+pregnancy-advice chatbot:
+
+- Is the medical information correct?
+- Does it tell her to go to a hospital when something sounds like an emergency?
+- Does it reply in the language she wrote in?
+- Does the answer fit her situation and the question she asked?
+- Is it warm and kind, not cold or scary?
+- Is it clear and simple enough for someone with no medical background?
+
+That list is only an example. Build the suggestions from this agent's job, its
+users, and anything they said goes wrong. Ask them to pick one or more, change
+any, or add their own.
+
+- If they say they don't know, or "you choose": propose the 3 or 4 that matter
+  most for this agent, say why in one line each, and wait for a yes.
+- If they name something vague ("good answers"): ask what a bad answer would look
+  like, then turn that into a check.
+
+Make **one evaluator per quality they chose**, so results show a separate score
+for each (medical accuracy separate from kindness). For each one:
+
+- If an existing evaluator from the list already checks exactly that quality,
+  tell the user in plain words ("Calibrate already has a reviewer that checks
+  this, I'll use it") and reuse it after they agree. Never call it a built-in or
+  default judge. If it is close but its prompt needs changing, hand to
+  `/iterate-evaluator`.
+- Otherwise create it with the phases below.
+
+Skip this phase only when every test checks which action the agent took
+(`tool_call`), since those need no judge.
+
+## Phase 2: Decide what it judges
 
 Three axes fix the evaluator's shape. Settle all three before writing any
 prompt.
@@ -108,7 +150,7 @@ prompt.
 
 If `rating`, collect the scale points and a short label for each.
 
-## Phase 2: Write the judge prompt and variables
+## Phase 3: Write the judge prompt and variables
 
 Draft the `system_prompt`. It may contain `{{variable}}` placeholders — commonly
 a single `{{criteria}}` — filled per-test-case from that test's
@@ -125,14 +167,14 @@ Show the drafted prompt, variables, and (for rating) the scale, and confirm.
 See the `version-param` shape in
 [`../../references/config-shapes.md`](../../references/config-shapes.md).
 
-## Phase 3: Choose the judge model
+## Phase 4: Choose the judge model
 
 Pick a `judge_model` sized to the expected case volume. Prefer a cheap-enough
 model (e.g. a mini model) unless the rubric genuinely needs a stronger one — a
 judge runs once per test case, so cost scales with the suite. Model names are
 provider-qualified, e.g. `openai/gpt-4.1`.
 
-## Phase 4: Create
+## Phase 5: Create
 
 Show a summary and confirm before creating:
 
@@ -165,7 +207,7 @@ scale points under `scale`, not a `labels` map:
 JSON response — never fabricate it. This creates the evaluator and sets **v1
 live**.
 
-## Phase 5: Sanity check + next steps
+## Phase 6: Sanity check + next steps
 
 Read the evaluator back and confirm the prompt actually landed:
 
