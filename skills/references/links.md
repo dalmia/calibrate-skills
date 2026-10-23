@@ -16,12 +16,13 @@ they run their own copy. You asked them for it at sign-in, so you have it.
 the first time you need a link, and reuse it for the rest of the session:
 
 ```bash
-calibrate organizations get-current-workspace --output-format json
+calibrate workspace current --output-format json
 ```
 
-Read `uuid` from the result. If the command is not there, the CLI on this
-machine predates it: run `calibrate organizations --help` and use whichever
-command reports the current workspace.
+It comes back as `{"uuid": "...", "name": "..."}`. Read `uuid` from it, and
+never make one up. The command arrived in CLI 0.0.84; on an older one it isn't
+there, but every skill upgrades the CLI before it runs, so that should not
+happen.
 
 If you still cannot get it, leave that part out and link `<app>/tests` instead
 of `<app>/<workspace_uuid>/tests`. That still opens, but it opens whichever
