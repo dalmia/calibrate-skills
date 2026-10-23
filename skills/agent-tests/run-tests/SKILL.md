@@ -129,11 +129,17 @@ polling pattern in `agent-mode.md`). Report progress each time; never block
 silently.
 
 ```bash
-calibrate agent-tests get-run --task-id <task_id> --output-format json
+calibrate agent-tests get-run --task-id <task_id> --compact --output-format json
 ```
 
-Continue until `status` is `completed` or `failed`. Report only the status the
-command actually returns — do not assume completion.
+`--compact` drops the per-case text (the agent's output, the test case, the
+judge reasoning) and keeps the verdicts. On a run of 140 tests that's 57 KB
+instead of 429 KB. Add `--only-failed` when you just want the failures. Pull the
+full text once, at the end, and only for the cases you're going to show.
+
+Continue until `status` is `done` or `failed`. A finished run says `done`, not
+`completed`. Report only the status the command actually returns: do not assume
+completion.
 
 Read the flags on the result before you present it:
 
