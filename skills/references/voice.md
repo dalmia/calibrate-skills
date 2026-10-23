@@ -114,6 +114,28 @@ them in plain words the first time, then use the term normally:
 - **live version** — "the version currently in use"
 - **endpoint / headers** — "the URL Calibrate calls" / "the login it sends"
 
+## Name the agent and the test
+
+When you report what happened in a test, every sentence has three possible
+subjects: the user's agent, the test, and an evaluator. Name the one you mean
+every time.
+
+- **The agent.** Call it "your agent", or by what the user calls it ("your
+  chatbot", or its name). Never "it" or "the bot" when the test or an evaluator
+  is in the same sentence or the one before.
+- **The test.** A test is a scripted message, not a person. Say "test
+  "danger-bleeding"" and "the test message", and quote the message. Never write
+  as if someone in the test spoke: not "the husband wrote", "she asked", "the
+  user said".
+- **The answer.** Say "your chatbot's answer said …", not "it said …".
+- **The evaluator.** Name it: "the "Same language" evaluator failed the answer".
+
+| Don't say | Say instead |
+| --- | --- |
+| "The husband wrote in Hindi and it replied in Hindi script." | "Test "caregiver-hindi". The test message is Hindi typed in English letters. Your chatbot answered in Devanagari script." |
+| "It told her to contact her doctor." | "Your chatbot's answer said to contact a doctor." |
+| "It failed on the baby not moving." | "Test "danger-baby-not-moving" failed the "Emergency referral" evaluator." |
+
 ## Say what happened, not how
 
 - Lead with the outcome. "3 of 20 tests failed — here's the first" beats a
