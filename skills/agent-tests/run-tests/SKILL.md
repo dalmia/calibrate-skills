@@ -184,7 +184,15 @@ Read the flags on the result before you present it:
 ## Phase 4: Present results
 
 Lead with the outcome, **failures first**. For each case show PASS or FAIL and,
-for response-judged cases, the judge's reasoning verbatim. Use only numbers and
+for response-judged cases, the judge's reasoning verbatim.
+
+When you describe a failure to the user, follow *Name the agent and the test*
+in [`voice.md`](../../references/voice.md): give the test name, quote the test
+message, say what the agent's answer did, and name the evaluator that failed it.
+For example: "Test "caregiver-hindi". The test message is Hindi typed in English
+letters. Your chatbot answered in Devanagari script. The "Same language"
+evaluator failed the answer because the script does not match the message." Not
+"The husband wrote in Hindi and it replied in Hindi script." Use only numbers and
 verdicts present in the output — never invent a score or a count.
 
 ```
