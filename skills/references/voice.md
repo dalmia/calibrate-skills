@@ -93,6 +93,7 @@ Keep the mechanics internal; translate before you speak.
 | `llm`, `llm-general`, `conversation`, `stt`, `tts` as evaluator types | "the judge that reads a conversation" / "…that reads one input and one answer" / "…that reads a transcript" / "…that listens to the audio" |
 | `agent_id`, `input`, `output`, `tool_calls` on a trace | "what your agent was given, what it replied, and the tools it used" |
 | ingest / instrument / payload | "send us the real turns your agent handles" |
+| built-in / default evaluator, LLM judge, LLM-as-a-judge | "a reviewer Calibrate already has" / "an AI reviewer that grades each answer" |
 | `$ARGUMENTS`, agent mode, greenfield, clobber, mis-wired | never surface these at all |
 
 ## Introduce domain terms once, then use them
