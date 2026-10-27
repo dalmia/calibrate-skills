@@ -1041,6 +1041,21 @@
             "description": "Number of labelling jobs assigned to this annotator",
             "title": "Jobs Count"
           },
+          "kappa_by_kind": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/KappaOfAnswerKind"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement with the other annotators and its kappa, one entry for each kind of answer compared, binary answers first. The kinds are never combined into one kappa",
+            "title": "Kappa By Kind"
+          },
           "name": {
             "description": "Annotator name",
             "title": "Name",
@@ -1099,6 +1114,46 @@
           }
         },
         "title": "AnnotatorUpdate",
+        "type": "object"
+      },
+      "AnswerSummary": {
+        "properties": {
+          "count": {
+            "description": "How many answers there are",
+            "title": "Count",
+            "type": "integer"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Mean of the rating answers",
+            "title": "Mean"
+          },
+          "true_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many pass/fail answers are a pass",
+            "title": "True Count"
+          }
+        },
+        "required": [
+          "count",
+          "true_count",
+          "mean"
+        ],
+        "title": "AnswerSummary",
         "type": "object"
       },
       "BatchRunRequest": {
@@ -2062,6 +2117,31 @@
         "title": "CreateJobsResponse",
         "type": "object"
       },
+      "CurrentWorkspaceResponse": {
+        "properties": {
+          "name": {
+            "description": "Workspace display name",
+            "title": "Name",
+            "type": "string"
+          },
+          "uuid": {
+            "description": "Workspace ID. Put this at the front of a Calibrate web address to link straight to something in this workspace, as in `/<uuid>/tests`",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "name"
+        ],
+        "title": "CurrentWorkspaceResponse",
+        "type": "object"
+      },
       "DatasetCreateRequest": {
         "properties": {
           "dataset_type": {
@@ -2264,6 +2344,139 @@
           "updated_at"
         ],
         "title": "DatasetResponse",
+        "type": "object"
+      },
+      "EvaluatorAgreement": {
+        "properties": {
+          "chance_agreement": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement expected by chance alone, which `kappa` corrects for, on the same scale as the agreement",
+            "title": "Chance Agreement"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current mean agreement between this evaluator's judge and the annotators",
+            "title": "Current"
+          },
+          "evaluator_id": {
+            "description": "ID of the evaluator",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "title": "Evaluator Id",
+            "type": "string"
+          },
+          "human_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnswerSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The annotators' answers for this evaluator"
+          },
+          "inter_annotator": {
+            "$ref": "#/components/schemas/InterAnnotatorAgreement",
+            "description": "Agreement between annotators on this evaluator"
+          },
+          "kappa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement corrected for the agreement expected by chance, where 1 is perfect agreement, 0 is chance level, and below 0 is worse than chance",
+            "title": "Kappa"
+          },
+          "kappa_blank_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "too_few_items",
+                  "everyone_agreed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why `kappa` is blank when answers were compared:\n\n- `too_few_items`: every evaluator compared these answers on only one item, and one item cannot show the agreement expected by chance\n- `everyone_agreed`: every compared answer is the same, so agreement cannot be told apart from chance\n",
+            "title": "Kappa Blank Reason"
+          },
+          "kappa_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fleiss",
+                  "linear_weighted_fleiss",
+                  "cohen",
+                  "linear_weighted_cohen"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The kind of kappa reported in `kappa`:\n\n- `fleiss`: Fleiss' kappa between three or more annotators\n- `linear_weighted_fleiss`: Fleiss' kappa between three or more annotators, giving partial credit to close ratings\n- `cohen`: Cohen's kappa between exactly two annotators, between a judge and the annotators, or between one annotator and the others\n- `linear_weighted_cohen`: Cohen's kappa between exactly two annotators, between a judge and the annotators, or between one annotator and the others, giving partial credit to close ratings\n",
+            "title": "Kappa Type"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name of the evaluator",
+            "title": "Name"
+          },
+          "pair_count": {
+            "description": "How many judge and annotator pairs the current value averages over",
+            "title": "Pair Count",
+            "type": "integer"
+          },
+          "result": {
+            "$ref": "#/components/schemas/AnswerSummary",
+            "description": "The evaluator's own scores on the task"
+          }
+        },
+        "required": [
+          "kappa",
+          "kappa_type",
+          "kappa_blank_reason",
+          "chance_agreement",
+          "evaluator_id",
+          "name",
+          "current",
+          "pair_count",
+          "inter_annotator",
+          "result",
+          "human_result"
+        ],
+        "title": "EvaluatorAgreement",
         "type": "object"
       },
       "EvaluatorCreate": {
@@ -3114,6 +3327,33 @@
         "title": "EvaluatorVersionCreateRequest",
         "type": "object"
       },
+      "EvaluatorsWithHumansBlock": {
+        "properties": {
+          "current": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current mean agreement between the evaluators and the annotators, weighted by how many pairs each evaluator compared",
+            "title": "Current"
+          },
+          "pair_count": {
+            "description": "How many evaluator and annotator pairs the current value averages over",
+            "title": "Pair Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current",
+          "pair_count"
+        ],
+        "title": "EvaluatorsWithHumansBlock",
+        "type": "object"
+      },
       "ExpectedToolCall": {
         "properties": {
           "accept_any_arguments": {
@@ -3178,22 +3418,102 @@
             "description": "How many annotator pairs the current value averages over",
             "title": "Pair Count",
             "type": "integer"
-          },
-          "series": {
-            "description": "Agreement over time, one point per time bucket",
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array"
           }
         },
         "required": [
           "current",
-          "pair_count",
-          "series"
+          "pair_count"
         ],
         "title": "HumanAgreementBlock",
+        "type": "object"
+      },
+      "InterAnnotatorAgreement": {
+        "properties": {
+          "chance_agreement": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement expected by chance alone, which `kappa` corrects for, on the same scale as the agreement",
+            "title": "Chance Agreement"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current mean pairwise agreement among annotators on this evaluator",
+            "title": "Current"
+          },
+          "kappa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement corrected for the agreement expected by chance, where 1 is perfect agreement, 0 is chance level, and below 0 is worse than chance",
+            "title": "Kappa"
+          },
+          "kappa_blank_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "too_few_items",
+                  "everyone_agreed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why `kappa` is blank when answers were compared:\n\n- `too_few_items`: every evaluator compared these answers on only one item, and one item cannot show the agreement expected by chance\n- `everyone_agreed`: every compared answer is the same, so agreement cannot be told apart from chance\n",
+            "title": "Kappa Blank Reason"
+          },
+          "kappa_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fleiss",
+                  "linear_weighted_fleiss",
+                  "cohen",
+                  "linear_weighted_cohen"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The kind of kappa reported in `kappa`:\n\n- `fleiss`: Fleiss' kappa between three or more annotators\n- `linear_weighted_fleiss`: Fleiss' kappa between three or more annotators, giving partial credit to close ratings\n- `cohen`: Cohen's kappa between exactly two annotators, between a judge and the annotators, or between one annotator and the others\n- `linear_weighted_cohen`: Cohen's kappa between exactly two annotators, between a judge and the annotators, or between one annotator and the others, giving partial credit to close ratings\n",
+            "title": "Kappa Type"
+          },
+          "pair_count": {
+            "description": "How many annotator pairs the current value averages over",
+            "title": "Pair Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kappa",
+          "kappa_type",
+          "kappa_blank_reason",
+          "chance_agreement",
+          "current",
+          "pair_count"
+        ],
+        "title": "InterAnnotatorAgreement",
         "type": "object"
       },
       "ItemMetadataEntry": {
@@ -3630,6 +3950,105 @@
           }
         },
         "title": "JudgeResult",
+        "type": "object"
+      },
+      "KappaOfAnswerKind": {
+        "properties": {
+          "agreement": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Mean agreement with the other annotators over the pairs `kappa` is worked out from, from 0 to 1. When `kappa_blank_reason` is `too_few_items`, over every compared pair of this kind",
+            "title": "Agreement"
+          },
+          "answer_kind": {
+            "description": "Which answers this entry covers:\n\n- `binary`: answers that either match or do not, such as pass or fail\n- `rating`: ratings on a scale\n",
+            "enum": [
+              "binary",
+              "rating"
+            ],
+            "title": "Answer Kind",
+            "type": "string"
+          },
+          "chance_agreement": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement expected by chance alone, which `kappa` corrects for, on the same scale as the agreement",
+            "title": "Chance Agreement"
+          },
+          "kappa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Agreement corrected for the agreement expected by chance, where 1 is perfect agreement, 0 is chance level, and below 0 is worse than chance",
+            "title": "Kappa"
+          },
+          "kappa_blank_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "too_few_items",
+                  "everyone_agreed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why `kappa` is blank when answers were compared:\n\n- `too_few_items`: every evaluator compared these answers on only one item, and one item cannot show the agreement expected by chance\n- `everyone_agreed`: every compared answer is the same, so agreement cannot be told apart from chance\n",
+            "title": "Kappa Blank Reason"
+          },
+          "kappa_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fleiss",
+                  "linear_weighted_fleiss",
+                  "cohen",
+                  "linear_weighted_cohen"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The kind of kappa reported in `kappa`:\n\n- `fleiss`: Fleiss' kappa between three or more annotators\n- `linear_weighted_fleiss`: Fleiss' kappa between three or more annotators, giving partial credit to close ratings\n- `cohen`: Cohen's kappa between exactly two annotators, between a judge and the annotators, or between one annotator and the others\n- `linear_weighted_cohen`: Cohen's kappa between exactly two annotators, between a judge and the annotators, or between one annotator and the others, giving partial credit to close ratings\n",
+            "title": "Kappa Type"
+          },
+          "pair_count": {
+            "description": "How many compared pairs `agreement` averages over",
+            "title": "Pair Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kappa",
+          "kappa_type",
+          "kappa_blank_reason",
+          "chance_agreement",
+          "answer_kind",
+          "agreement",
+          "pair_count"
+        ],
+        "title": "KappaOfAnswerKind",
         "type": "object"
       },
       "LabellingJobCreated": {
@@ -4355,23 +4774,17 @@
       "TaskAgreementResponse": {
         "additionalProperties": true,
         "properties": {
-          "bucket": {
-            "description": "Time bucket used for the trend series",
-            "title": "Bucket",
-            "type": "string"
-          },
-          "days": {
-            "description": "Length of the trailing window in days",
-            "title": "Days",
-            "type": "integer"
-          },
           "evaluators": {
             "description": "Agreement between each evaluator and the annotators, plus that evaluator's own results and the human results, one entry per linked evaluator",
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/EvaluatorAgreement"
             },
+            "title": "Evaluators",
             "type": "array"
+          },
+          "evaluators_with_humans": {
+            "$ref": "#/components/schemas/EvaluatorsWithHumansBlock",
+            "description": "Agreement between the evaluators and the annotators, across every evaluator in `evaluators`"
           },
           "human_human": {
             "$ref": "#/components/schemas/HumanAgreementBlock",
@@ -4388,9 +4801,8 @@
         },
         "required": [
           "task_id",
-          "bucket",
-          "days",
           "human_human",
+          "evaluators_with_humans",
           "evaluators"
         ],
         "title": "TaskAgreementResponse",
@@ -8098,37 +8510,6 @@
             }
           },
           {
-            "description": "How to bucket points in the trend series",
-            "in": "query",
-            "name": "bucket",
-            "required": false,
-            "schema": {
-              "default": "week",
-              "description": "How to bucket points in the trend series",
-              "enum": [
-                "week",
-                "month",
-                "year"
-              ],
-              "title": "Bucket",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Trailing window in days for the trend series",
-            "in": "query",
-            "name": "days",
-            "required": false,
-            "schema": {
-              "default": 90,
-              "description": "Trailing window in days for the trend series",
-              "maximum": 3650,
-              "minimum": 1,
-              "title": "Days",
-              "type": "integer"
-            }
-          },
-          {
             "in": "header",
             "name": "X-API-Key",
             "required": false,
@@ -9650,6 +10031,61 @@
         "summary": "Create evaluator version",
         "tags": [
           "evaluators"
+        ]
+      }
+    },
+    "/organizations/current": {
+      "get": {
+        "description": "Get the workspace your API key belongs to",
+        "operationId": "get_current_workspace_organizations_current_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Get the current workspace",
+        "tags": [
+          "organizations"
         ]
       }
     },

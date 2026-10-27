@@ -239,23 +239,45 @@ Read agreement two ways:
   ceiling, **not** against 100%. A judge that matches humans as often as humans
   match each other is as good as it can get.
 
-Read them **for each evaluator separately**. `get-agreement` gives the
-people-with-people number for the whole task only; for one evaluator, compare
-the annotators' values on that evaluator's rows in `get-summary`, using only
-items both people labelled (`null` means not labelled yet). Then:
+Where the numbers live in the `get-agreement` response:
 
-- **People often disagree on an evaluator's quality** → the rule is unclear.
-  Help the user agree on what it means, and rewrite that evaluator's
-  instructions, before judging the evaluator.
-- **People agree, the evaluator doesn't** → change the evaluator's
-  instructions (Phase 5).
+- `human_human` is the ceiling across all annotators (`current`, `pair_count`).
+  There is no trend over time any more — no `series`, `bucket` or `days`.
+- `evaluators_with_humans.current` is the overall human↔judge number across
+  every linked evaluator.
+- `evaluators[]` has one entry per evaluator: `current` (human↔judge),
+  `inter_annotator` (that evaluator's own human ceiling), and `result` /
+  `human_result` (counts and means of what the judge and the people answered).
+- Each of those blocks also carries a chance-corrected `kappa`, with
+  `kappa_type` saying which kind. Prefer `kappa` when the answers are lopsided
+  (say, nearly all pass), because raw agreement looks high by luck;
+  `chance_agreement` is what luck alone would give. Pass/fail and rating
+  answers are never merged into one kappa.
+- `kappa` can be null. `kappa_blank_reason` says why: `too_few_items` (only one
+  item compared) or `everyone_agreed` (no spread to measure). Treat both as "not
+  enough to tell", not as zero.
+- Per-annotator kappa is on the annotator listing as `kappa_by_kind`; use it to
+  spot one annotator who disagrees with the rest.
+
+Read them **for each evaluator separately**, from its `evaluators[]` entry:
+
+- **People often disagree on an evaluator's quality** (`inter_annotator` low)
+  → the rule is unclear. Help the user agree on what it means, and rewrite that
+  evaluator's instructions, before judging the evaluator.
+- **People agree, the evaluator doesn't** (`current` well below
+  `inter_annotator`) → change the evaluator's instructions (Phase 5).
 - **The evaluator agrees with people about as often as they agree with each
   other** → it is as good as it can get. Don't push it toward 100%.
 
 Expect the weakest agreement, between people and with the evaluator, on
-qualities that are a matter of opinion. Report both numbers plainly, per
-evaluator, with how many items they rest on. Never fabricate — if the run didn't
-finish, say so.
+qualities that are a matter of opinion.
+
+Report both numbers plainly, per evaluator, with how many items they rest on
+(`pair_count`). If you quote the chance-corrected one, say it as "agreement once
+luck is accounted for" (1 is perfect, 0 is no better than guessing). If it is
+blank, say there weren't enough labelled items, or everyone gave the same
+answer, so it can't be told apart from luck. Never fabricate — if the run
+didn't finish, say so.
 
 ## Phase 5: Tune and re-check (the loop)
 
