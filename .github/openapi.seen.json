@@ -5878,6 +5878,17 @@
         "title": "ToolCallOutput",
         "type": "object"
       },
+      "TraceEvalRunStatus": {
+        "enum": [
+          "pending",
+          "processing",
+          "completed",
+          "failed",
+          "skipped"
+        ],
+        "title": "TraceEvalRunStatus",
+        "type": "string"
+      },
       "TraceIngest": {
         "additionalProperties": false,
         "properties": {
@@ -6024,6 +6035,63 @@
         "title": "TraceIngestResponse",
         "type": "object"
       },
+      "TraceListResponse": {
+        "description": "The page, plus the averages when `include_score_averages` asked for them.",
+        "properties": {
+          "items": {
+            "description": "The page of results",
+            "items": {
+              "$ref": "#/components/schemas/TraceSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The applied `limit` (null when unbounded)",
+            "title": "Limit"
+          },
+          "offset": {
+            "default": 0,
+            "description": "The applied `offset`",
+            "title": "Offset",
+            "type": "integer"
+          },
+          "score_averages": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TraceScoreAverage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "One entry per evaluator that scored at least one matching trace, averaged over every matching trace rather than this page. Ask for it with `include_score_averages`",
+            "title": "Score Averages"
+          },
+          "total": {
+            "description": "Total number of items matching the query, before pagination",
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "TraceListResponse",
+        "type": "object"
+      },
       "TraceMetadataEntry": {
         "additionalProperties": false,
         "properties": {
@@ -6082,6 +6150,394 @@
           }
         },
         "title": "TraceOutput",
+        "type": "object"
+      },
+      "TraceScoreAverage": {
+        "properties": {
+          "average": {
+            "description": "Mean of those scores. A binary evaluator averages 0 and 1, so its mean is the share that passed",
+            "title": "Average",
+            "type": "number"
+          },
+          "evaluator_uuid": {
+            "description": "ID of the evaluator these numbers are for",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Evaluator Uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the evaluator. Uses the last stored name if it has been deleted",
+            "title": "Name",
+            "type": "string"
+          },
+          "output_type": {
+            "description": "How the evaluator scores:\n\n- `binary`: pass or fail\n- `rating`: a numeric score, using the scale in `output_config`\n",
+            "enum": [
+              "binary",
+              "rating"
+            ],
+            "title": "Output Type",
+            "type": "string"
+          },
+          "scale_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Highest value on a rating scale",
+            "title": "Scale Max"
+          },
+          "scale_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lowest value on a rating scale",
+            "title": "Scale Min"
+          },
+          "traces_scored": {
+            "description": "How many of the matching traces this evaluator scored",
+            "title": "Traces Scored",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "evaluator_uuid",
+          "name",
+          "output_type",
+          "traces_scored",
+          "average"
+        ],
+        "title": "TraceScoreAverage",
+        "type": "object"
+      },
+      "TraceScoreResult": {
+        "properties": {
+          "evaluator_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "tts",
+                  "stt",
+                  "llm",
+                  "llm-general",
+                  "conversation",
+                  "tool-call"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
+            "title": "Evaluator Type"
+          },
+          "evaluator_uuid": {
+            "description": "ID of the evaluator that produced this result",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Evaluator Uuid",
+            "type": "string"
+          },
+          "evaluator_version_id": {
+            "description": "ID of the evaluator version that produced this result",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Evaluator Version Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the evaluator. Uses the last stored name if it has been deleted",
+            "title": "Name",
+            "type": "string"
+          },
+          "output_type": {
+            "description": "How the evaluator scores:\n\n- `binary`: pass or fail\n- `rating`: a numeric score, using the scale in `output_config`\n",
+            "enum": [
+              "binary",
+              "rating"
+            ],
+            "title": "Output Type",
+            "type": "string"
+          },
+          "passed": {
+            "description": "Whether this evaluator passed. A binary result passes on 1. A rating passes at the top of its scale",
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "reasoning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The judge's rationale for this result",
+            "title": "Reasoning"
+          },
+          "scale_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Highest value on a rating scale",
+            "title": "Scale Max"
+          },
+          "scale_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lowest value on a rating scale",
+            "title": "Scale Min"
+          },
+          "value": {
+            "description": "The judged result. Binary stores 0 or 1. Rating stores the numeric score",
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "evaluator_uuid",
+          "name",
+          "output_type",
+          "value",
+          "evaluator_version_id",
+          "passed"
+        ],
+        "title": "TraceScoreResult",
+        "type": "object"
+      },
+      "TraceSummary": {
+        "properties": {
+          "agent_id": {
+            "description": "ID of the agent that produced the turn",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The conversation ID you sent, if any",
+            "title": "Conversation Id"
+          },
+          "created_at": {
+            "description": "When the trace was created (ISO 8601 UTC)",
+            "title": "Created At",
+            "type": "string"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "maxLength": 50000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TraceTurn"
+                },
+                "maxItems": 500,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the agent was given for this turn. For a `general` agent, the standalone prompt as a string. For a `conversation` agent, the history up to the reported output, oldest turn first, in OpenAI chat format. Sent only with `include_content`",
+            "title": "Input"
+          },
+          "input_preview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The standalone prompt or the last user message, truncated for display",
+            "title": "Input Preview"
+          },
+          "labels": {
+            "description": "Your own tags for this turn, such as an environment or a release. Matched exactly when filtering, so keep the spelling stable",
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "latest_run_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the latest scoring run was skipped or failed",
+            "title": "Latest Run Error"
+          },
+          "latest_run_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceEvalRunStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Status of the latest scoring run for this trace"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The message ID you sent, if any",
+            "title": "Message Id"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TraceMetadataEntry"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Key-value pairs stored with the trace. Sent only with `include_content`",
+            "title": "Metadata"
+          },
+          "metadata_count": {
+            "description": "Number of metadata entries stored with the trace",
+            "title": "Metadata Count",
+            "type": "integer"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the agent produced for this turn. Sent only with `include_content`"
+          },
+          "response_preview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The agent reply, truncated for display",
+            "title": "Response Preview"
+          },
+          "results": {
+            "description": "Results for each evaluator on the latest scoring run",
+            "items": {
+              "$ref": "#/components/schemas/TraceScoreResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "tool_call_count": {
+            "description": "Number of tool calls the agent issued for this turn",
+            "title": "Tool Call Count",
+            "type": "integer"
+          },
+          "tool_calls": {
+            "description": "Tools the agent issued on this turn, with the arguments it passed",
+            "items": {
+              "$ref": "#/components/schemas/TraceToolCall"
+            },
+            "title": "Tool Calls",
+            "type": "array"
+          },
+          "tool_names": {
+            "description": "Names of the tools the agent issued on this turn, in order",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tool Names",
+            "type": "array"
+          },
+          "turn_count": {
+            "description": "Number of turns in the stored input. A standalone prompt counts as 1",
+            "title": "Turn Count",
+            "type": "integer"
+          },
+          "uuid": {
+            "description": "Unique ID for the trace",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "agent_id",
+          "tool_names",
+          "tool_calls",
+          "turn_count",
+          "tool_call_count",
+          "metadata_count",
+          "labels",
+          "created_at"
+        ],
+        "title": "TraceSummary",
         "type": "object"
       },
       "TraceToolCall": {
@@ -10470,6 +10926,304 @@
       }
     },
     "/traces": {
+      "get": {
+        "description": "List ingested traces, newest first",
+        "operationId": "list_traces_endpoint_traces_get",
+        "parameters": [
+          {
+            "description": "Return only traces from this agent",
+            "in": "query",
+            "name": "agent_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces from this agent",
+              "title": "Agent Id"
+            }
+          },
+          {
+            "description": "Return only the turns of this conversation. Requires `agent_id`",
+            "in": "query",
+            "name": "conversation_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only the turns of this conversation. Requires `agent_id`",
+              "title": "Conversation Id"
+            }
+          },
+          {
+            "description": "Return only traces containing this text in their message ID, conversation ID, conversation history, output, or metadata",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces containing this text in their message ID, conversation ID, conversation history, output, or metadata",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Return only traces whose output is of this kind. `response` covers every trace carrying a reply, including one that also issued tool calls. `tool_call` covers traces that only issued tool calls",
+            "in": "query",
+            "name": "output_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "response",
+                    "tool_call"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces whose output is of this kind. `response` covers every trace carrying a reply, including one that also issued tool calls. `tool_call` covers traces that only issued tool calls",
+              "title": "Output Type"
+            }
+          },
+          {
+            "description": "Return only traces carrying at least one of these labels. Repeat the parameter for each label",
+            "in": "query",
+            "name": "labels",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces carrying at least one of these labels. Repeat the parameter for each label",
+              "title": "Labels"
+            }
+          },
+          {
+            "description": "Return only traces whose latest scoring run matches this condition. Each is written as `<evaluator ID>:<condition>`, where the condition is `passed`, `failed`, or one of `=`, `!=`, `<`, `<=`, `>`, `>=` followed by a number, such as `>=4`. Repeat the parameter to require every condition at once",
+            "in": "query",
+            "name": "score",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces whose latest scoring run matches this condition. Each is written as `<evaluator ID>:<condition>`, where the condition is `passed`, `failed`, or one of `=`, `!=`, `<`, `<=`, `>`, `>=` followed by a number, such as `>=4`. Repeat the parameter to require every condition at once",
+              "title": "Score"
+            }
+          },
+          {
+            "description": "Return only traces created at or after this time (ISO 8601). A time with no timezone is read as UTC",
+            "in": "query",
+            "name": "created_after",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces created at or after this time (ISO 8601). A time with no timezone is read as UTC",
+              "title": "Created After"
+            }
+          },
+          {
+            "description": "Return only traces created before this time (ISO 8601). A time with no timezone is read as UTC",
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces created before this time (ISO 8601). A time with no timezone is read as UTC",
+              "title": "Created Before"
+            }
+          },
+          {
+            "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces it has not scored come last whichever direction you pick",
+            "in": "query",
+            "name": "sort_by_evaluator",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces it has not scored come last whichever direction you pick",
+              "title": "Sort By Evaluator"
+            }
+          },
+          {
+            "description": "Whether `sort_by_evaluator` puts the highest scores first or the lowest. Ignored without it",
+            "in": "query",
+            "name": "sort_order",
+            "required": false,
+            "schema": {
+              "default": "desc",
+              "description": "Whether `sort_by_evaluator` puts the highest scores first or the lowest. Ignored without it",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "title": "Sort Order",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also return each trace's full input, output and metadata. Use `limit` and `offset` to page through them",
+            "in": "query",
+            "name": "include_content",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Also return each trace's full input, output and metadata. Use `limit` and `offset` to page through them",
+              "title": "Include Content",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Also return each evaluator's mean score over every matching trace, not just this page. Costs a pass over those traces, so ask for it when the filters change rather than on every page",
+            "in": "query",
+            "name": "include_score_averages",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Also return each evaluator's mean score over every matching trace, not just this page. Costs a pass over those traces, so ask for it when the filters change rather than on every page",
+              "title": "Include Score Averages",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Maximum number of items to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Maximum number of items to return",
+              "maximum": 1000000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of items to skip before returning results",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of items to skip before returning results",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "List traces",
+        "tags": [
+          "traces"
+        ]
+      },
       "post": {
         "description": "Store a production agent turn and its conversation history for later review",
         "operationId": "ingest_trace_traces_post",

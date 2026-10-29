@@ -13,7 +13,7 @@ argument-hint: "[agent-name-or-uuid]"
 A trace is a record of one real thing the agent handled in production: what it
 was given, and what it produced. Sending them puts real traffic in Calibrate, so
 the user can see what their agent actually does and later turn real failures
-into test cases. Drives `calibrate traces create`.
+into test cases. Drives `calibrate traces create`, and `calibrate traces list` to read them back.
 
 See [`../../references/agent-mode.md`](../../references/agent-mode.md) for how to
 read command output (TOON/JSON). Keep what you *say* to the user plain — see
@@ -256,8 +256,48 @@ Add `--conversation-id`, `--message-id` or `--metadata '[{"key": "...", "value":
 (`-i` is the short form of `--input`.) Report plainly whether it landed. On
 failure read the structured error and fix it — a rejected field, the wrong input
 shape for this agent's kind, a stale key — rather than moving on. Then have the
-user run their own agent once and confirm that turn shows up too; only that
-proves the code edit works.
+user run their own agent once and confirm that turn shows up too — look for it
+with `calibrate traces list` (see *Looking back at traces*); only that proves
+the code edit works.
+
+## Looking back at traces
+
+When the user wants to see what came in — to find failures, check a score, or
+pick real turns for test cases — read them back with `calibrate traces list`
+(run `calibrate traces list --help` for the exact flags; they follow the query
+names below, kebab-cased). Newest first, 50 per page; page with `limit` and
+`offset`. The response carries `items` and `total`.
+
+Filters, all optional and combinable:
+
+- `agent_id`; `conversation_id` (needs `agent_id`) for one conversation's turns.
+- `q` — text match across message id, conversation id, history, output, metadata.
+- `output_type` — `response` (any trace with a reply, even alongside tool
+  calls) or `tool_call` (traces that only issued tool calls).
+- `labels` — repeat for each; a trace matches if it has any of them. Exact
+  spelling.
+- `score` — `<evaluator id>:<condition>` where the condition is `passed`,
+  `failed`, or an operator and number such as `>=4`. Repeat to require all.
+  It matches the trace's latest scoring run.
+- `created_after`, `created_before` — ISO 8601, no timezone means UTC.
+- `sort_by_evaluator` with `sort_order` (`asc` or `desc`, default `desc`) —
+  traces that evaluator hasn't scored sort last either way.
+
+Two switches change the size of the answer. By default each item has only
+previews (`input_preview`, `response_preview`), tool names and counts, and the
+per-evaluator `results`. `include_content` adds the full `input`, `output` and
+`metadata` — use it with a small `limit`. `include_score_averages` adds
+`score_averages`, one mean per evaluator across **all** matching traces (not
+just the page); it costs a pass over them, so ask for it when the filters
+change, not on every page. A binary evaluator's mean is its pass rate.
+
+A trace may have no results yet: `latest_run_status` is `pending`,
+`processing`, `completed`, `failed` or `skipped`, and `latest_run_error` says
+why a run failed or was skipped.
+
+Say it plainly: "3 of your last 40 answers failed the "Emergency referral"
+evaluator — here they are", with the agent's answer quoted; not the filter
+syntax or field names.
 
 ## Phase 4: Summary + next steps
 
