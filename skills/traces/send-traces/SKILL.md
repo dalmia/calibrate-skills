@@ -281,14 +281,15 @@ Filters, all optional and combinable:
   It matches the trace's latest scoring run.
 - `created_after`, `created_before` — ISO 8601, no timezone means UTC.
 - `sort_by_evaluator` with `sort_order` (`asc` or `desc`, default `desc`) —
-  traces that evaluator hasn't scored sort last either way.
+  traces that evaluator hasn't scored sort last either way, and an evaluator
+  not linked to the agent counts as having scored none.
 
 Two switches change the size of the answer. By default each item has only
 previews (`input_preview`, `response_preview`), tool names and counts, and the
 per-evaluator `results`. `include_content` adds the full `input`, `output` and
 `metadata` — use it with a small `limit`. `include_score_averages` adds
-`score_averages`, one mean per evaluator across **all** matching traces (not
-just the page); it costs a pass over them, so ask for it when the filters
+`score_averages`, one mean per evaluator linked to the agent that scored at
+least one matching trace, across **all** matching traces (not just the page); it costs a pass over them, so ask for it when the filters
 change, not on every page. A binary evaluator's mean is its pass rate.
 
 A trace may have no results yet: `latest_run_status` is `pending`,

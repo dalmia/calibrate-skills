@@ -2049,6 +2049,30 @@
             ],
             "title": "Evaluator Ids"
           },
+          "evaluator_reasoning_modes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "enum": [
+                    "optional",
+                    "required",
+                    "hidden"
+                  ],
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Map of evaluator ID to how the labelling form treats the reasoning box for that evaluator, with the same values as `reasoning_mode`. Every ID must be an evaluator on these jobs, otherwise you get a 400. An evaluator left out uses `reasoning_mode`",
+            "examples": [
+              {
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479": "required"
+              }
+            ]
+          },
           "item_ids": {
             "default": [],
             "description": "Item IDs to assign. **Required when `select_all=false`**. Ignored when `select_all=true`",
@@ -4855,7 +4879,7 @@
             "description": "Where this page sits in the full item list"
           },
           "rows": {
-            "description": "One row per item, evaluator, and version on this page, with the evaluator's value and each annotator's label",
+            "description": "One row per item, evaluator, and version on this page, with the evaluator's value and each annotator's label. `item_added_at` is when the row was added (ISO 8601 UTC). Each label's `answered_at` is when the annotator first gave it in their latest labelling job, and editing does not change it",
             "items": {
               "additionalProperties": true,
               "type": "object"
@@ -6076,7 +6100,7 @@
                 "type": "null"
               }
             ],
-            "description": "One entry per evaluator that scored at least one matching trace, averaged over every matching trace rather than this page. Ask for it with `include_score_averages`",
+            "description": "One average for each evaluator linked to the agent that scored at least one trace matching the filters, covering all the matching traces it scored rather than this page. Ask for it with `include_score_averages`",
             "title": "Score Averages"
           },
           "total": {
@@ -6482,7 +6506,7 @@
             "title": "Response Preview"
           },
           "results": {
-            "description": "Results for each evaluator on the latest scoring run",
+            "description": "Results on the latest scoring run from the evaluators linked to the agent",
             "items": {
               "$ref": "#/components/schemas/TraceScoreResult"
             },
@@ -8966,6 +8990,60 @@
             }
           },
           {
+            "description": "Which date `start` and `end` apply to:\n\n- `row_added`: when the row was added to the task\n- `annotator_answered`: when the annotator first gave the answer in their latest labelling job. Editing does not change this date\n\nOmit to use `row_added`",
+            "in": "query",
+            "name": "date_field",
+            "required": false,
+            "schema": {
+              "default": "row_added",
+              "description": "Which date `start` and `end` apply to:\n\n- `row_added`: when the row was added to the task\n- `annotator_answered`: when the annotator first gave the answer in their latest labelling job. Editing does not change this date\n\nOmit to use `row_added`",
+              "enum": [
+                "row_added",
+                "annotator_answered"
+              ],
+              "title": "Date Field",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return only rows or answers dated at or after this time (ISO 8601). A time with no timezone is read as UTC. Omit for no earliest date",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only rows or answers dated at or after this time (ISO 8601). A time with no timezone is read as UTC. Omit for no earliest date",
+              "title": "Start"
+            }
+          },
+          {
+            "description": "Return only rows or answers dated before this time (ISO 8601). A time with no timezone is read as UTC. Omit for no latest date",
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only rows or answers dated before this time (ISO 8601). A time with no timezone is read as UTC. Omit for no latest date",
+              "title": "End"
+            }
+          },
+          {
             "in": "header",
             "name": "X-API-Key",
             "required": false,
@@ -9550,6 +9628,60 @@
               "description": "When true, keep only rows where the evaluator disagreed with at least one annotator",
               "title": "Disagreement Only",
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Which date `start` and `end` apply to:\n\n- `row_added`: when the row was added to the task\n- `annotator_answered`: when the annotator first gave the answer in their latest labelling job. Editing does not change this date\n\nOmit to use `row_added`",
+            "in": "query",
+            "name": "date_field",
+            "required": false,
+            "schema": {
+              "default": "row_added",
+              "description": "Which date `start` and `end` apply to:\n\n- `row_added`: when the row was added to the task\n- `annotator_answered`: when the annotator first gave the answer in their latest labelling job. Editing does not change this date\n\nOmit to use `row_added`",
+              "enum": [
+                "row_added",
+                "annotator_answered"
+              ],
+              "title": "Date Field",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return only rows or answers dated at or after this time (ISO 8601). A time with no timezone is read as UTC. Omit for no earliest date",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only rows or answers dated at or after this time (ISO 8601). A time with no timezone is read as UTC. Omit for no earliest date",
+              "title": "Start"
+            }
+          },
+          {
+            "description": "Return only rows or answers dated before this time (ISO 8601). A time with no timezone is read as UTC. Omit for no latest date",
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only rows or answers dated before this time (ISO 8601). A time with no timezone is read as UTC. Omit for no latest date",
+              "title": "End"
             }
           },
           {
@@ -11053,7 +11185,7 @@
             }
           },
           {
-            "description": "Return only traces created at or after this time (ISO 8601). A time with no timezone is read as UTC",
+            "description": "Return only traces created at or after this time (ISO 8601). A time with no timezone is read as UTC. Omit for no earliest date",
             "in": "query",
             "name": "created_after",
             "required": false,
@@ -11067,12 +11199,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Return only traces created at or after this time (ISO 8601). A time with no timezone is read as UTC",
+              "description": "Return only traces created at or after this time (ISO 8601). A time with no timezone is read as UTC. Omit for no earliest date",
               "title": "Created After"
             }
           },
           {
-            "description": "Return only traces created before this time (ISO 8601). A time with no timezone is read as UTC",
+            "description": "Return only traces created before this time (ISO 8601). A time with no timezone is read as UTC. Omit for no latest date",
             "in": "query",
             "name": "created_before",
             "required": false,
@@ -11086,12 +11218,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Return only traces created before this time (ISO 8601). A time with no timezone is read as UTC",
+              "description": "Return only traces created before this time (ISO 8601). A time with no timezone is read as UTC. Omit for no latest date",
               "title": "Created Before"
             }
           },
           {
-            "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces it has not scored come last whichever direction you pick",
+            "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces this evaluator has not scored come last whichever direction you pick, and an evaluator not linked to the agent counts as having scored none",
             "in": "query",
             "name": "sort_by_evaluator",
             "required": false,
@@ -11104,7 +11236,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces it has not scored come last whichever direction you pick",
+              "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces this evaluator has not scored come last whichever direction you pick, and an evaluator not linked to the agent counts as having scored none",
               "title": "Sort By Evaluator"
             }
           },
