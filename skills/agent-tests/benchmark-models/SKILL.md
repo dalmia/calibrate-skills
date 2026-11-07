@@ -215,6 +215,11 @@ Two caveats to surface with the ranking:
   emits a tool call and no user-facing text is expected behavior, not a miss —
   don't count it against a model.
 
+After the results, follow *When to remind the user* in
+[`calibrate-evaluator`](../../annotation/calibrate-evaluator/SKILL.md): if this
+run covers more tests than any run before it, and the evaluators were checked
+against people on fewer answers than that, say so in one line.
+
 ## Handoffs
 
 - **Run tests on a single model (and link them)** → `/run-tests`
