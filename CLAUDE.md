@@ -40,12 +40,6 @@ calibrate CLI binary isn't installed." Guard against it:
   table. This includes internal field/key names (`type=connection`, `agent_url`,
   `endpoint`, `system_prompt`) and step-by-step plumbing narration ("let me check
   the schema"): the user needs the input request and the outcome, nothing between.
-- Never describe how something looks in the app: no colours, icons, badges,
-  layout or where a button sits. The agent works through the CLI and never sees
-  the screen, so it cannot use that and will repeat it to the user as if it
-  were true. State the behaviour instead ("a rating test passes only at the
-  highest number", not "the highest number shows green"). CI rejects colour
-  words outside code spans, so an API field such as `color` is still fine.
 - Run `python3 scripts/check_skills.py` before pushing.
 
 ## After every change: commit, then simulate
