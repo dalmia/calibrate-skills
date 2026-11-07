@@ -181,8 +181,7 @@ prompt.
 
 If `rating`, collect the rows of the rating scale: a number and a short label for each. Give the
 label for the worst result the lowest number and the label for the best result
-the highest number: Calibrate shows the highest number in green and the lowest
-in red, and a rating test passes only at the highest number.
+the highest number: a rating test passes only at the highest number.
 
 ## Phase 3: Write the evaluator prompt and variables
 
