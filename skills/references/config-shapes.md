@@ -120,7 +120,7 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
 - `output-type`: `binary` (Correct/Wrong) or `rating` (a labeled scale — set
   `output_config`).
 - `output_config` is `{"scale": [{value, name, description?, color?}, ...]}` — an
-  ordered array of scale points, **not** a `labels` map. `value` is a boolean for
+  ordered array of rows (a number and a label each), **not** a `labels` map. `value` is a boolean for
   a `binary` evaluator, a number for a `rating` one.
 - For a `rating` evaluator, give the label for the worst result the lowest
   number and the label for the best result the highest number, e.g.

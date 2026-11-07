@@ -136,7 +136,7 @@ problem:
 - **`judge_model`** — keep the same model unless model choice is the failure
   (e.g. the judge can't follow a nuanced rubric at all). Prompt changes are the
   first lever; swap the model only when the prompt can't carry it.
-- **`output_config`** — keep the same scale points/labels so old and new
+- **`output_config`** — keep the same rows (numbers and labels) so old and new
   versions stay comparable. A `rating` evaluator requires `output_config`; a
   `binary` one keeps the default Correct/Wrong unless overridden. Check the
   existing rating scale gives the label for the worst result the lowest number
