@@ -179,7 +179,10 @@ prompt.
     defines each scale point and its label. Use when a graded judgment is more
     useful than pass/fail.
 
-If `rating`, collect the scale points and a short label for each.
+If `rating`, collect the scale points and a short label for each. Give the
+label for the worst result the lowest number and the label for the best result
+the highest number: Calibrate shows the highest number in green and the lowest
+in red, and a rating test passes only at the highest number.
 
 ## Phase 3: Write the evaluator prompt and variables
 
@@ -195,6 +198,9 @@ remove, or rename one. Choose the variable set deliberately now — a good defau
 is a single `criteria` variable, which keeps the judge reusable across tests.
 
 Show the drafted prompt, variables, and (for rating) the scale, and confirm.
+For a rating evaluator, read the rating scale back in plain words, e.g. "1 = No
+is the worst result, 5 = Yes is the best. Is that right?" If it is backwards,
+fix it before creating.
 See the `version-param` shape in
 [`../../references/config-shapes.md`](../../references/config-shapes.md).
 
@@ -237,7 +243,7 @@ as flags the command doesn't know.
 
 For a `rating` evaluator, add the scale to `version-param` — an ordered array of
 scale points under `scale`, not a `labels` map:
-`"output_config": {"scale": [{"value": 1, "name": "..."}, {"value": 5, "name": "..."}]}`.
+`"output_config": {"scale": [{"value": 1, "name": "<worst>"}, {"value": 5, "name": "<best>"}]}`.
 
 `--name` must be unique within the workspace. Capture `evaluator_uuid` from the
 JSON response — never fabricate it. This creates the evaluator and sets **v1

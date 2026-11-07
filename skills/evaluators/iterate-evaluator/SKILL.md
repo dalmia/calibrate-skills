@@ -138,7 +138,10 @@ problem:
   first lever; swap the model only when the prompt can't carry it.
 - **`output_config`** — keep the same scale points/labels so old and new
   versions stay comparable. A `rating` evaluator requires `output_config`; a
-  `binary` one keeps the default Correct/Wrong unless overridden.
+  `binary` one keeps the default Correct/Wrong unless overridden. Check the
+  existing rating scale gives the label for the worst result the lowest number
+  and the label for the best result the highest number. If it does not, tell
+  the user; do not change it without asking.
 
 If the user actually needs a different variable set, stop here and route to
 `/design-evaluator` — don't try to force it through a version.
