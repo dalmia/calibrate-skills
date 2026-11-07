@@ -176,10 +176,10 @@ prompt.
   - `binary` — pass/fail. Uses the default `Correct` / `Wrong` labels unless you
     override them. Best for "did the reply do X?" checks.
   - `rating` — a labeled scale (e.g. 1–5). Requires an `output_config` that
-    defines each scale point and its label. Use when a graded judgment is more
+    defines each row of the rating scale: a number and its label. Use when a graded judgment is more
     useful than pass/fail.
 
-If `rating`, collect the scale points and a short label for each. Give the
+If `rating`, collect the rows of the rating scale: a number and a short label for each. Give the
 label for the worst result the lowest number and the label for the best result
 the highest number: Calibrate shows the highest number in green and the lowest
 in red, and a rating test passes only at the highest number.
@@ -242,7 +242,7 @@ all. An unquoted description stops at the first space and the rest of it arrives
 as flags the command doesn't know.
 
 For a `rating` evaluator, add the scale to `version-param` — an ordered array of
-scale points under `scale`, not a `labels` map:
+rows under `scale`, not a `labels` map:
 `"output_config": {"scale": [{"value": 1, "name": "<worst>"}, {"value": 5, "name": "<best>"}]}`.
 
 `--name` must be unique within the workspace. Capture `evaluator_uuid` from the
