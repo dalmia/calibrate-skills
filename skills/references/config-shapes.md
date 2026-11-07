@@ -122,6 +122,10 @@ An evaluator is a versioned judge. A version is one prompt + model + rubric:
 - `output_config` is `{"scale": [{value, name, description?, color?}, ...]}` — an
   ordered array of scale points, **not** a `labels` map. `value` is a boolean for
   a `binary` evaluator, a number for a `rating` one.
+- For a `rating` evaluator, give the label for the worst result the lowest
+  number and the label for the best result the highest number, e.g.
+  `[{"value": 1, "name": "No"}, {"value": 5, "name": "Yes"}]`. The highest
+  number shows green and is the only one a rating test passes at.
 - Variable names are **frozen after v1** — later versions may change a
   variable's description/default but cannot add, remove, or rename one.
 - Evaluators are either **built-in defaults** or **custom** ones you authored —
