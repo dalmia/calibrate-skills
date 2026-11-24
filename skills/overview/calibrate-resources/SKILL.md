@@ -4,7 +4,9 @@ description: Orientation for evaluating agents with Calibrate — the primitives
   (agents, tests, agent-tests, evaluators, annotation tasks, traces), the CLI,
   auth, and which skill to reach for. Load when the user asks "what is
   Calibrate", "how do I evaluate with Calibrate", "what can Calibrate do", or
-  seems unsure where to start.
+  seems unsure where to start. Also load for any question about the Calibrate
+  web app: "where do I find X", "how do I do Y in the app", "why does Z look
+  like that".
 ---
 
 # Calibrate: resources and orientation
@@ -175,6 +177,22 @@ for payload shapes. Keep what you *say* to the user plain — see
 8. `/iterate-evaluator` — tune the judge and reset its live version.
 
 `/onboard` runs this whole flow interactively for a first-time user.
+
+## Questions about the web app
+
+These skills work through the `calibrate` command and never see the web app, so
+never answer a question about it from memory or from anything in these skills.
+Look it up in the docs, which are kept up to date with the app:
+
+1. Fetch `https://docs.calibrate.artpark.ai/llms.txt`, the list of every docs
+   page with one line on what it covers.
+2. Pick the page that answers the question and fetch it. Each page is plain
+   text at its listed address, for example
+   `https://docs.calibrate.artpark.ai/app/evaluators/create.md`.
+3. Answer from that page in plain words, and give the person the page's address
+   without `.md` so they can see its screenshots.
+
+If no page covers it, say the docs do not cover it. Do not guess.
 
 ## Not in the public API
 
