@@ -41,11 +41,15 @@ calibrate CLI binary isn't installed." Guard against it:
   `endpoint`, `system_prompt`) and step-by-step plumbing narration ("let me check
   the schema"): the user needs the input request and the outcome, nothing between.
 - Never describe how something looks in the app: no colours, icons, badges,
-  layout or where a button sits. The agent works through the CLI and never sees
-  the screen, so it cannot use that and will repeat it to the user as if it
-  were true. State the behaviour instead ("a rating test passes only at the
-  highest number", not "the highest number shows green"). CI rejects colour
-  words outside code spans, so an API field such as `color` is still fine.
+  layout or where a button sits. The agent never sees the screen, so it cannot
+  use that and will repeat it to the user as if it were true. State the
+  behaviour instead ("a rating test passes only at the highest number", not
+  "the highest number shows green"). A page's address and the name of what to
+  click, when the person has to do something in the app themselves, are fine.
+  Questions about the app are answered from the live docs (see
+  `calibrate-resources`), never from a description kept in a skill. The
+  `ui-look-review` check reads every pull request and blocks one that breaks
+  this.
 - Run `python3 scripts/check_skills.py` before pushing.
 
 ## After every change: commit, then simulate

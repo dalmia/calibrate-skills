@@ -75,27 +75,6 @@ def check_heading_jargon(problems: list[str]) -> None:
                     )
 
 
-# Skills drive the CLI and never see the app, so how the app looks (colours)
-# is noise the agent repeats as fact. Code spans are skipped so API fields
-# like `color` still pass. See CLAUDE.md.
-UI_COLOURS = re.compile(
-    r"\b(red|green|amber|yellow|orange|grey|gray|colou?r(ed|s)?)\b", re.I
-)
-
-
-def check_ui_colours(problems: list[str]) -> None:
-    for f in sorted(SKILLS.rglob("*.md")):
-        rel = f.relative_to(ROOT)
-        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
-            m = UI_COLOURS.search(re.sub(r"`[^`]*`", "", line))
-            if m:
-                fail(
-                    f"{rel}:{i}: '{m.group(0)}' describes how the app looks; "
-                    f"skills never see the screen, so state the behaviour instead",
-                    problems,
-                )
-
-
 def check_voice_link(problems: list[str]) -> None:
     for f in sorted(SKILLS.rglob("SKILL.md")):
         if "references/voice.md" not in f.read_text(encoding="utf-8"):
@@ -165,7 +144,6 @@ def main() -> int:
     problems: list[str] = []
     check_frontmatter(problems)
     check_heading_jargon(problems)
-    check_ui_colours(problems)
     check_voice_link(problems)
     check_update_line(problems)
     check_links(problems)

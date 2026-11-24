@@ -1,0 +1,88 @@
+name: ui-look-review
+
+# The skills work through the `calibrate` command and never see the web app. A
+# line that says how the app looks ("the highest number shows green") is
+# something the agent cannot use and repeats to the user as fact. Questions
+# about the app are answered from the live docs instead (see calibrate-resources).
+#
+# So Claude reads what each pull request changes in skills/ and fails this check
+# when any added line describes the app's look. See CLAUDE.md.
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect what changed in the skills
+        run: |
+          git diff "origin/${{ github.base_ref }}...HEAD" -- skills > skills-change.diff
+          wc -l skills-change.diff
+
+      - name: Read the changes for descriptions of the app
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --allowed-tools "Read,Write,Glob,Grep"
+          prompt: |
+            `skills-change.diff` is what this pull request changes in `skills/`.
+            Read `CLAUDE.md` at the root first.
+
+            These skills are read by a coding agent that works through the
+            `calibrate` command and never sees the Calibrate web app. Read every
+            ADDED line (starting with `+`) and flag each one that describes how
+            the app looks or where things sit on screen, such as:
+
+            - colours ("shows green", "the red tag")
+            - icons, badges, pills, tags or other visual marks
+            - layout or position ("at the top right", "in the sidebar", "below
+              the table")
+            - how something is drawn or styled
+
+            Do NOT flag:
+
+            - a page's web address
+            - the name of a page, tab or button the person is told to click
+              when they must do something in the app themselves ("Workspace
+              settings → API keys")
+            - API field names, even ones like `color`
+            - what the product does ("a rating test passes only at the highest
+              number")
+
+            Write `ui-look-review.md`:
+            - If nothing is flagged, write exactly `PASS` as the whole file.
+            - Otherwise, one line per finding: `file:line` in the new file,
+              the quoted words, and the behaviour to state instead.
+
+      - name: Pass or fail
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f ui-look-review.md ]; then
+            echo "The review did not write its result."
+            exit 1
+          fi
+          if grep -qx "PASS" ui-look-review.md; then
+            echo "No description of how the app looks."
+            exit 0
+          fi
+          {
+            echo "**These lines describe how the app looks.** Skills never see the app, so state the behaviour instead, or link the docs page."
+            echo
+            cat ui-look-review.md
+          } > comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md
+          cat ui-look-review.md
+          exit 1
