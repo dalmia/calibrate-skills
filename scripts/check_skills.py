@@ -23,6 +23,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+try:
+    import yaml
+except ImportError:  # ponytail: CI installs it; a local run without it skips the YAML check
+    yaml = None
+
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
 
@@ -40,6 +45,14 @@ def check_frontmatter(problems: list[str]) -> None:
             fail(f"{rel}: missing YAML frontmatter", problems)
             continue
         fm = m.group(1)
+        # The skills installer reads this as YAML and silently skips a skill
+        # it cannot parse (a ": " inside a plain description does it).
+        if yaml is not None:
+            try:
+                yaml.safe_load(fm)
+            except yaml.YAMLError as e:
+                fail(f"{rel}: frontmatter is not valid YAML: {e}", problems)
+                continue
         name_m = re.search(r"^name:\s*(\S+)", fm, re.MULTILINE)
         if not name_m:
             fail(f"{rel}: frontmatter missing `name`", problems)
