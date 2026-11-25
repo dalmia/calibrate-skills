@@ -11,7 +11,9 @@ jobs:
       # main is served live to every `npx skills add dalmia/calibrate-skills`,
       # so validate structure before it lands.
       - name: Validate skills
-        run: python3 scripts/check_skills.py
+        run: |
+          pip install pyyaml
+          python3 scripts/check_skills.py
       # Smoke-test that the skills CLI can enumerate this repo's skills.
       - uses: actions/setup-node@v4
         with:

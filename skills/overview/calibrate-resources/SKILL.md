@@ -5,8 +5,8 @@ description: Orientation for evaluating agents with Calibrate — the primitives
   auth, and which skill to reach for. Load when the user asks "what is
   Calibrate", "how do I evaluate with Calibrate", "what can Calibrate do", or
   seems unsure where to start. Also load for any question about the Calibrate
-  web app: "where do I find X", "how do I do Y in the app", "why does Z look
-  like that".
+  web app, such as "where do I find X", "how do I do Y in the app", or "why
+  does Z look like that".
 ---
 
 # Calibrate: resources and orientation
