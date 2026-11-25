@@ -37,11 +37,12 @@ tool_call.*
 
 <!-- TODO: track runs. -->
 
-## Phase 5 — Evaluator checked against people
+## Phase 5 — Evaluators checked against people
 
-*Human↔judge agreement result, if you ran /calibrate-evaluator.*
+*Per evaluator: how often people agreed with each other, how often the
+evaluator agreed with them, and on how many items. Or that the user skipped it.*
 
-<!-- TODO: agreement numbers + whether the judge is trusted. -->
+<!-- TODO: agreement per evaluator, or "skipped by the user". -->
 
 ---
 
