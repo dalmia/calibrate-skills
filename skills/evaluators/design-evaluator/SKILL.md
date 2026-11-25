@@ -179,7 +179,7 @@ prompt.
     defines each row of the rating scale: a number and its label. Use when a graded judgment is more
     useful than pass/fail.
 
-In the app, the highest number shows a green Best pill and the lowest a red Worst pill.
+A rating test passes only at the highest number of the rating scale.
 
 If `rating`, collect the rows of the rating scale: a number and a short label for each. Give the
 label for the worst result the lowest number and the label for the best result
