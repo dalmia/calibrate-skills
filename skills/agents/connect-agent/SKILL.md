@@ -199,7 +199,7 @@ calibrate agents create --name "<name>" --type <agent|connection> \
   --interaction-type <conversation|general> --config-param '<json>' --output-format json
 ```
 
-Capture `agent_uuid` from the response.
+Capture `uuid` from the response (it is `uuid`, not `agent_uuid`; `agent_uuid` is only ever a flag name).
 
 ## Phase 3: Verify connection
 
@@ -232,7 +232,7 @@ calibrate agents update --agent-uuid <agent_uuid> --config-param '<json>'
 To turn agent names into UUIDs elsewhere:
 
 ```bash
-calibrate agents resolve --names '["<name>"]'
+calibrate agents resolve --names '<name>'
 ```
 
 ## Phase 4: Summary + next steps
@@ -241,7 +241,7 @@ calibrate agents resolve --names '["<name>"]'
 Agent connected
   ID:   <agent_uuid>
   Name: <name>
-  Dashboard: https://calibrate.artpark.ai/agents/<agent_uuid>
+  Dashboard: <app>/<workspace_uuid>/agents/<uuid>
 ```
 
 Hand off to whatever the user needs next:

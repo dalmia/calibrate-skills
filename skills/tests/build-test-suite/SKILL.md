@@ -97,11 +97,14 @@ it; you already have it.
 
 ## Phase 1: Choose the evaluator type per case
 
-The agent's `interaction_type` fixes the menu — a suite can mix the two types
+The agent's `interaction_type` fixes the menu — a suite can mix the types
 available to it across cases:
 
 For a `conversation` agent (called with the exchange so far):
 
+- **`conversation`** — quality, over the whole exchange rather than one reply.
+  An LLM judge scores the conversation end to end. Every `conversation` test
+  must keep at least one evaluator.
 - **`tool_call`** — deterministic. Assert the agent calls tool X with args Y.
   No judge model, no token cost. Reach for this whenever the correct behavior is
   a specific action rather than a judgment about wording.
@@ -136,7 +139,7 @@ Start from the hypothesis — what must be true of the agent — and write the
 failing and edge cases, not just the happy path (empty input, out-of-policy
 requests, ambiguous asks, tool-args boundaries). Each item has:
 
-- **name** — unique within the batch.
+- **name** — unique within the workspace, not just within this batch.
 - **the input** — which key depends on the agent's `interaction_type`. For a
   `conversation` agent, `conversation_history`: a list of `{role, content}`
   turns leading up to the point of evaluation. For a `general` agent, `input`:
@@ -152,7 +155,7 @@ the drafted cases and confirm before uploading.
 ## Phase 3: Upload
 
 For many cases, prefer `bulk-create` (at most 500 items per request, names
-unique within the batch). `--type` applies to every row, so **one batch is one
+unique within the workspace as well as within the batch). `--type` applies to every row, so **one batch is one
 type** — split a mixed suite into one batch per type. Pass `--agent-uuids` to
 link every created test to the agent on creation (omit to link none);
 `--language` writes to each test's `config.settings.language` (omit to leave
@@ -173,11 +176,17 @@ carries `evaluation` (required, its `type` matching `--type`), optional
 general agent. Note the name: the single-test config says `history` where a bulk
 row says `conversation_history`.
 
+The judge does **not** go in the config here. `create` takes a separate
+`-e/--evaluators` flag, and leaving it off creates the test with no judge
+attached and no complaint. A bulk row is the other way round: the judge is part
+of the item.
+
 ```bash
 calibrate tests create \
   --name "<name>" \
   --type <response|conversation|tool_call|general> \
   --config-param '<json>' \
+  --evaluators '[{"evaluator_uuid": "<uuid>", "variable_values": {"criteria": "..."}}]' \
   --output-format json
 ```
 

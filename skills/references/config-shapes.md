@@ -57,8 +57,11 @@ Linking a test to an agent of the other kind is rejected by the backend.
   one it carries decides which kind of agent it can be linked to.
 - `evaluation` — **required**. `{"type": ...}`, matching the test's `--type`.
   For `tool_call` it also carries `tool_calls`:
-  `[{"tool": "issue_refund", "arguments": {"order_id": "ORD-42"},
-  "accept_any_arguments": false}]` (`accept_any_arguments` optional).
+  `[{"tool": "issue_refund", "arguments": {"order_id": {"match_type": "exact",
+  "value": "ORD-42"}}, "accept_any_arguments": false}]`
+  (`accept_any_arguments` optional). Each expected argument is an object, never
+  a bare value: `{"match_type": "exact", "value": ...}`,
+  `{"match_type": "llm_judge", "criteria": "..."}`, or `{"match_type": "any"}`.
 - `settings` — optional, e.g. `{"language": "en"}`.
 
 ### Bulk row (`tests bulk-create --tests`)
