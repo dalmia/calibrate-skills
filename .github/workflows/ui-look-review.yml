@@ -7,10 +7,10 @@ name: ui-look-review
 #
 # So Claude reads what each pull request changes in skills/ and fails this check
 # when any added line describes the app's look. See CLAUDE.md.
+# Runs on every pull request so it can be a required check; one that changes
+# nothing in skills/ passes straight away.
 on:
   pull_request:
-    paths:
-      - "skills/**"
 
 permissions:
   contents: read
@@ -26,11 +26,17 @@ jobs:
           fetch-depth: 0
 
       - name: Collect what changed in the skills
+        id: diff
         run: |
           git diff "origin/${{ github.base_ref }}...HEAD" -- skills > skills-change.diff
-          wc -l skills-change.diff
+          if [ -s skills-change.diff ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nothing in skills/ changed."
+          fi
 
       - name: Read the changes for descriptions of the app
+        if: steps.diff.outputs.changed == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -67,6 +73,7 @@ jobs:
               the quoted words, and the behaviour to state instead.
 
       - name: Pass or fail
+        if: steps.diff.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
