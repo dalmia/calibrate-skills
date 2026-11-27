@@ -169,9 +169,9 @@ prompt.
   transcript) or `audio` (grades synthesized speech / audio output).
 - **evaluator type** — what it judges: `llm` (a reply with its conversation
   history), `llm-general` (a standalone input/output pair), `conversation` (a
-  whole conversation), `stt`, `tts`, or `tool-call` (whether the agent called
-  the right tool, labelled by a person — it has no judge prompt to write, so
-  don't draft one).
+  whole conversation), `stt`, `tts`, or `tool-call` (the tool calls an
+  agent made — the only type that scores tool-call items; it has no judge
+  prompt to write, so don't draft one).
 - **output-type** — how it scores:
   - `binary` — pass/fail. Uses the default `Correct` / `Wrong` labels unless you
     override them. Best for "did the reply do X?" checks.

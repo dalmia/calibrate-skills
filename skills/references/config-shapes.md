@@ -187,8 +187,9 @@ name annotators see; the judge reads only `content`. Turns in `chat_history` /
 Tool-call items (`llm`, `llm-general`): send `tool_calls`, or
 `expected_tool_calls` / `actual_tool_calls`, as
 `[{tool, arguments?, output?, accept_any_arguments?}]`. Any of these marks the
-item as a tool call for a person to judge (`is_tool_call` on the fetched item);
-use the `tool-call` evaluator type for it. For a tool call with no text reply,
+item as a tool call (`is_tool_call` on the fetched item), which only a
+`tool-call` evaluator scores; omit them for an item judged on its text reply.
+`expected_tool_calls` is shown to the judge beside the calls the agent made. For a tool call with no text reply,
 `agent_response` is `""`.
 
 Other optional keys on an item, beside `payload`:
@@ -197,8 +198,8 @@ Other optional keys on an item, beside `payload`:
   labelling form. On update, omit to keep the stored pairs, send `[]` to clear.
 - `evaluator_results` — scores to record without running a judge, keyed by
   evaluator UUID (each linked to the task): `{value, reasoning?,
-  version_number?}`. A tool-call item takes only the tool-call evaluator; every
-  other item takes any evaluator except that one. The response then includes
+  version_number?}`. A tool-call item takes only `tool-call` evaluators; every
+  other item takes any evaluator that is not a `tool-call` one. The response then includes
   `evaluator_result_count` and `evaluator_run_job_id`.
 
 Updating an item replaces its whole payload.

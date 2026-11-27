@@ -129,7 +129,10 @@ calibrate annotation-tasks add-items --task-uuid <t> \
 Field names per task type, translations or rewrites shown to annotators,
 tool-call items, `metadata`, and `evaluator_results` are in
 [`config-shapes.md`](../../references/config-shapes.md). If the agent's reply is
-a tool call, label it with a `tool-call` evaluator, not a text judge.
+a tool call, label it with a `tool-call` evaluator, not a text judge. Linking evaluators to
+a task that holds tool-call items always leaves one `tool-call` evaluator
+linked, and items an evaluator can't judge are left out of a run, so the
+counts can come back lower than what you sent.
 
 ## Phase 2: Collect human labels
 

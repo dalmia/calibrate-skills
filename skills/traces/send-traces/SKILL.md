@@ -181,6 +181,8 @@ The whole accepted set of fields — anything else is rejected:
   conversation ties them together.
 - `message_id` — optional, their own id for the last user message, kept for
   reference only.
+- `feedback` — optional, `{is_correct, comment?}` (comment up to 2000
+  characters), when the code already has a verdict on the agent's output.
 - `metadata` — optional, a list of up to 100 `{"key": ..., "value": ...}` pairs,
   both strings — **not** a plain object. Prefer OpenTelemetry `gen_ai.*` key
   names where they fit.
@@ -279,6 +281,9 @@ Filters, all optional and combinable:
 - `score` — `<evaluator id>:<condition>` where the condition is `passed`,
   `failed`, or an operator and number such as `>=4`. Repeat to require all.
   It matches the trace's latest scoring run.
+- `source` — `api` (sent by the code) or `chat` (a reply the agent gave on its
+  chat link).
+- `feedback` — `correct`, `wrong` or `any`: traces someone marked.
 - `created_after`, `created_before` — ISO 8601, no timezone means UTC.
 - `sort_by_evaluator` with `sort_order` (`asc` or `desc`, default `desc`) —
   traces that evaluator hasn't scored sort last either way, and an evaluator
@@ -291,6 +296,20 @@ per-evaluator `results`. `include_content` adds the full `input`, `output` and
 `score_averages`, one mean per evaluator linked to the agent that scored at
 least one matching trace, across **all** matching traces (not just the page); it costs a pass over them, so ask for it when the filters
 change, not on every page. A binary evaluator's mean is its pass rate.
+
+A trace also carries its `source` and any `feedback` (`is_correct`, `comment`,
+`at`), and `stopped_early` is true when the agent was cut off after calling
+tools too many times in a row before it replied. A verdict is set or cleared
+after the fact with `PUT /traces/<trace_uuid>/feedback` (`is_correct` true,
+false, or null to clear; optional `comment`).
+
+Which part of a trace fills each variable of an evaluator linked to the agent is
+set with `PUT /agents/<agent_uuid>/evaluators/<evaluator_uuid>/trace-variables`,
+body `{"trace_variables": {"<variable>": "<source>"}}`. Sources: `input`,
+`output.response`, `output.tool_calls`, `labels`, `conversation_id`,
+`message_id`, `metadata.<key>`, and `feedback.comment`. Every variable needs a value;
+an empty object clears the choices. The values each trace
+was scored with are kept in its results as `variable_values`.
 
 A trace may have no results yet: `latest_run_status` is `pending`,
 `processing`, `completed`, `failed` or `skipped`, and `latest_run_error` says

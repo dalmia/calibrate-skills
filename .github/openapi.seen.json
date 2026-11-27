@@ -13,7 +13,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\n**Either type**:\n- `traces.scoring.enabled`: whether the traces you send for this agent are scored by its linked evaluators. On unless you set it to `false`. Turning it back on needs at least one linked evaluator that can score traces\n\n```json\n{\"traces\": {\"scoring\": {\"enabled\": false}}}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nFor `type=agent`, omitted keys inherit managed defaults. Omit `config` entirely to use all defaults. For `type=connection`, `config` is stored as-is and must contain `agent_url`"
+            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-3.5-flash-lite`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\n**Either type**:\n- `traces.scoring.enabled`: whether the traces you send for this agent are scored by its linked evaluators. On unless you set it to `false`. Turning it back on needs at least one linked evaluator that can score traces\n\n```json\n{\"traces\": {\"scoring\": {\"enabled\": false}}}\n```\n\n- `talk_to_agent.messages_per_day`: how many replies the agent's chat link may give in a day, counted from midnight UTC. From 1 up to `max_chat_replies_per_day` from `GET /org-limits/me`. Omit to use the workspace's `talk_to_agent.default_messages_per_day`\n\n```json\n{\"talk_to_agent\": {\"messages_per_day\": 50}}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nFor `type=agent`, omitted keys inherit managed defaults. Omit `config` entirely to use all defaults. For `type=connection`, `config` is stored as-is and must contain `agent_url`"
           },
           "interaction_type": {
             "default": "conversation",
@@ -70,6 +70,161 @@
           "message"
         ],
         "title": "AgentCreateResponse",
+        "type": "object"
+      },
+      "AgentEvaluatorResponse": {
+        "properties": {
+          "created_at": {
+            "description": "When the evaluator was created (ISO 8601 UTC)",
+            "title": "Created At",
+            "type": "string"
+          },
+          "data_type": {
+            "description": "The modality the judge reads:\n\n- `text`\n- `audio`\n",
+            "enum": [
+              "text",
+              "audio"
+            ],
+            "title": "Data Type",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the evaluator checks",
+            "title": "Description"
+          },
+          "evaluator_type": {
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: the tool calls an agent made\n",
+            "enum": [
+              "tts",
+              "stt",
+              "llm",
+              "llm-general",
+              "conversation",
+              "tool-call"
+            ],
+            "title": "Evaluator Type",
+            "type": "string"
+          },
+          "is_default": {
+            "description": "True when the evaluator is a built-in default or your workspace's editable copy of one. False for an evaluator you created yourself",
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "is_protected": {
+            "description": "True when the evaluator is locked. A locked evaluator cannot be deleted, and only its name, description and rubric can change",
+            "title": "Is Protected",
+            "type": "boolean"
+          },
+          "live_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvaluatorLiveVersionSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The version that is currently live"
+          },
+          "live_version_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "minLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ID of the version that is currently live",
+            "examples": [
+              "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+            ],
+            "title": "Live Version Id"
+          },
+          "name": {
+            "description": "Evaluator name",
+            "title": "Name",
+            "type": "string"
+          },
+          "output_type": {
+            "description": "How the evaluator scores:\n\n- `binary`: pass or fail\n- `rating`: a numeric score, using the scale in `output_config`\n",
+            "enum": [
+              "binary",
+              "rating"
+            ],
+            "title": "Output Type",
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stable slug for a built-in default evaluator",
+            "title": "Slug"
+          },
+          "source_default_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stable slug of the built-in default this evaluator is your editable copy of. Set on your default forks so you can identify a specific default by it",
+            "title": "Source Default Slug"
+          },
+          "trace_variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Which part of a trace fills each variable of the evaluator when it scores an agent's traces",
+            "type": "object"
+          },
+          "updated_at": {
+            "description": "When the evaluator was last updated (ISO 8601 UTC)",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "uuid": {
+            "description": "Evaluator ID",
+            "examples": [
+              "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            ],
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "name",
+          "evaluator_type",
+          "data_type",
+          "output_type",
+          "is_default",
+          "is_protected",
+          "created_at",
+          "updated_at",
+          "trace_variables"
+        ],
+        "title": "AgentEvaluatorResponse",
         "type": "object"
       },
       "AgentResponse": {
@@ -571,7 +726,7 @@
                 "type": "null"
               }
             ],
-            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-2.5-flash`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\n**Either type**:\n- `traces.scoring.enabled`: whether the traces you send for this agent are scored by its linked evaluators. On unless you set it to `false`. Turning it back on needs at least one linked evaluator that can score traces\n\n```json\n{\"traces\": {\"scoring\": {\"enabled\": false}}}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nReplaces the stored config. Omit to leave unchanged\n\nFor `type=connection`, changing `agent_url` or `agent_headers` resets the connection and benchmark verification flags"
+            "description": "Agent behavioral config. The keys depend on `type`.\n\n**`type=agent`**, built inside Calibrate:\n- `system_prompt`: the agent's instructions\n- `llm.model`: `provider/model`, e.g. `openai/gpt-4.1` or `google/gemini-3.5-flash-lite`\n- `stt.provider`: `deepgram`, `openai`, `cartesia`, `elevenlabs`, `google`, `sarvam`, or `smallest`\n- `tts.provider`: `cartesia`, `openai`, `google`, `elevenlabs`, `sarvam`, or `smallest`\n- `settings.agent_speaks_first`, `settings.max_assistant_turns`\n- `system_tools.end_call`: let the agent end the call\n- `data_extraction_fields`: `[{name, type, description, required}]`\n\n```json\n{\n  \"system_prompt\": \"You are a helpful support agent.\",\n  \"llm\": {\"model\": \"openai/gpt-4.1\"},\n  \"stt\": {\"provider\": \"deepgram\"},\n  \"tts\": {\"provider\": \"elevenlabs\"},\n  \"settings\": {\"agent_speaks_first\": true, \"max_assistant_turns\": 50}\n}\n```\n\n**`type=connection`**, your own HTTP endpoint:\n- `agent_url`: public HTTP(S) endpoint your agent is called at\n- `agent_headers`: headers sent on each request, e.g. auth\n- `benchmark_provider`: `openrouter` by default. Other values: `openai`, `google`, `anthropic`, `meta-llama`, `mistralai`, `deepseek`, `x-ai`, `cohere`, `qwen`, or `ai21`\n\n```json\n{\n  \"agent_url\": \"https://api.example.com/agent\",\n  \"agent_headers\": {\"Authorization\": \"Bearer <token>\"},\n  \"benchmark_provider\": \"openrouter\"\n}\n```\n\n**Either type**:\n- `traces.scoring.enabled`: whether the traces you send for this agent are scored by its linked evaluators. On unless you set it to `false`. Turning it back on needs at least one linked evaluator that can score traces\n\n```json\n{\"traces\": {\"scoring\": {\"enabled\": false}}}\n```\n\n- `talk_to_agent.messages_per_day`: how many replies the agent's chat link may give in a day, counted from midnight UTC. From 1 up to `max_chat_replies_per_day` from `GET /org-limits/me`. Omit to use the workspace's `talk_to_agent.default_messages_per_day`\n\n```json\n{\"talk_to_agent\": {\"messages_per_day\": 50}}\n```\n\nEvery request Calibrate makes to your endpoint carries the header\n`X-Calibrate-Eval: 1`. Read it to tell a test run from a real user, for example\nto tag the trace you send back or to skip sending one.\n\nReplaces the stored config. Omit to leave unchanged\n\nFor `type=connection`, changing `agent_url` or `agent_headers` resets the connection and benchmark verification flags"
           },
           "name": {
             "anyOf": [
@@ -668,7 +823,7 @@
                 "type": "null"
               }
             ],
-            "description": "Evaluator scores to record, keyed by evaluator ID. Each evaluator ID must be linked to the task. Put the score in `value`, a bool for binary or a number within the scale for rating, with optional `reasoning` and `version_number`. Omit `version_number` to record against the evaluator's live version. An item recording a tool call takes the tool-call evaluator and no other, and every other item takes any evaluator except that one",
+            "description": "Evaluator scores to record, keyed by evaluator ID. Each evaluator ID must be linked to the task. Put the score in `value`, a bool for binary or a number within the scale for rating, with optional `reasoning` and `version_number`. Omit `version_number` to record against the evaluator's live version. An item recording a tool call takes only tool-call evaluators, and every other item takes any evaluator that is not a tool-call evaluator",
             "examples": [
               {
                 "f47ac10b-58cc-4372-a567-0e02b2c3d479": {
@@ -912,7 +1067,7 @@
           },
           "items": {
             "default": [],
-            "description": "The task's items, each with its agreement stats and an `is_tool_call` flag marking the rows a person labels on the tool call rather than a text reply. You get these when you fetch one task by ID, not when you list tasks",
+            "description": "The task's items, each with its agreement stats and an `is_tool_call` flag that says whether the item is judged on tool calls rather than a text reply. You get these when you fetch one task by ID, not when you list tasks",
             "items": {
               "additionalProperties": true,
               "type": "object"
@@ -2529,7 +2684,7 @@
           },
           "evaluator_type": {
             "default": "llm",
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: the tool calls an agent made\n",
             "enum": [
               "tts",
               "stt",
@@ -2628,7 +2783,7 @@
             "title": "Description"
           },
           "evaluator_type": {
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: the tool calls an agent made\n",
             "enum": [
               "tts",
               "stt",
@@ -3049,7 +3204,7 @@
       "EvaluatorRunStartRequest": {
         "properties": {
           "evaluators": {
-            "description": "The evaluators to run. Each must be linked to the task",
+            "description": "The evaluators to run. Each must be linked to the task. Items that none of the chosen evaluators can judge are left out, and so are evaluators that can judge none of the chosen items, so `item_count` and `evaluator_count` can be lower than what you sent",
             "items": {
               "$ref": "#/components/schemas/EvaluatorRunRequestEntry"
             },
@@ -3093,7 +3248,7 @@
       "EvaluatorSetRequest": {
         "properties": {
           "evaluator_ids": {
-            "description": "The full ordered set of evaluators the task should end up linked to, in display order. Missing ones are unlinked, new ones are linked, and the order sets their position. Send an empty list to unlink all. Each must be one you created or a built-in default",
+            "description": "The full ordered set of evaluators the task should end up linked to, in display order. Missing ones are unlinked, new ones are linked, and the order sets their position. Send an empty list to unlink all. A task holding tool-call items always keeps one tool-call evaluator, so Tool call correctness is linked back if none is left. Each must be one you created or a built-in default",
             "examples": [
               [
                 "f47ac10b-58cc-4372-a567-0e02b2c3d479"
@@ -3197,7 +3352,7 @@
                 "type": "null"
               }
             ],
-            "description": "The scale points and their labels. Required for a `rating` evaluator. A `binary` evaluator uses the default Correct/Wrong labels unless you set your own"
+            "description": "The rows of the rating scale, each a number and its label. Required for a `rating` evaluator. For a rating evaluator, give the label for the worst result the lowest number and the label for the best result the highest number. A `binary` evaluator uses the default Correct/Wrong labels unless you set your own"
           },
           "system_prompt": {
             "anyOf": [
@@ -3256,6 +3411,7 @@
         "properties": {
           "judge_model": {
             "description": "The model that runs the judge, named the way its provider does, for example `openai/gpt-4.1` or `anthropic/claude-sonnet-4`",
+            "pattern": "\\S",
             "title": "Judge Model",
             "type": "string"
           },
@@ -3268,10 +3424,11 @@
                 "type": "null"
               }
             ],
-            "description": "The scale points and their labels. Required for a `rating` evaluator. A `binary` evaluator uses the default Correct/Wrong labels unless you set your own"
+            "description": "The rows of the rating scale, each a number and its label. Required for a `rating` evaluator. For a rating evaluator, give the label for the worst result the lowest number and the label for the best result the highest number. A `binary` evaluator uses the default Correct/Wrong labels unless you set your own"
           },
           "system_prompt": {
             "description": "Judge system prompt. May contain `{{variable}}` placeholders",
+            "pattern": "\\S",
             "title": "System Prompt",
             "type": "string"
           },
@@ -3303,6 +3460,7 @@
         "properties": {
           "judge_model": {
             "description": "The model that runs the judge, named the way its provider does, for example `openai/gpt-4.1` or `anthropic/claude-sonnet-4`",
+            "pattern": "\\S",
             "title": "Judge Model",
             "type": "string"
           },
@@ -3321,10 +3479,11 @@
                 "type": "null"
               }
             ],
-            "description": "The scale points and their labels. Required for a `rating` evaluator. A `binary` evaluator uses the default Correct/Wrong labels unless you set your own"
+            "description": "The rows of the rating scale, each a number and its label. Required for a `rating` evaluator. For a rating evaluator, give the label for the worst result the lowest number and the label for the best result the highest number. A `binary` evaluator uses the default Correct/Wrong labels unless you set your own"
           },
           "system_prompt": {
             "description": "Judge system prompt. May contain `{{variable}}` placeholders",
+            "pattern": "\\S",
             "title": "System Prompt",
             "type": "string"
           },
@@ -3553,7 +3712,7 @@
           },
           "value": {
             "description": "Value of the metadata entry",
-            "maxLength": 8192,
+            "maxLength": 50000,
             "title": "Value",
             "type": "string"
           }
@@ -3581,7 +3740,7 @@
                 "type": "null"
               }
             ],
-            "description": "Tool calls the agent made. Sending this marks the item as a tool call for a person to judge. For `llm` and `llm-general` tasks",
+            "description": "Tool calls the agent made. Sending this marks the item as a tool call, which only a tool-call evaluator scores. Omit for an item judged on its text reply. For `llm` and `llm-general` tasks",
             "title": "Actual Tool Calls"
           },
           "agent_response": {
@@ -3665,7 +3824,7 @@
                 "type": "null"
               }
             ],
-            "description": "Tool calls the agent should have made. Sending this marks the item as a tool call for a person to judge. For `llm` and `llm-general` tasks",
+            "description": "Tool calls the agent should have made, shown to the judge beside the calls the agent made. Omit to judge without expected calls. Sending this marks the item as a tool call, which only a tool-call evaluator scores. For `llm` and `llm-general` tasks",
             "title": "Expected Tool Calls"
           },
           "input": {
@@ -3752,7 +3911,7 @@
                 "type": "null"
               }
             ],
-            "description": "Tool calls the agent made in place of a text reply. With no text reply, sending this marks the item as a tool call for a person to judge. For `llm` and `llm-general` tasks",
+            "description": "Tool calls the agent made. With no text reply, sending at least one marks the item as a tool call, which only a tool-call evaluator scores. Omit when the agent made no tool calls. For `llm` and `llm-general` tasks",
             "title": "Tool Calls"
           },
           "transcript": {
@@ -4410,7 +4569,7 @@
                 "type": "null"
               }
             ],
-            "description": "The ordered scale points that make up the rubric, each with its label",
+            "description": "The rows of the rating scale, each a number and its label. For a rating evaluator, give the label for the worst result the lowest number and the label for the best result the highest number",
             "title": "Scale"
           }
         },
@@ -4429,7 +4588,7 @@
                 "type": "null"
               }
             ],
-            "description": "Color to show for this level. Omit for the default",
+            "description": "Color to show for this row. Omit for the default",
             "title": "Color"
           },
           "description": {
@@ -4441,16 +4600,16 @@
                 "type": "null"
               }
             ],
-            "description": "Rubric text for this level, added to the judge prompt. Omit to leave this level undescribed",
+            "description": "Rubric text for this row, added to the judge prompt. Omit to leave this row undescribed",
             "title": "Description"
           },
           "name": {
-            "description": "Short label for this scale point",
+            "description": "Short label for this row",
             "title": "Name",
             "type": "string"
           },
           "value": {
-            "description": "The value for this scale point. Use a boolean for a `binary` evaluator, a number for a `rating` one",
+            "description": "The value for this row. Use a boolean for a `binary` evaluator, a number for a `rating` one. For a rating evaluator, give the label for the worst result the lowest number and the label for the best result the highest number",
             "title": "Value"
           }
         },
@@ -4459,6 +4618,47 @@
           "name"
         ],
         "title": "OutputScaleEntry",
+        "type": "object"
+      },
+      "PaginatedResponse_AgentEvaluatorResponse_": {
+        "properties": {
+          "items": {
+            "description": "The page of results",
+            "items": {
+              "$ref": "#/components/schemas/AgentEvaluatorResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The applied `limit` (null when unbounded)",
+            "title": "Limit"
+          },
+          "offset": {
+            "default": 0,
+            "description": "The applied `offset`",
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items matching the query, before pagination",
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "PaginatedResponse[AgentEvaluatorResponse]",
         "type": "object"
       },
       "PaginatedResponse_AgentSummary_": {
@@ -5913,6 +6113,124 @@
         "title": "TraceEvalRunStatus",
         "type": "string"
       },
+      "TraceFeedback": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "When the feedback was last given (ISO 8601 UTC)",
+            "title": "At",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What was right or wrong about the agent's output. Omit if you have none",
+            "title": "Comment"
+          },
+          "is_correct": {
+            "description": "Whether the agent's output for this turn was correct",
+            "title": "Is Correct",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_correct",
+          "at"
+        ],
+        "title": "TraceFeedback",
+        "type": "object"
+      },
+      "TraceFeedbackIngest": {
+        "additionalProperties": false,
+        "description": "Feedback sent with a new trace, which has nothing to clear.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What was right or wrong about the agent's output. Omit if you have none",
+            "title": "Comment"
+          },
+          "is_correct": {
+            "description": "Whether the agent's output for this turn was correct",
+            "title": "Is Correct",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_correct"
+        ],
+        "title": "TraceFeedbackIngest",
+        "type": "object"
+      },
+      "TraceFeedbackResponse": {
+        "properties": {
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceFeedback"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The feedback now on the trace"
+          }
+        },
+        "required": [
+          "feedback"
+        ],
+        "title": "TraceFeedbackResponse",
+        "type": "object"
+      },
+      "TraceFeedbackUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What was right or wrong about the agent's output. Omit if you have none",
+            "title": "Comment"
+          },
+          "is_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the agent's output for this turn was correct. `null` clears the feedback",
+            "title": "Is Correct"
+          }
+        },
+        "required": [
+          "is_correct"
+        ],
+        "title": "TraceFeedbackUpdate",
+        "type": "object"
+      },
       "TraceIngest": {
         "additionalProperties": false,
         "properties": {
@@ -5936,6 +6254,17 @@
             ],
             "description": "Your own ID for the conversation this turn belongs to. Turns sharing it are grouped into one conversation. Omit if you have none",
             "title": "Conversation Id"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceFeedbackIngest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A verdict on the agent's output, if you already have one. Omit if you have none"
           },
           "input": {
             "anyOf": [
@@ -6128,7 +6457,7 @@
           },
           "value": {
             "description": "Value of the metadata entry",
-            "maxLength": 8192,
+            "maxLength": 50000,
             "title": "Value",
             "type": "string"
           }
@@ -6155,6 +6484,18 @@
             ],
             "description": "The assistant reply text for this turn. Omit for turns that only issued tool calls",
             "title": "Response"
+          },
+          "stopped_early": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True when the agent was stopped after calling tools as many times in a row as it may, before it replied",
+            "title": "Stopped Early"
           },
           "tool_calls": {
             "anyOf": [
@@ -6266,7 +6607,7 @@
                 "type": "null"
               }
             ],
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: the tool calls an agent made\n",
             "title": "Evaluator Type"
           },
           "evaluator_uuid": {
@@ -6348,6 +6689,25 @@
             "description": "The judged result. Binary stores 0 or 1. Rating stores the numeric score",
             "title": "Value",
             "type": "number"
+          },
+          "variable_values": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The value each variable of the evaluator was given for this trace, by variable name. Kept as it was when the trace was scored, even if the agent later fills the variable from another part of the trace",
+            "examples": [
+              {
+                "language": "Hindi"
+              }
+            ]
           }
         },
         "required": [
@@ -6384,6 +6744,17 @@
             "description": "When the trace was created (ISO 8601 UTC)",
             "title": "Created At",
             "type": "string"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TraceFeedback"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The verdict and comment given on the trace, through the API or on the chat link"
           },
           "input": {
             "anyOf": [
@@ -6513,6 +6884,15 @@
             "title": "Results",
             "type": "array"
           },
+          "source": {
+            "description": "Where the trace came from:\n\n- `api`: sent to `POST /traces`\n- `chat`: a reply the agent gave on its chat link",
+            "enum": [
+              "api",
+              "chat"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
           "tool_call_count": {
             "description": "Number of tool calls the agent issued for this turn",
             "title": "Tool Call Count",
@@ -6559,6 +6939,7 @@
           "tool_call_count",
           "metadata_count",
           "labels",
+          "source",
           "created_at"
         ],
         "title": "TraceSummary",
@@ -6625,6 +7006,44 @@
           "role"
         ],
         "title": "TraceTurn",
+        "type": "object"
+      },
+      "TraceVariablesRequest": {
+        "properties": {
+          "trace_variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Which part of a trace fills each variable, keyed by variable name. Each value is one of:\n\n- `input`: the trace's input\n- `output.response`: the agent's reply\n- `output.tool_calls`: the tool calls the agent issued\n- `labels`: the trace's labels\n- `conversation_id`: the conversation ID sent with the trace\n- `message_id`: the message ID sent with the trace\n- `feedback.comment`: the comment given by the user along with the feedback for the trace\n- `metadata.<key>`: the metadata entry with that key\n\nEvery variable needs a value. Replaces the stored choices, and an empty object clears them",
+            "examples": [
+              {
+                "ai_reply": "output.response",
+                "nurse_reply": "metadata.expert_answer"
+              }
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "trace_variables"
+        ],
+        "title": "TraceVariablesRequest",
+        "type": "object"
+      },
+      "TraceVariablesResponse": {
+        "properties": {
+          "trace_variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Which part of a trace fills each variable",
+            "type": "object"
+          }
+        },
+        "required": [
+          "trace_variables"
+        ],
+        "title": "TraceVariablesResponse",
         "type": "object"
       },
       "TurnText": {
@@ -6832,7 +7251,7 @@
             "title": "Description"
           },
           "evaluator_type": {
-            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: whether the agent called the right tool, labelled by a person\n",
+            "description": "What the evaluator judges:\n\n- `tts`: TTS audio\n- `stt`: one transcript\n- `llm`: a reply with its conversation history\n- `llm-general`: a standalone input and output pair\n- `conversation`: a full conversation\n- `tool-call`: the tool calls an agent made\n",
             "enum": [
               "tts",
               "stt",
@@ -8159,7 +8578,7 @@
                   "value": {
                     "config": {
                       "llm": {
-                        "model": "google/gemini-2.5-flash"
+                        "model": "google/gemini-3.5-flash-lite"
                       },
                       "settings": {
                         "agent_speaks_first": false,
@@ -8235,7 +8654,7 @@
           {
             "label": "Agent within Calibrate",
             "lang": "curl",
-            "source": "curl --request POST \\\n  --url https://api.calibrate.artpark.ai/agents \\\n  --header 'Content-Type: application/json' \\\n  --header 'X-API-Key: <api-key>' \\\n  --data '{\n  \"name\": \"Support Agent\",\n  \"type\": \"agent\",\n  \"config\": {\n    \"system_prompt\": \"You are a helpful assistant.\",\n    \"llm\": {\n      \"model\": \"google/gemini-2.5-flash\"\n    },\n    \"stt\": {\n      \"provider\": \"google\"\n    },\n    \"tts\": {\n      \"provider\": \"google\"\n    },\n    \"settings\": {\n      \"agent_speaks_first\": false,\n      \"max_assistant_turns\": 10\n    }\n  }\n}'"
+            "source": "curl --request POST \\\n  --url https://api.calibrate.artpark.ai/agents \\\n  --header 'Content-Type: application/json' \\\n  --header 'X-API-Key: <api-key>' \\\n  --data '{\n  \"name\": \"Support Agent\",\n  \"type\": \"agent\",\n  \"config\": {\n    \"system_prompt\": \"You are a helpful assistant.\",\n    \"llm\": {\n      \"model\": \"google/gemini-3.5-flash-lite\"\n    },\n    \"stt\": {\n      \"provider\": \"google\"\n    },\n    \"tts\": {\n      \"provider\": \"google\"\n    },\n    \"settings\": {\n      \"agent_speaks_first\": false,\n      \"max_assistant_turns\": 10\n    }\n  }\n}'"
           },
           {
             "label": "Connect OpenAI-compatible agent",
@@ -8548,7 +8967,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_EvaluatorResponse_"
+                  "$ref": "#/components/schemas/PaginatedResponse_AgentEvaluatorResponse_"
                 }
               }
             },
@@ -8648,6 +9067,99 @@
           }
         ],
         "summary": "Link evaluators to agent",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/{agent_uuid}/evaluators/{evaluator_uuid}/trace-variables": {
+      "put": {
+        "description": "Choose which part of a trace fills each variable of an evaluator",
+        "operationId": "update_evaluator_trace_variables_agents__agent_uuid__evaluators__evaluator_uuid__trace_variables_put",
+        "parameters": [
+          {
+            "description": "The agent the evaluator is linked to",
+            "in": "path",
+            "name": "agent_uuid",
+            "required": true,
+            "schema": {
+              "description": "The agent the evaluator is linked to",
+              "examples": [
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              ],
+              "title": "Agent Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The evaluator whose variables to fill",
+            "in": "path",
+            "name": "evaluator_uuid",
+            "required": true,
+            "schema": {
+              "description": "The evaluator whose variables to fill",
+              "examples": [
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              ],
+              "title": "Evaluator Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceVariablesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceVariablesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Update evaluator trace variables",
         "tags": [
           "agents"
         ]
@@ -11223,6 +11735,51 @@
             }
           },
           {
+            "description": "Return only traces from this source:\n\n- `api`: sent to `POST /traces`\n- `chat`: a reply the agent gave on its chat link",
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "api",
+                    "chat"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces from this source:\n\n- `api`: sent to `POST /traces`\n- `chat`: a reply the agent gave on its chat link",
+              "title": "Source"
+            }
+          },
+          {
+            "description": "Return only traces with this feedback:\n\n- `correct`: marked correct\n- `wrong`: marked wrong\n- `any`: marked either way",
+            "in": "query",
+            "name": "feedback",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "correct",
+                    "wrong",
+                    "any"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only traces with this feedback:\n\n- `correct`: marked correct\n- `wrong`: marked wrong\n- `any`: marked either way",
+              "title": "Feedback"
+            }
+          },
+          {
             "description": "Order traces by this evaluator's score on each trace's latest scoring run. Traces this evaluator has not scored come last whichever direction you pick, and an evaluator not linked to the agent counts as having scored none",
             "in": "query",
             "name": "sort_by_evaluator",
@@ -11415,6 +11972,85 @@
           }
         ],
         "summary": "Create trace",
+        "tags": [
+          "traces"
+        ]
+      }
+    },
+    "/traces/{trace_uuid}/feedback": {
+      "put": {
+        "description": "Set whether the agent's output on a trace was correct, replacing any earlier feedback, or clear it",
+        "operationId": "set_trace_feedback_endpoint_traces__trace_uuid__feedback_put",
+        "parameters": [
+          {
+            "description": "The trace to give feedback on",
+            "in": "path",
+            "name": "trace_uuid",
+            "required": true,
+            "schema": {
+              "description": "The trace to give feedback on",
+              "examples": [
+                "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              ],
+              "title": "Trace Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceFeedbackUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceFeedbackResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Set trace feedback",
         "tags": [
           "traces"
         ]
