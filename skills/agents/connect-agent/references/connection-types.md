@@ -13,6 +13,10 @@ service to point at.
 - **Required config keys**: `system_prompt`, `llm.model` (e.g. `openai/gpt-4.1`)
 - **Optional config keys**: `stt.provider`, `tts.provider`, `settings.agent_speaks_first`,
   `settings.max_assistant_turns`, `system_tools.end_call`, `data_extraction_fields`
+- **Either type, optional**: `talk_to_agent.messages_per_day` — replies the
+  agent's chat link may give per day (from midnight UTC), 1 up to
+  `max_chat_replies_per_day` from `calibrate`'s org-limits; omit for the
+  workspace default.
 - **Use when**: evaluating a prompt/model choice before any service exists.
 
 ```json
